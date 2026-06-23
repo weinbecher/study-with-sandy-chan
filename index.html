@@ -98,6 +98,10 @@
     .sandy-image { position: relative; z-index: 2; display: block; width: 132px; height: 132px; object-fit: contain; filter: drop-shadow(0 7px 7px rgba(111,67,44,.18)); transition: transform .18s ease; }
     .sandy:hover .sandy-image { transform: translateY(-4px) scale(1.03); }
     .sandy.happy .sandy-image { animation: kitty-hop .45s ease-in-out 2; }
+    .sandy-art { position: relative; }
+    .sandy-eye { position: absolute; z-index: 3; top: 40px; width: 20px; height: 11px; border-top: 3px solid #5a463e; border-radius: 50%; opacity: 0; transform: scaleY(.2); transition: opacity .12s ease, transform .12s ease; pointer-events: none; }
+    .sandy-eye.left { left: 48px; } .sandy-eye.right { left: 75px; }
+    .sandy.blink .sandy-eye { opacity: 1; transform: scaleY(1); }
     @keyframes pop { 0% { transform: scale(.6); } 55% { transform: scale(1.08); } 100% { transform: scale(1); } }
     @keyframes float { from { opacity: 0; transform: translateY(30px) scale(.5); } 20% { opacity: 1; } to { opacity: 0; transform: translateY(-160px) scale(1.25) rotate(18deg); } }
     @keyframes kitty-hop { 50% { transform: translateY(-8px) rotate(2deg); } }
@@ -150,7 +154,10 @@
 
   <div class="sandy" id="sandy" role="button" tabindex="0" aria-label="和三花貓 Sandy 互動">
     <div class="sandy-speech" id="sandySpeech">你好，我是 Sandy！點我一下吧。</div>
-    <img class="sandy-image" src="assets/sandy-green-eyes.png" alt="Sandy，一隻綠眼睛的可愛三花貓">
+    <div class="sandy-art">
+      <img class="sandy-image" src="assets/sandy-green-eyes.png" alt="Sandy，一隻綠眼睛的可愛三花貓">
+      <span class="sandy-eye left" aria-hidden="true"></span><span class="sandy-eye right" aria-hidden="true"></span>
+    </div>
   </div>
 
   <script>
@@ -314,12 +321,21 @@
 
     function setSandyMessage(message) { $("sandySpeech").textContent = message; }
 
+    function makeSandySquint() {
+      const sandy = $("sandy");
+      sandy.classList.remove("blink");
+      void sandy.offsetWidth;
+      sandy.classList.add("blink");
+      setTimeout(() => sandy.classList.remove("blink"), 900);
+    }
+
     function celebrateSandy() {
       const sandy = $("sandy");
       setSandyMessage("答對了！喵～太厲害了！");
       sandy.classList.remove("happy");
       void sandy.offsetWidth;
       sandy.classList.add("happy");
+      makeSandySquint();
       setTimeout(playMeow, 420);
       setTimeout(() => sandy.classList.remove("happy"), 1700);
     }
@@ -331,6 +347,7 @@
       sandy.classList.remove("happy");
       void sandy.offsetWidth;
       sandy.classList.add("happy");
+      makeSandySquint();
       playMeow();
       setTimeout(() => sandy.classList.remove("happy"), 1700);
     }
