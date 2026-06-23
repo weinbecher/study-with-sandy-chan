@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>日語語法實戰特訓｜N2</title>
+  <style>
+    :root {
+      --pink-50: #fff8fb;
+      --pink-100: #ffeaf2;
+      --pink-200: #ffd3e2;
+      --pink-400: #ee79a4;
+      --pink-600: #bd3e6b;
+      --ink: #422d36;
+      --muted: #856a76;
+      --white: #fff;
+      --shadow: 0 18px 50px rgba(157, 68, 103, .14);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: radial-gradient(circle at 10% 10%, #fff 0 11%, transparent 11.5%),
+                  radial-gradient(circle at 92% 12%, #ffe4ee 0 12%, transparent 12.5%),
+                  linear-gradient(135deg, #fff8fb, #fff0f5 52%, #fdf8ff);
+    }
+
+    .app { width: min(720px, calc(100% - 32px)); margin: 0 auto; padding: 46px 0 36px; }
+    header { text-align: center; margin-bottom: 25px; }
+    .eyebrow { color: var(--pink-600); font-size: .82rem; font-weight: 800; letter-spacing: .12em; }
+    h1 { margin: 7px 0 8px; font-size: clamp(1.75rem, 5vw, 2.5rem); letter-spacing: .02em; }
+    .subtitle { margin: 0; color: var(--muted); font-size: .98rem; }
+
+    .progress-wrap { display: flex; align-items: center; gap: 12px; margin: 0 4px 14px; color: var(--muted); font-size: .86rem; font-weight: 700; }
+    .progress { overflow: hidden; flex: 1; height: 10px; border-radius: 999px; background: var(--pink-200); }
+    .progress > span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #f5a4c0, var(--pink-400)); transition: width .35s ease; }
+
+    .card { overflow: hidden; background: rgba(255,255,255,.92); border: 1px solid rgba(238,121,164,.18); border-radius: 24px; box-shadow: var(--shadow); }
+    .card-inner { padding: clamp(24px, 6vw, 42px); }
+    .grammar-tag { display: inline-block; padding: 6px 11px; border-radius: 999px; color: var(--pink-600); background: var(--pink-100); font-family: "Yu Gothic", sans-serif; font-size: .88rem; font-weight: 800; }
+    .question { margin: 19px 0 7px; font-size: clamp(1.2rem, 3.4vw, 1.5rem); font-weight: 800; line-height: 1.65; }
+    .question-audio { display: inline-flex; align-items: center; gap: 5px; margin: 2px 0 10px; padding: 6px 9px; border: 0; border-radius: 9px; color: var(--pink-600); background: var(--pink-50); cursor: pointer; font: inherit; font-size: .82rem; font-weight: 800; }
+    .question-audio:hover, .question-audio:focus-visible { color: white; background: var(--pink-400); outline: none; }
+    .question-audio:disabled { color: var(--muted); background: #f5f0f2; cursor: default; }
+    .hint { margin: 0 0 24px; color: var(--muted); font-size: .93rem; }
+    .choices { display: grid; gap: 12px; }
+    .choice {
+      width: 100%; min-height: 64px; padding: 12px 18px; border: 2px solid #f5d3df; border-radius: 15px;
+      color: var(--ink); background: var(--white); cursor: pointer; font: inherit; font-size: 1rem; text-align: left;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+    .choice:hover:not(:disabled), .choice:focus-visible { border-color: var(--pink-400); background: #fff9fb; transform: translateY(-2px); outline: none; }
+    .choice:disabled { cursor: default; }
+    .choice.correct { border-color: #75c8a4; background: #edfbf4; }
+    .choice.wrong { border-color: #ee8b9e; background: #fff0f2; }
+    .choice b { color: var(--pink-600); font-family: "Yu Gothic", sans-serif; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 17px clamp(24px, 6vw, 42px); border-top: 1px solid #f8e4eb; color: var(--muted); background: #fffcfd; font-size: .88rem; }
+    .footer-actions { display: flex; align-items: center; gap: 4px; }
+    .score { font-weight: 800; }
+    .restart, .sound-toggle { border: 0; padding: 8px 11px; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-weight: 800; }
+    .restart:hover, .sound-toggle:hover { text-decoration: underline; }
+    .sound-toggle[aria-pressed="false"] { color: var(--muted); }
+    .voice-picker { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: .78rem; font-weight: 700; }
+    .voice-picker select { max-width: 135px; border: 1px solid #f0c9d7; border-radius: 7px; padding: 5px; color: var(--pink-600); background: white; font: inherit; }
+
+    .wrongbook { margin-top: 18px; padding: 18px 20px; border: 1px solid rgba(238,121,164,.18); border-radius: 18px; background: rgba(255,255,255,.8); }
+    .wrongbook-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .wrongbook h2 { margin: 0; font-size: 1rem; }
+    .wrongbook-clear { border: 0; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 800; }
+    .wrongbook-empty { margin: 12px 0 0; color: var(--muted); font-size: .86rem; }
+    .wrongbook-list { display: grid; gap: 10px; margin-top: 13px; }
+    .wrongbook-item { padding: 12px; border-radius: 12px; background: #fff7fa; font-size: .86rem; line-height: 1.6; }
+    .wrongbook-item strong { color: var(--pink-600); font-family: "Yu Gothic", sans-serif; }
+
+    .overlay { position: fixed; z-index: 5; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(58, 31, 42, .33); opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .modal { width: min(480px, 100%); padding: 28px; border-radius: 22px; background: var(--white); box-shadow: 0 24px 70px rgba(49, 22, 33, .24); transform: translateY(8px) scale(.98); transition: transform .2s; }
+    .overlay.show .modal { transform: translateY(0) scale(1); }
+    .modal h2 { margin: 0 0 12px; font-size: 1.3rem; }
+    .modal p { margin: 0; color: #5d4650; line-height: 1.75; }
+    .modal .example { margin-top: 13px; padding: 13px; border-radius: 11px; background: var(--pink-50); color: #60434e; line-height: 1.7; font-size: .92rem; }
+    .next { width: 100%; margin-top: 20px; padding: 13px; border: 0; border-radius: 12px; color: white; background: linear-gradient(135deg, #ef85aa, #d85888); cursor: pointer; font: inherit; font-weight: 800; box-shadow: 0 6px 15px rgba(216,88,136,.25); }
+    .next:hover { filter: brightness(1.04); }
+
+    .celebration { position: fixed; z-index: 7; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .2s; }
+    .celebration.show { opacity: 1; }
+    .celebrate-box { padding: 25px 32px; border-radius: 24px; color: var(--pink-600); background: rgba(255,255,255,.93); box-shadow: var(--shadow); text-align: center; transform: scale(.6); }
+    .celebration.show .celebrate-box { animation: pop .8s cubic-bezier(.18,.89,.32,1.28) forwards; }
+    .face { font-size: clamp(2rem, 9vw, 3.3rem); }
+    .yay { margin-top: 9px; font-weight: 900; }
+    .heart { position: absolute; color: #f26b9a; font-size: 1.7rem; animation: float 1.25s ease-out forwards; }
+    .sandy { position: fixed; z-index: 4; right: clamp(12px, 3vw, 30px); bottom: 16px; display: grid; justify-items: center; cursor: grab; user-select: none; touch-action: none; }
+    .sandy.dragging { cursor: grabbing; }
+    .sandy-speech { max-width: 176px; margin: 0 0 7px; padding: 9px 12px; border: 1px solid #f4cbd9; border-radius: 15px 15px 4px 15px; color: #8b4c62; background: rgba(255, 255, 255, .94); box-shadow: 0 7px 18px rgba(157,68,103,.13); font-size: .8rem; font-weight: 700; line-height: 1.35; text-align: center; }
+    .sandy-image { position: relative; z-index: 2; display: block; width: 132px; height: 132px; object-fit: contain; filter: drop-shadow(0 7px 7px rgba(111,67,44,.18)); transition: transform .18s ease; }
+    .sandy:hover .sandy-image { transform: translateY(-4px) scale(1.03); }
+    .sandy.happy .sandy-image { animation: kitty-hop .45s ease-in-out 2; }
+    @keyframes pop { 0% { transform: scale(.6); } 55% { transform: scale(1.08); } 100% { transform: scale(1); } }
+    @keyframes float { from { opacity: 0; transform: translateY(30px) scale(.5); } 20% { opacity: 1; } to { opacity: 0; transform: translateY(-160px) scale(1.25) rotate(18deg); } }
+    @keyframes kitty-hop { 50% { transform: translateY(-8px) rotate(2deg); } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="eyebrow">N2 GRAMMAR PRACTICE</div>
+      <h1>日語語法實戰特訓</h1>
+      <p class="subtitle">讀懂情境，選出最自然的接續表現。</p>
+    </header>
+
+    <div class="progress-wrap"><span id="progressText">第 1 / 6 題</span><div class="progress"><span id="progressBar"></span></div></div>
+    <section class="card" aria-live="polite">
+      <div class="card-inner">
+        <span class="grammar-tag" id="grammarTag">接續表現</span>
+        <p class="question" id="question"></p>
+        <button class="question-audio" id="questionAudio" type="button">🔊 朗讀題目</button>
+        <p class="hint">請選擇最適合填入空格的語法。</p>
+        <div class="choices" id="choices"></div>
+      </div>
+      <footer class="card-footer">
+        <span class="score" id="score">答對 0 題</span>
+        <div class="footer-actions">
+          <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 語音：開</button>
+          <label class="voice-picker">聲音<select id="voiceSelect" aria-label="選擇日文語音"><option>載入中…</option></select></label>
+          <button class="restart" id="restart" type="button">重新開始</button>
+        </div>
+      </footer>
+    </section>
+    <section class="wrongbook" aria-live="polite">
+      <div class="wrongbook-head"><h2>📘 錯題本 <span id="wrongbookCount">0</span></h2><button class="wrongbook-clear" id="wrongbookClear" type="button">清空紀錄</button></div>
+      <p class="wrongbook-empty" id="wrongbookEmpty">目前沒有錯題紀錄。</p>
+      <div class="wrongbook-list" id="wrongbookList"></div>
+    </section>
+  </main>
+
+  <div class="overlay" id="explainOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h2 id="modalTitle">再看一次重點</h2>
+      <p id="explanation"></p>
+      <div class="example" id="example"></div>
+      <button class="next" id="next" type="button">下一題</button>
+    </div>
+  </div>
+
+  <div class="celebration" id="celebration" aria-live="polite"><div class="celebrate-box"><div class="face">٩(◕‿◕)۶</div><div class="yay">答對了！很自然！</div></div></div>
+
+  <div class="sandy" id="sandy" role="button" tabindex="0" aria-label="和三花貓 Sandy 互動">
+    <div class="sandy-speech" id="sandySpeech">你好，我是 Sandy！點我一下吧。</div>
+    <img class="sandy-image" src="assets/sandy-green-eyes.png" alt="Sandy，一隻綠眼睛的可愛三花貓">
+  </div>
+
+  <script>
+    // 新增題目時，只要依照以下結構加入物件即可。
+    const questions = [
+      {
+        grammar: "あるいは", sentence: "資料はメールで送ってください。____、共有フォルダに入れてもかまいません。",
+        correct: "あるいは", wrong: "それにしては",
+        correctNote: "「あるいは」表示「或者」，用來提出另一個可選擇的方案。",
+        wrongNote: "「それにしては」是「儘管如此，卻……」的意思，前後需要有預期落差，不能用來列舉選項。",
+        example: "例：電車、あるいはバスで行きましょう。"
+      },
+      {
+        grammar: "しかも", sentence: "このレストランは駅から近い。____、値段も手ごろだ。",
+        correct: "しかも", wrong: "それとも",
+        correctNote: "「しかも」用於添加同方向、而且更進一步的資訊，相當於「而且／再加上」。",
+        wrongNote: "「それとも」用於疑問句中讓對方二選一；這句是在補充優點，不是在提問。",
+        example: "例：彼は親切で、しかも仕事が早い。"
+      },
+      {
+        grammar: "そういえば", sentence: "____、田中さん、来月結婚するって聞いた？",
+        correct: "そういえば", wrong: "そこで",
+        correctNote: "「そういえば」表示因眼前話題而聯想到另一件事，常用來自然地轉換話題。",
+        wrongNote: "「そこで」表示因果關係中的「因此」，後面通常接為了解決前項問題而採取的行動。",
+        example: "例：そういえば、昨日の宿題はどうだった？"
+      },
+      {
+        grammar: "そこで", sentence: "終電がなくなってしまった。____、駅の近くのホテルに泊まることにした。",
+        correct: "そこで", wrong: "あるいは",
+        correctNote: "「そこで」表示面對前面的狀況後，採取相應對策；相當於「於是／因此」。",
+        wrongNote: "「あるいは」僅表示「或者」，不表示因為終電沒了所以住飯店的因果關係。",
+        example: "例：道に迷った。そこで、交番で聞いた。"
+      },
+      {
+        grammar: "それとも", sentence: "コーヒーにしますか。____、紅茶にしますか。",
+        correct: "それとも", wrong: "しかも",
+        correctNote: "「それとも」用在疑問句，表示「還是……呢？」並要求對方在選項之間選擇。",
+        wrongNote: "「しかも」是在同方向補充事實；這裡是讓對方選咖啡或紅茶，應使用「それとも」。",
+        example: "例：今日は家で休みますか。それとも出かけますか。"
+      },
+      {
+        grammar: "それにしては", sentence: "彼は日本に来てまだ三か月だ。____、日本語がとても上手だ。",
+        correct: "それにしては", wrong: "そういえば",
+        correctNote: "「それにしては」表示依照前項來看，後項的結果超出預期；意思是「就……而言，卻……」。",
+        wrongNote: "「そういえば」只是由一件事聯想到另一件事，沒有「與預期不同」的語感。注意：「それにしても」則較常用於感嘆「即使如此，仍然……」。",
+        example: "例：この店は高い。それにしては、料理が普通だ。"
+      }
+    ];
+
+    let current = 0;
+    let correctCount = 0;
+    let locked = false;
+    let soundEnabled = "speechSynthesis" in window;
+    let speechUnlocked = false;
+    let questionSpeechTimer;
+    let sandyDrag = null;
+    let japaneseVoices = [];
+    const wrongBookKey = "n2-grammar-wrong-book-v1";
+    let wrongBook = loadWrongBook();
+    const $ = (id) => document.getElementById(id);
+    const questionEl = $("question"), choicesEl = $("choices"), grammarTag = $("grammarTag");
+
+    function shuffled(items) { return [...items].sort(() => Math.random() - .5); }
+
+    function render() {
+      const item = questions[current];
+      locked = false;
+      grammarTag.textContent = item.grammar;
+      questionEl.textContent = item.sentence.replace("____", "（　　）");
+      choicesEl.innerHTML = "";
+      shuffled([item.correct, item.wrong]).forEach((answer) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "choice";
+        button.innerHTML = `<b>${answer}</b>`;
+        button.addEventListener("click", () => {
+          speechUnlocked = true;
+          speak(answer);
+          answerQuestion(answer, button);
+        });
+        choicesEl.appendChild(button);
+      });
+      $("progressText").textContent = `第 ${current + 1} / ${questions.length} 題`;
+      $("progressBar").style.width = `${(current / questions.length) * 100}%`;
+      $("score").textContent = `答對 ${correctCount} 題`;
+      $("questionAudio").textContent = speechUnlocked ? "🔊 重聽題目" : "▶ 開始並朗讀";
+      clearTimeout(questionSpeechTimer);
+      questionSpeechTimer = setTimeout(() => {
+        if (!locked && speechUnlocked) speakQuestion();
+      }, 650);
+    }
+
+    function answerQuestion(answer, button) {
+      if (locked) return;
+      locked = true;
+      const item = questions[current];
+      const buttons = choicesEl.querySelectorAll("button");
+      buttons.forEach((b) => b.disabled = true);
+      if (answer === item.correct) {
+        button.classList.add("correct");
+        correctCount++;
+        $("score").textContent = `答對 ${correctCount} 題`;
+        showCelebration();
+        celebrateSandy();
+        showExplanation(item, true);
+      } else {
+        button.classList.add("wrong");
+        [...buttons].find((b) => b.querySelector("b").textContent === item.correct).classList.add("correct");
+        recordWrong(item, answer);
+        showExplanation(item, false);
+      }
+    }
+
+    function showExplanation(item, isCorrect) {
+      $("modalTitle").textContent = isCorrect ? "答對了！文法重點" : "這題的語法重點";
+      $("explanation").textContent = isCorrect ? item.correctNote : item.correctNote + " " + item.wrongNote;
+      $("example").textContent = item.example;
+      $("next").textContent = current === questions.length - 1 ? "查看結果" : "下一題";
+      $("explainOverlay").classList.add("show");
+    }
+
+    function speak(text) {
+      if (!soundEnabled || !speechUnlocked || !("SpeechSynthesisUtterance" in window)) return;
+      const synthesis = window.speechSynthesis;
+      synthesis.cancel();
+      synthesis.resume();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ja-JP";
+      const japaneseVoice = japaneseVoices.find((voice) => voice.name === $("voiceSelect").value) || japaneseVoices.find((voice) => /siri|kyoko|haruka|nanami|female/i.test(voice.name)) || japaneseVoices[0];
+      if (japaneseVoice) utterance.voice = japaneseVoice;
+      utterance.rate = 0.85;
+      utterance.pitch = 1;
+      synthesis.speak(utterance);
+    }
+
+    function speakQuestion() {
+      const item = questions[current];
+      if (!item) return;
+      // 全形空白讓語音在填空位置自然停頓，不朗讀答案。
+      speak(item.sentence.replace("____", "　　　"));
+    }
+
+    function playMeow() {
+      if (!soundEnabled) return;
+      const Audio = window.AudioContext || window.webkitAudioContext;
+      if (!Audio) { speak("にゃー"); return; }
+      const audio = new Audio();
+      const oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+      oscillator.type = "triangle";
+      oscillator.frequency.setValueAtTime(480, audio.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(760, audio.currentTime + .16);
+      oscillator.frequency.exponentialRampToValueAtTime(370, audio.currentTime + .52);
+      gain.gain.setValueAtTime(.001, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.12, audio.currentTime + .045);
+      gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .55);
+      oscillator.connect(gain).connect(audio.destination);
+      oscillator.start();
+      oscillator.stop(audio.currentTime + .57);
+    }
+
+    function setSandyMessage(message) { $("sandySpeech").textContent = message; }
+
+    function celebrateSandy() {
+      const sandy = $("sandy");
+      setSandyMessage("答對了！喵～太厲害了！");
+      sandy.classList.remove("happy");
+      void sandy.offsetWidth;
+      sandy.classList.add("happy");
+      setTimeout(playMeow, 420);
+      setTimeout(() => sandy.classList.remove("happy"), 1700);
+    }
+
+    function interactWithSandy() {
+      const messages = ["喵～再試一題吧！", "我在旁邊陪你練習。", "慢慢想，Sandy 等你！", "選完我會告訴你表現得怎樣，喵！"];
+      setSandyMessage(messages[Math.floor(Math.random() * messages.length)]);
+      const sandy = $("sandy");
+      sandy.classList.remove("happy");
+      void sandy.offsetWidth;
+      sandy.classList.add("happy");
+      playMeow();
+      setTimeout(() => sandy.classList.remove("happy"), 1700);
+    }
+
+    function beginSandyDrag(event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      const sandy = $("sandy");
+      const box = sandy.getBoundingClientRect();
+      sandy.setPointerCapture(event.pointerId);
+      sandy.style.left = `${box.left}px`;
+      sandy.style.top = `${box.top}px`;
+      sandy.style.right = "auto";
+      sandy.style.bottom = "auto";
+      sandyDrag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, left: box.left, top: box.top, moved: false };
+      sandy.classList.add("dragging");
+      event.preventDefault();
+    }
+
+    function moveSandy(event) {
+      if (!sandyDrag || event.pointerId !== sandyDrag.pointerId) return;
+      const dx = event.clientX - sandyDrag.startX;
+      const dy = event.clientY - sandyDrag.startY;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) sandyDrag.moved = true;
+      const sandy = $("sandy");
+      const box = sandy.getBoundingClientRect();
+      const maxLeft = Math.max(0, window.innerWidth - box.width);
+      const maxTop = Math.max(0, window.innerHeight - box.height);
+      sandy.style.left = `${Math.min(maxLeft, Math.max(0, sandyDrag.left + dx))}px`;
+      sandy.style.top = `${Math.min(maxTop, Math.max(0, sandyDrag.top + dy))}px`;
+    }
+
+    function endSandyDrag(event) {
+      if (!sandyDrag || event.pointerId !== sandyDrag.pointerId) return;
+      const wasDrag = sandyDrag.moved;
+      const sandy = $("sandy");
+      sandy.classList.remove("dragging");
+      if (sandy.hasPointerCapture(event.pointerId)) sandy.releasePointerCapture(event.pointerId);
+      sandyDrag = null;
+      if (!wasDrag) interactWithSandy();
+    }
+
+    function updateSoundToggle() {
+      const toggle = $("soundToggle");
+      toggle.setAttribute("aria-pressed", String(soundEnabled));
+      toggle.textContent = soundEnabled ? "🔊 語音：開" : "🔇 語音：關";
+      if (!("speechSynthesis" in window)) {
+        toggle.textContent = "語音不支援";
+        toggle.disabled = true;
+        $("questionAudio").disabled = true;
+      }
+    }
+
+    function loadVoices() {
+      const select = $("voiceSelect");
+      let savedVoice = "";
+      try { savedVoice = localStorage.getItem("n2-grammar-voice") || ""; } catch {}
+      const previous = savedVoice || select.value;
+      japaneseVoices = window.speechSynthesis ? window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("ja")) : [];
+      select.innerHTML = "";
+      if (!japaneseVoices.length) {
+        select.innerHTML = "<option value=\"\">裝置預設</option>";
+        return;
+      }
+      japaneseVoices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = voice.name;
+        select.appendChild(option);
+      });
+      const preferred = japaneseVoices.find((voice) => voice.name === previous) || japaneseVoices.find((voice) => /siri|kyoko|haruka|nanami|female/i.test(voice.name)) || japaneseVoices[0];
+      select.value = preferred.name;
+    }
+
+    function loadWrongBook() {
+      try { return JSON.parse(localStorage.getItem(wrongBookKey)) || {}; } catch { return {}; }
+    }
+
+    function recordWrong(item, selected) {
+      wrongBook[item.grammar] = { grammar: item.grammar, sentence: item.sentence, selected, correct: item.correct, note: item.correctNote };
+      try { localStorage.setItem(wrongBookKey, JSON.stringify(wrongBook)); } catch {}
+      renderWrongBook();
+    }
+
+    function renderWrongBook() {
+      const items = Object.values(wrongBook);
+      $("wrongbookCount").textContent = items.length;
+      $("wrongbookEmpty").hidden = items.length > 0;
+      $("wrongbookList").innerHTML = items.map((item) => `<article class="wrongbook-item"><strong>${item.grammar}</strong><br>${item.sentence.replace("____", "（　　）")}<br>你的答案：${item.selected}　正解：${item.correct}<br>${item.note}</article>`).join("");
+    }
+
+    function showCelebration() {
+      const celebration = $("celebration");
+      celebration.classList.add("show");
+      for (let i = 0; i < 10; i++) {
+        const heart = document.createElement("span");
+        heart.className = "heart";
+        heart.textContent = i % 3 === 0 ? "✦" : "♥";
+        heart.style.left = `${38 + Math.random() * 24}%`;
+        heart.style.top = `${52 + Math.random() * 14}%`;
+        heart.style.animationDelay = `${Math.random() * .18}s`;
+        celebration.appendChild(heart);
+        setTimeout(() => heart.remove(), 1400);
+      }
+      setTimeout(() => celebration.classList.remove("show"), 1150);
+    }
+
+    function nextQuestion() {
+      $("explainOverlay").classList.remove("show");
+      current++;
+      if (current < questions.length) { render(); return; }
+      showResult();
+    }
+
+    function showResult() {
+      grammarTag.textContent = "完成！";
+      questionEl.textContent = `你答對了 ${correctCount} / ${questions.length} 題`;
+      const message = correctCount === questions.length ? "全答對！N2 接續表現掌握得很好。" : "把錯題提示再讀一次，下次會更穩。";
+      choicesEl.innerHTML = `<div class="example" style="font-size:1rem; text-align:center; padding:22px;">${message}</div>`;
+      $("progressText").textContent = "練習完成";
+      $("progressBar").style.width = "100%";
+    }
+
+    $("next").addEventListener("click", nextQuestion);
+    $("questionAudio").addEventListener("click", () => {
+      speechUnlocked = true;
+      $("questionAudio").textContent = "🔊 重聽題目";
+      speakQuestion();
+    });
+    $("restart").addEventListener("click", () => { current = 0; correctCount = 0; render(); });
+    $("soundToggle").addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      if (!soundEnabled) window.speechSynthesis.cancel();
+      updateSoundToggle();
+    });
+    $("voiceSelect").addEventListener("change", () => {
+      try { localStorage.setItem("n2-grammar-voice", $("voiceSelect").value); } catch {}
+      if (speechUnlocked) speakQuestion();
+    });
+    $("wrongbookClear").addEventListener("click", () => {
+      wrongBook = {};
+      try { localStorage.removeItem(wrongBookKey); } catch {}
+      renderWrongBook();
+    });
+    $("sandy").addEventListener("pointerdown", beginSandyDrag);
+    $("sandy").addEventListener("pointermove", moveSandy);
+    $("sandy").addEventListener("pointerup", endSandyDrag);
+    $("sandy").addEventListener("pointercancel", endSandyDrag);
+    $("sandy").addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); interactWithSandy(); }
+    });
+    updateSoundToggle();
+    loadVoices();
+    if ("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    renderWrongBook();
+    render();
+  </script>
+</body>
+</html>
