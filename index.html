@@ -102,9 +102,18 @@
     .sandy-eye { position: absolute; z-index: 3; top: 40px; width: 20px; height: 11px; border-top: 3px solid #5a463e; border-radius: 50%; opacity: 0; transform: scaleY(.2); transition: opacity .12s ease, transform .12s ease; pointer-events: none; }
     .sandy-eye.left { left: 48px; } .sandy-eye.right { left: 75px; }
     .sandy.blink .sandy-eye { opacity: 1; transform: scaleY(1); }
+    .snack-pack { position: fixed; z-index: 4; left: clamp(12px, 3vw, 30px); bottom: 20px; padding: 10px; border: 1px solid #f0c9d7; border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: 0 8px 22px rgba(157,68,103,.14); text-align: center; }
+    .snack-pack-title { margin-bottom: 6px; color: var(--pink-600); font-size: .72rem; font-weight: 900; letter-spacing: .05em; }
+    .snack-list { display: flex; gap: 6px; }
+    .snack { width: 38px; height: 38px; border: 0; border-radius: 11px; background: #fff4f7; cursor: grab; font-size: 1.35rem; touch-action: none; transition: transform .15s ease, background .15s ease; }
+    .snack:hover { background: #ffe3ed; transform: translateY(-2px); }
+    .snack.dragging { opacity: .45; cursor: grabbing; }
+    .snack-ghost { position: fixed; z-index: 12; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: white; box-shadow: 0 8px 16px rgba(101,44,67,.22); font-size: 1.7rem; pointer-events: none; transform: translate(-50%, -50%) rotate(8deg); }
+    .snack-pop { position: fixed; z-index: 11; font-size: 2rem; pointer-events: none; animation: snack-pop .9s ease-out forwards; }
     @keyframes pop { 0% { transform: scale(.6); } 55% { transform: scale(1.08); } 100% { transform: scale(1); } }
     @keyframes float { from { opacity: 0; transform: translateY(30px) scale(.5); } 20% { opacity: 1; } to { opacity: 0; transform: translateY(-160px) scale(1.25) rotate(18deg); } }
     @keyframes kitty-hop { 50% { transform: translateY(-8px) rotate(2deg); } }
+    @keyframes snack-pop { from { opacity: 0; transform: translateY(16px) scale(.55); } 30% { opacity: 1; } to { opacity: 0; transform: translateY(-54px) scale(1.3); } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   </style>
 </head>
@@ -159,6 +168,14 @@
       <span class="sandy-eye left" aria-hidden="true"></span><span class="sandy-eye right" aria-hidden="true"></span>
     </div>
   </div>
+  <aside class="snack-pack" aria-label="Sandy 的零食包">
+    <div class="snack-pack-title">SANDY'S SNACKS</div>
+    <div class="snack-list">
+      <button class="snack" type="button" data-snack="🐟" aria-label="拖曳小魚給 Sandy">🐟</button>
+      <button class="snack" type="button" data-snack="🍪" aria-label="拖曳餅乾給 Sandy">🍪</button>
+      <button class="snack" type="button" data-snack="🍓" aria-label="拖曳草莓給 Sandy">🍓</button>
+    </div>
+  </aside>
 
   <script>
     // 新增題目時，只要依照以下結構加入物件即可。
@@ -214,6 +231,7 @@
     let speechUnlocked = false;
     let questionSpeechTimer;
     let sandyDrag = null;
+    let snackDrag = null;
     let japaneseVoices = [];
     const wrongBookKey = "n2-grammar-wrong-book-v1";
     let wrongBook = loadWrongBook();
@@ -389,6 +407,57 @@
       if (!wasDrag) interactWithSandy();
     }
 
+    function startSnackDrag(event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.stopPropagation();
+      const snack = event.currentTarget;
+      snack.setPointerCapture(event.pointerId);
+      const ghost = document.createElement("div");
+      ghost.className = "snack-ghost";
+      ghost.textContent = snack.dataset.snack;
+      document.body.appendChild(ghost);
+      snack.classList.add("dragging");
+      snackDrag = { pointerId: event.pointerId, snack, ghost };
+      moveSnackDrag(event);
+      event.preventDefault();
+    }
+
+    function moveSnackDrag(event) {
+      if (!snackDrag || event.pointerId !== snackDrag.pointerId) return;
+      snackDrag.ghost.style.left = `${event.clientX}px`;
+      snackDrag.ghost.style.top = `${event.clientY}px`;
+    }
+
+    function endSnackDrag(event) {
+      if (!snackDrag || event.pointerId !== snackDrag.pointerId) return;
+      const { snack, ghost } = snackDrag;
+      const sandyBox = $("sandy").getBoundingClientRect();
+      const fedSandy = event.clientX >= sandyBox.left && event.clientX <= sandyBox.right && event.clientY >= sandyBox.top && event.clientY <= sandyBox.bottom;
+      snack.classList.remove("dragging");
+      if (snack.hasPointerCapture(event.pointerId)) snack.releasePointerCapture(event.pointerId);
+      ghost.remove();
+      snackDrag = null;
+      if (fedSandy) feedSandy(snack.dataset.snack, sandyBox);
+    }
+
+    function feedSandy(snack, sandyBox) {
+      const messages = { "🐟": "喵！小魚最好吃了！", "🍪": "謝謝餅乾！好開心！", "🍓": "草莓甜甜的，喵～" };
+      setSandyMessage(messages[snack] || "謝謝你餵我！");
+      const sandy = $("sandy");
+      sandy.classList.remove("happy");
+      void sandy.offsetWidth;
+      sandy.classList.add("happy");
+      makeSandySquint();
+      playMeow();
+      const pop = document.createElement("div");
+      pop.className = "snack-pop";
+      pop.textContent = "😻";
+      pop.style.left = `${sandyBox.left + sandyBox.width / 2}px`;
+      pop.style.top = `${sandyBox.top + 48}px`;
+      document.body.appendChild(pop);
+      setTimeout(() => { sandy.classList.remove("happy"); pop.remove(); }, 950);
+    }
+
     function updateSoundToggle() {
       const toggle = $("soundToggle");
       toggle.setAttribute("aria-pressed", String(soundEnabled));
@@ -497,6 +566,12 @@
     $("sandy").addEventListener("pointercancel", endSandyDrag);
     $("sandy").addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") { event.preventDefault(); interactWithSandy(); }
+    });
+    document.querySelectorAll(".snack").forEach((snack) => {
+      snack.addEventListener("pointerdown", startSnackDrag);
+      snack.addEventListener("pointermove", moveSnackDrag);
+      snack.addEventListener("pointerup", endSnackDrag);
+      snack.addEventListener("pointercancel", endSnackDrag);
     });
     updateSoundToggle();
     loadVoices();
