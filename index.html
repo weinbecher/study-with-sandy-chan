@@ -111,7 +111,12 @@
     .sandy-eye.left { left: 48px; } .sandy-eye.right { left: 75px; }
     .sandy.blink .sandy-eye { opacity: 1; transform: scaleY(1); }
     .snack-pack { position: fixed; z-index: 4; left: clamp(12px, 3vw, 30px); bottom: 20px; padding: 10px; border: 1px solid #f0c9d7; border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: 0 8px 22px rgba(157,68,103,.14); text-align: center; }
-    .snack-pack-title { margin-bottom: 6px; color: var(--pink-600); font-size: .72rem; font-weight: 900; letter-spacing: .05em; }
+    .snack-pack-title { margin: 0 0 6px; border: 0; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-size: .72rem; font-weight: 900; letter-spacing: .05em; }
+    .snack-pack-title::after { content: "⌃"; display: inline-block; margin-left: 5px; transition: transform .16s ease; }
+    .snack-pack.collapsed { padding: 7px 10px; }
+    .snack-pack.collapsed .snack-list { display: none; }
+    .snack-pack.collapsed .snack-pack-title { margin: 0; }
+    .snack-pack.collapsed .snack-pack-title::after { transform: rotate(180deg); }
     .snack-list { display: flex; gap: 6px; }
     .snack { width: 38px; height: 38px; border: 0; border-radius: 11px; background: #fff4f7; cursor: grab; font-size: 1.35rem; touch-action: none; transition: transform .15s ease, background .15s ease; }
     .snack:hover { background: #ffe3ed; transform: translateY(-2px); }
@@ -189,7 +194,7 @@
     </div>
   </div>
   <aside class="snack-pack" aria-label="Sandy 的零食包">
-    <div class="snack-pack-title">SANDY'S SNACKS</div>
+    <button class="snack-pack-title" id="snackToggle" type="button" aria-expanded="false">SANDY'S SNACKS</button>
     <div class="snack-list">
       <button class="snack" type="button" data-snack="🐟" aria-label="拖曳小魚給 Sandy">🐟</button>
       <button class="snack" type="button" data-snack="🍪" aria-label="拖曳餅乾給 Sandy">🍪</button>
@@ -351,18 +356,41 @@
       const Audio = window.AudioContext || window.webkitAudioContext;
       if (!Audio) { speak("にゃー"); return; }
       const audio = new Audio();
-      const oscillator = audio.createOscillator();
+      const now = audio.currentTime;
+      const voice = audio.createOscillator();
+      const warmth = audio.createOscillator();
+      const wobble = audio.createOscillator();
+      const filter = audio.createBiquadFilter();
       const gain = audio.createGain();
-      oscillator.type = "triangle";
-      oscillator.frequency.setValueAtTime(480, audio.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(760, audio.currentTime + .16);
-      oscillator.frequency.exponentialRampToValueAtTime(370, audio.currentTime + .52);
-      gain.gain.setValueAtTime(.001, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(.12, audio.currentTime + .045);
-      gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .55);
-      oscillator.connect(gain).connect(audio.destination);
-      oscillator.start();
-      oscillator.stop(audio.currentTime + .57);
+      const wobbleGain = audio.createGain();
+      voice.type = "sawtooth";
+      warmth.type = "sine";
+      wobble.type = "sine";
+      voice.frequency.setValueAtTime(620, now);
+      voice.frequency.exponentialRampToValueAtTime(380, now + .22);
+      voice.frequency.exponentialRampToValueAtTime(470, now + .58);
+      warmth.frequency.setValueAtTime(310, now);
+      warmth.frequency.exponentialRampToValueAtTime(195, now + .36);
+      wobble.frequency.setValueAtTime(5.2, now);
+      wobbleGain.gain.setValueAtTime(28, now);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1350, now);
+      filter.frequency.exponentialRampToValueAtTime(720, now + .65);
+      filter.Q.value = 1.2;
+      gain.gain.setValueAtTime(.001, now);
+      gain.gain.exponentialRampToValueAtTime(.075, now + .06);
+      gain.gain.exponentialRampToValueAtTime(.045, now + .42);
+      gain.gain.exponentialRampToValueAtTime(.001, now + .72);
+      wobble.connect(wobbleGain).connect(voice.frequency);
+      voice.connect(filter);
+      warmth.connect(filter);
+      filter.connect(gain).connect(audio.destination);
+      voice.start(now);
+      warmth.start(now);
+      wobble.start(now);
+      voice.stop(now + .74);
+      warmth.stop(now + .74);
+      wobble.stop(now + .74);
     }
 
     function setSandyMessage(message) { $("sandySpeech").textContent = message; }
@@ -708,6 +736,12 @@
     $("sandy").addEventListener("pointercancel", endSandyDrag);
     $("sandy").addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") { event.preventDefault(); interactWithSandy(); }
+    });
+    const snackPack = document.querySelector(".snack-pack");
+    snackPack.classList.add("collapsed");
+    $("snackToggle").addEventListener("click", () => {
+      const collapsed = snackPack.classList.toggle("collapsed");
+      $("snackToggle").setAttribute("aria-expanded", String(!collapsed));
     });
     document.querySelectorAll(".snack").forEach((snack) => {
       snack.addEventListener("pointerdown", startSnackDrag);
