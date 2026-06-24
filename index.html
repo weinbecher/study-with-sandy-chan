@@ -245,6 +245,8 @@
     let correctCount = 0;
     let locked = false;
     let soundEnabled = "speechSynthesis" in window;
+    const sandySounds = ["assets/sandy-purr-1.wav", "assets/sandy-meow-1.wav", "assets/sandy-meow-2.wav", "assets/sandy-meow-3.wav", "assets/sandy-meow-4.wav"];
+    let activeSandySound = null;
     let speechUnlocked = false;
     let questionSpeechTimer;
     let sandyDrag = null;
@@ -344,6 +346,15 @@
 
     function playMeow() {
       if (!soundEnabled) return;
+      if (activeSandySound) {
+        activeSandySound.pause();
+        activeSandySound.currentTime = 0;
+      }
+      const source = sandySounds[Math.floor(Math.random() * sandySounds.length)];
+      activeSandySound = new Audio(source);
+      activeSandySound.volume = .85;
+      activeSandySound.play().catch(() => {});
+      return;
       const Audio = window.AudioContext || window.webkitAudioContext;
       if (!Audio) { speak("にゃー"); return; }
       const audio = new Audio();
@@ -667,6 +678,7 @@
     $("soundToggle").addEventListener("click", () => {
       soundEnabled = !soundEnabled;
       if (!soundEnabled) window.speechSynthesis.cancel();
+      if (!soundEnabled && activeSandySound) activeSandySound.pause();
       updateSoundToggle();
     });
     $("voiceSelect").addEventListener("change", () => {
