@@ -33,9 +33,14 @@
     .eyebrow { color: var(--pink-600); font-size: .82rem; font-weight: 800; letter-spacing: .12em; }
     h1 { margin: 7px 0 8px; font-size: clamp(1.75rem, 5vw, 2.5rem); letter-spacing: .02em; }
     .subtitle { margin: 0; color: var(--muted); font-size: .98rem; }
-    .account { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 10px; border: 1px solid #f3d5e0; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.7); font-size: .78rem; font-weight: 700; }
+    .account { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding: 7px 10px; border: 1px solid #f3d5e0; border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.7); font-size: .78rem; font-weight: 700; }
     .account button { border: 0; padding: 3px 5px; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-weight: 800; }
     .account button:hover { text-decoration: underline; }
+    .auth-controls { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 6px; }
+    .auth-controls input { width: 142px; border: 1px solid #f0c9d7; border-radius: 8px; padding: 6px 8px; color: var(--ink); background: white; font: inherit; font-size: .78rem; }
+    .auth-controls .auth-primary { padding: 6px 8px; border-radius: 8px; color: white; background: var(--pink-600); text-decoration: none; }
+    .auth-controls .auth-primary:hover { background: var(--pink-400); text-decoration: none; }
+    .account.signed-in .auth-controls, .account:not(.signed-in) #accountAction, .account:not(.signed-in) #setPassword { display: none; }
 
     .progress-wrap { display: flex; align-items: center; gap: 12px; margin: 0 4px 14px; color: var(--muted); font-size: .86rem; font-weight: 700; }
     .progress { overflow: hidden; flex: 1; height: 10px; border-radius: 999px; background: var(--pink-200); }
@@ -126,7 +131,18 @@
       <div class="eyebrow">N2 GRAMMAR PRACTICE</div>
       <h1>日語語法實戰特訓</h1>
       <p class="subtitle">讀懂情境，選出最自然的接續表現。</p>
-      <div class="account"><span id="accountStatus">Sign in to save progress across devices</span><button id="accountAction" type="button">Sign in</button></div>
+      <div class="account" id="account">
+        <span id="accountStatus">Sign in to save progress across devices</span>
+        <div class="auth-controls">
+          <input id="accountEmail" type="email" autocomplete="email" placeholder="Email address">
+          <input id="accountPassword" type="password" autocomplete="current-password" placeholder="Password">
+          <button class="auth-primary" id="signIn" type="button">Sign in</button>
+          <button id="signUp" type="button">Create account</button>
+          <button id="resetPassword" type="button">Reset password</button>
+        </div>
+        <button id="setPassword" type="button">Set password</button>
+        <button id="accountAction" type="button">Sign out</button>
+      </div>
     </header>
 
     <div class="progress-wrap"><span id="progressText">第 1 / 6 題</span><div class="progress"><span id="progressBar"></span></div></div>
@@ -565,16 +581,45 @@
     function questionId(item) { return item.grammar; }
 
     function updateAccountUI() {
+      $("account").classList.toggle("signed-in", Boolean(signedInUser));
       $("accountStatus").textContent = signedInUser ? `Saving progress for ${signedInUser.email}` : "Sign in to save progress across devices";
-      $("accountAction").textContent = signedInUser ? "Sign out" : "Sign in";
     }
 
-    async function sendSignInLink() {
-      const email = window.prompt("Enter Sophia's email address. We'll send a sign-in link there.");
-      if (!email) return;
-      const { error } = await supabaseClient.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href.split("#")[0] } });
-      if (error) { window.alert(`Couldn't send the sign-in link: ${error.message}`); return; }
-      window.alert("Sign-in link sent. Open it on this device to connect progress here.");
+    function accountCredentials() {
+      return { email: $("accountEmail").value.trim(), password: $("accountPassword").value };
+    }
+
+    async function signInWithPassword() {
+      const { email, password } = accountCredentials();
+      if (!email || !password) { window.alert("Enter your email address and password first."); return; }
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) window.alert(`Couldn't sign in: ${error.message}`);
+    }
+
+    async function signUpWithPassword() {
+      const { email, password } = accountCredentials();
+      if (!email || password.length < 8) { window.alert("Use an email address and a password of at least 8 characters."); return; }
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) { window.alert(`Couldn't create the account: ${error.message}`); return; }
+      if (!data.session) window.alert("Account created. Check your email once to confirm it, then sign in with your password.");
+    }
+
+    async function setPassword() {
+      const password = window.prompt("Choose a new password (at least 8 characters).");
+      if (!password) return;
+      if (password.length < 8) { window.alert("Use at least 8 characters."); return; }
+      if (password !== window.prompt("Enter the new password again.")) { window.alert("Those passwords didn't match."); return; }
+      const { error } = await supabaseClient.auth.updateUser({ password });
+      if (error) { window.alert(`Couldn't set the password: ${error.message}`); return; }
+      window.alert("Password saved. You can now sign in with email and password.");
+    }
+
+    async function requestPasswordReset() {
+      const email = $("accountEmail").value.trim();
+      if (!email) { window.alert("Enter your email address first."); return; }
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split("#")[0] });
+      if (error) { window.alert(`Couldn't send the reset link: ${error.message}`); return; }
+      window.alert("Password reset link sent. Open it on this device, then choose Set password.");
     }
 
     async function startCloudSession() {
@@ -636,9 +681,12 @@
       speakQuestion();
     });
     $("restart").addEventListener("click", createFreshSession);
-    $("accountAction").addEventListener("click", async () => {
-      if (signedInUser) await supabaseClient.auth.signOut(); else await sendSignInLink();
-    });
+    $("signIn").addEventListener("click", signInWithPassword);
+    $("signUp").addEventListener("click", signUpWithPassword);
+    $("resetPassword").addEventListener("click", requestPasswordReset);
+    $("setPassword").addEventListener("click", setPassword);
+    $("accountAction").addEventListener("click", () => supabaseClient.auth.signOut());
+    $("accountPassword").addEventListener("keydown", (event) => { if (event.key === "Enter") signInWithPassword(); });
     $("soundToggle").addEventListener("click", () => {
       soundEnabled = !soundEnabled;
       if (!soundEnabled) window.speechSynthesis.cancel();
