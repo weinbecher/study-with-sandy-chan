@@ -355,7 +355,7 @@
       activeSandySound.volume = .85;
       activeSandySound.play().catch(() => {});
       return;
-      const Audio = window.AudioContext || window.webkitAudioContext;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!Audio) { speak("にゃー"); return; }
       const audio = new Audio();
       const now = audio.currentTime;
