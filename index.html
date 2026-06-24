@@ -33,6 +33,9 @@
     .eyebrow { color: var(--pink-600); font-size: .82rem; font-weight: 800; letter-spacing: .12em; }
     h1 { margin: 7px 0 8px; font-size: clamp(1.75rem, 5vw, 2.5rem); letter-spacing: .02em; }
     .subtitle { margin: 0; color: var(--muted); font-size: .98rem; }
+    .account { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 10px; border: 1px solid #f3d5e0; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.7); font-size: .78rem; font-weight: 700; }
+    .account button { border: 0; padding: 3px 5px; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-weight: 800; }
+    .account button:hover { text-decoration: underline; }
 
     .progress-wrap { display: flex; align-items: center; gap: 12px; margin: 0 4px 14px; color: var(--muted); font-size: .86rem; font-weight: 700; }
     .progress { overflow: hidden; flex: 1; height: 10px; border-radius: 999px; background: var(--pink-200); }
@@ -123,6 +126,7 @@
       <div class="eyebrow">N2 GRAMMAR PRACTICE</div>
       <h1>日語語法實戰特訓</h1>
       <p class="subtitle">讀懂情境，選出最自然的接續表現。</p>
+      <div class="account"><span id="accountStatus">Sign in to save progress across devices</span><button id="accountAction" type="button">Sign in</button></div>
     </header>
 
     <div class="progress-wrap"><span id="progressText">第 1 / 6 題</span><div class="progress"><span id="progressBar"></span></div></div>
@@ -177,6 +181,7 @@
     </div>
   </aside>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     // 新增題目時，只要依照以下結構加入物件即可。
     const questions = [
@@ -233,6 +238,12 @@
     let sandyDrag = null;
     let snackDrag = null;
     let japaneseVoices = [];
+    const supabaseUrl = "https://dqkulgkvzawpboaoysum.supabase.co";
+    const supabasePublishableKey = "sb_publishable_kd_u18OSCcjCkLLAohOHig_67kwF35H";
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabasePublishableKey);
+    let signedInUser = null;
+    let activeSession = null;
+    let cloudReady = false;
     const wrongBookKey = "n2-grammar-wrong-book-v1";
     let wrongBook = loadWrongBook();
     const $ = (id) => document.getElementById(id);
@@ -287,6 +298,7 @@
         recordWrong(item, answer);
         showExplanation(item, false);
       }
+      saveAnswer(item, answer, answer === item.correct);
     }
 
     function showExplanation(item, isCorrect) {
@@ -498,6 +510,12 @@
       wrongBook[item.grammar] = { grammar: item.grammar, sentence: item.sentence, selected, correct: item.correct, note: item.correctNote };
       try { localStorage.setItem(wrongBookKey, JSON.stringify(wrongBook)); } catch {}
       renderWrongBook();
+      if (signedInUser) {
+        supabaseClient.from("mistake_notebook").upsert({
+          user_id: signedInUser.id, question_id: questionId(item), grammar: item.grammar,
+          sentence: item.sentence, selected_answer: selected, correct_answer: item.correct, note: item.correctNote
+        }, { onConflict: "user_id,question_id" }).then(({ error }) => { if (error) console.warn("Could not save mistake", error); });
+      }
     }
 
     function renderWrongBook() {
@@ -537,6 +555,78 @@
       choicesEl.innerHTML = `<div class="example" style="font-size:1rem; text-align:center; padding:22px;">${message}</div>`;
       $("progressText").textContent = "練習完成";
       $("progressBar").style.width = "100%";
+      if (activeSession && !activeSession.completed_at) {
+        activeSession.completed_at = new Date().toISOString();
+        supabaseClient.from("study_sessions").update({ completed_at: activeSession.completed_at }).eq("id", activeSession.id)
+          .then(({ error }) => { if (error) console.warn("Could not complete session", error); });
+      }
+    }
+
+    function questionId(item) { return item.grammar; }
+
+    function updateAccountUI() {
+      $("accountStatus").textContent = signedInUser ? `Saving progress for ${signedInUser.email}` : "Sign in to save progress across devices";
+      $("accountAction").textContent = signedInUser ? "Sign out" : "Sign in";
+    }
+
+    async function sendSignInLink() {
+      const email = window.prompt("Enter Sophia's email address. We'll send a sign-in link there.");
+      if (!email) return;
+      const { error } = await supabaseClient.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href.split("#")[0] } });
+      if (error) { window.alert(`Couldn't send the sign-in link: ${error.message}`); return; }
+      window.alert("Sign-in link sent. Open it on this device to connect progress here.");
+    }
+
+    async function startCloudSession() {
+      if (!signedInUser) return;
+      const { data, error } = await supabaseClient.from("study_sessions").insert({ user_id: signedInUser.id }).select().single();
+      if (error) { console.warn("Could not start cloud session", error); return; }
+      activeSession = data;
+    }
+
+    async function loadCloudProgress() {
+      if (!signedInUser || cloudReady) return;
+      cloudReady = true;
+      const { data: session, error } = await supabaseClient.from("study_sessions").select("*").is("completed_at", null).order("started_at", { ascending: false }).limit(1).maybeSingle();
+      if (error) { console.warn("Could not load cloud progress", error); return; }
+      activeSession = session;
+      if (!activeSession) await startCloudSession();
+      if (activeSession) {
+        current = activeSession.current_index;
+        correctCount = activeSession.correct_count;
+        if (current >= questions.length) showResult(); else render();
+      }
+      const { data: mistakes, error: mistakesError } = await supabaseClient.from("mistake_notebook").select("*");
+      if (!mistakesError && mistakes) {
+        mistakes.forEach((item) => { wrongBook[item.grammar] = { grammar: item.grammar, sentence: item.sentence, selected: item.selected_answer, correct: item.correct_answer, note: item.note }; });
+        renderWrongBook();
+      }
+    }
+
+    function saveAnswer(item, selected, isCorrect) {
+      if (!signedInUser || !activeSession) return;
+      const nextIndex = current + 1;
+      const nextScore = correctCount;
+      supabaseClient.from("practice_attempts").insert({ user_id: signedInUser.id, session_id: activeSession.id, question_id: questionId(item), grammar: item.grammar, selected_answer: selected, is_correct: isCorrect }).then(({ error }) => { if (error) console.warn("Could not save answer", error); });
+      activeSession.current_index = nextIndex;
+      activeSession.correct_count = nextScore;
+      supabaseClient.from("study_sessions").update({ current_index: nextIndex, correct_count: nextScore }).eq("id", activeSession.id).then(({ error }) => { if (error) console.warn("Could not save session", error); });
+    }
+
+    async function createFreshSession() {
+      if (activeSession && !activeSession.completed_at) await supabaseClient.from("study_sessions").update({ completed_at: new Date().toISOString() }).eq("id", activeSession.id);
+      activeSession = null;
+      current = 0;
+      correctCount = 0;
+      if (signedInUser) await startCloudSession();
+      render();
+    }
+
+    async function initialiseAccount() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      signedInUser = session?.user || null;
+      updateAccountUI();
+      if (signedInUser) await loadCloudProgress();
     }
 
     $("next").addEventListener("click", nextQuestion);
@@ -545,7 +635,10 @@
       $("questionAudio").textContent = "🔊 重聽題目";
       speakQuestion();
     });
-    $("restart").addEventListener("click", () => { current = 0; correctCount = 0; render(); });
+    $("restart").addEventListener("click", createFreshSession);
+    $("accountAction").addEventListener("click", async () => {
+      if (signedInUser) await supabaseClient.auth.signOut(); else await sendSignInLink();
+    });
     $("soundToggle").addEventListener("click", () => {
       soundEnabled = !soundEnabled;
       if (!soundEnabled) window.speechSynthesis.cancel();
@@ -559,6 +652,7 @@
       wrongBook = {};
       try { localStorage.removeItem(wrongBookKey); } catch {}
       renderWrongBook();
+      if (signedInUser) supabaseClient.from("mistake_notebook").delete().then(({ error }) => { if (error) console.warn("Could not clear cloud mistakes", error); });
     });
     $("sandy").addEventListener("pointerdown", beginSandyDrag);
     $("sandy").addEventListener("pointermove", moveSandy);
@@ -578,6 +672,14 @@
     if ("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
     renderWrongBook();
     render();
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      signedInUser = session?.user || null;
+      activeSession = null;
+      cloudReady = false;
+      updateAccountUI();
+      if (signedInUser) loadCloudProgress();
+    });
+    initialiseAccount();
   </script>
 </body>
 </html>
