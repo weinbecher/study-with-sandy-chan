@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hans">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>日語語法實戰特訓｜N2</title>
+  <title>N2 二选一陷阱特训｜Study with Sandy</title>
   <style>
     :root {
       --pink-50: #fff8fb;
@@ -131,9 +131,9 @@
 <body>
   <main class="app">
     <header>
-      <div class="eyebrow">N2 GRAMMAR PRACTICE</div>
-      <h1>日語語法實戰特訓</h1>
-      <p class="subtitle">讀懂情境，選出最自然的接續表現。</p>
+      <div class="eyebrow">N2 TWO-CHOICE TRAPS</div>
+      <h1>N2 二选一陷阱特训</h1>
+      <p class="subtitle">100 组高频易混搭配、语法、敬语与自他动词。</p>
       <div class="account" id="account">
         <span id="accountStatus">Progress is saved when you sign in.</span>
         <a id="loginLink" href="login.html">Sign in</a>
@@ -147,7 +147,7 @@
         <span class="grammar-tag" id="grammarTag">接續表現</span>
         <p class="question" id="question"></p>
         <button class="question-audio" id="questionAudio" type="button">🔊 朗讀題目</button>
-        <p class="hint">請選擇最適合填入空格的語法。</p>
+        <p class="hint">请在两个看似都像的选项里，选出日语里更自然的一项。</p>
         <div class="choices" id="choices"></div>
       </div>
       <footer class="card-footer">
@@ -160,8 +160,8 @@
       </footer>
     </section>
     <section class="wrongbook" aria-live="polite">
-      <div class="wrongbook-head"><h2>📘 錯題本 <span id="wrongbookCount">0</span></h2><button class="wrongbook-clear" id="wrongbookClear" type="button">清空紀錄</button></div>
-      <p class="wrongbook-empty" id="wrongbookEmpty">目前沒有錯題紀錄。</p>
+      <div class="wrongbook-head"><h2>📘 错题本 <span id="wrongbookCount">0</span></h2><button class="wrongbook-clear" id="wrongbookClear" type="button">清空记录</button></div>
+      <p class="wrongbook-empty" id="wrongbookEmpty">目前没有错题记录。</p>
       <div class="wrongbook-list" id="wrongbookList"></div>
     </section>
   </main>
@@ -195,51 +195,116 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 新增題目時，只要依照以下結構加入物件即可。
-    const questions = [
-      {
-        grammar: "あるいは", sentence: "資料はメールで送ってください。____、共有フォルダに入れてもかまいません。",
-        correct: "あるいは", wrong: "それにしては",
-        correctNote: "「あるいは」表示「或者」，用來提出另一個可選擇的方案。",
-        wrongNote: "「それにしては」是「儘管如此，卻……」的意思，前後需要有預期落差，不能用來列舉選項。",
-        example: "例：電車、あるいはバスで行きましょう。"
-      },
-      {
-        grammar: "しかも", sentence: "このレストランは駅から近い。____、値段も手ごろだ。",
-        correct: "しかも", wrong: "それとも",
-        correctNote: "「しかも」用於添加同方向、而且更進一步的資訊，相當於「而且／再加上」。",
-        wrongNote: "「それとも」用於疑問句中讓對方二選一；這句是在補充優點，不是在提問。",
-        example: "例：彼は親切で、しかも仕事が早い。"
-      },
-      {
-        grammar: "そういえば", sentence: "____、田中さん、来月結婚するって聞いた？",
-        correct: "そういえば", wrong: "そこで",
-        correctNote: "「そういえば」表示因眼前話題而聯想到另一件事，常用來自然地轉換話題。",
-        wrongNote: "「そこで」表示因果關係中的「因此」，後面通常接為了解決前項問題而採取的行動。",
-        example: "例：そういえば、昨日の宿題はどうだった？"
-      },
-      {
-        grammar: "そこで", sentence: "終電がなくなってしまった。____、駅の近くのホテルに泊まることにした。",
-        correct: "そこで", wrong: "あるいは",
-        correctNote: "「そこで」表示面對前面的狀況後，採取相應對策；相當於「於是／因此」。",
-        wrongNote: "「あるいは」僅表示「或者」，不表示因為終電沒了所以住飯店的因果關係。",
-        example: "例：道に迷った。そこで、交番で聞いた。"
-      },
-      {
-        grammar: "それとも", sentence: "コーヒーにしますか。____、紅茶にしますか。",
-        correct: "それとも", wrong: "しかも",
-        correctNote: "「それとも」用在疑問句，表示「還是……呢？」並要求對方在選項之間選擇。",
-        wrongNote: "「しかも」是在同方向補充事實；這裡是讓對方選咖啡或紅茶，應使用「それとも」。",
-        example: "例：今日は家で休みますか。それとも出かけますか。"
-      },
-      {
-        grammar: "それにしては", sentence: "彼は日本に来てまだ三か月だ。____、日本語がとても上手だ。",
-        correct: "それにしては", wrong: "そういえば",
-        correctNote: "「それにしては」表示依照前項來看，後項的結果超出預期；意思是「就……而言，卻……」。",
-        wrongNote: "「そういえば」只是由一件事聯想到另一件事，沒有「與預期不同」的語感。注意：「それにしても」則較常用於感嘆「即使如此，仍然……」。",
-        example: "例：この店は高い。それにしては、料理が普通だ。"
-      }
+    // 新增题目时，只要照着 rawQuestions 的结构加入即可。
+    const rawQuestions = [
+      { id: "001", topic: "词汇搭配", grammar: "注目を集める", sentence: "このニュースは多くの注目を____。", correct: "集める", wrong: "招く", tip: "注目・人気・関心は「集める」と搭配。", reason: "容易只看汉字，把「招く」误当成所有抽象结果都能接。" },
+      { id: "002", topic: "词汇搭配", grammar: "誤解を招く", sentence: "曖昧な説明は誤解を____ことがある。", correct: "招く", wrong: "集める", tip: "抽象负面结果、麻烦、误解常用「招く」。", reason: "「集める」是收集注意、资料、人气，不自然接「誤解」。" },
+      { id: "003", topic: "词汇搭配", grammar: "理解を深める", sentence: "この本は日本文化への理解を____のに役立つ。", correct: "深める", wrong: "高める", tip: "理解・交流・関係是往深处发展，用「深める」。", reason: "中文常说“提高理解”，但日语更自然是「理解を深める」。" },
+      { id: "004", topic: "词汇搭配", grammar: "能力を高める", sentence: "研修で社員の能力を____。", correct: "高める", wrong: "深める", tip: "能力・品質・意識是水平上升，用「高める」。", reason: "「深める」适合理解、关系、交流，不适合能力水平。" },
+      { id: "005", topic: "词汇搭配", grammar: "交流を深める", sentence: "留学を通して現地の学生との交流を____。", correct: "深める", wrong: "高める", tip: "人与人、国家之间的交流加深，用「深める」。", reason: "交流不是数值或等级上升，所以不用「高める」。" },
+      { id: "006", topic: "词汇搭配", grammar: "緊張が高まる", sentence: "試験開始が近づき、教室の緊張が____。", correct: "高まる", wrong: "深まる", tip: "情绪、期待、紧张的强度上升，用「高まる」。", reason: "中文“加深紧张”会干扰，但日语自然搭配是「緊張が高まる」。" },
+      { id: "007", topic: "词汇搭配", grammar: "期待に応える", sentence: "チームはファンの期待に____プレーをした。", correct: "応える", wrong: "答える", tip: "質問には「答える」；期待・要望には「応える」。", reason: "「答える」偏回答问题，不是回应期待。" },
+      { id: "008", topic: "词汇搭配", grammar: "質問に答える", sentence: "先生は学生の質問に丁寧に____。", correct: "答える", wrong: "応える", tip: "有具体问题、需要答案时用「答える」。", reason: "「応える」是回应期待、要求、声援，不能泛化成所有回应。" },
+      { id: "009", topic: "词汇搭配", grammar: "迷惑をかける", sentence: "遅刻してみんなに迷惑を____しまった。", correct: "かける", wrong: "与える", tip: "看到「迷惑」先反应「迷惑をかける」。", reason: "中文“造成麻烦”会让人想选「与える」，但固定搭配更重要。" },
+      { id: "010", topic: "词汇搭配", grammar: "声をかける", sentence: "困っている人に声を____。", correct: "かける", wrong: "あげる", tip: "主动搭话、招呼别人是「声をかける」。", reason: "「声をあげる」偏发出声音、呼喊，不是对人搭话。" },
+      { id: "011", topic: "词汇搭配", grammar: "計画を立てる", sentence: "週末旅行の計画を____。", correct: "立てる", wrong: "建てる", tip: "计划、目标、方针等无形事务用「立てる」。", reason: "「建てる」主要用于建造建筑物。" },
+      { id: "012", topic: "词汇搭配", grammar: "腕を磨く", sentence: "毎日練習して料理の腕を____。", correct: "磨く", wrong: "研ぐ", tip: "技能、センス、腕前要打磨提升，用「磨く」。", reason: "「研ぐ」多用于磨刀、研磨具体锋利物。" },
+      { id: "013", topic: "词汇搭配", grammar: "視野を広げる", sentence: "海外経験は視野を____。", correct: "広げる", wrong: "拡大する", tip: "抽象的眼界、视野更自然说「広げる」。", reason: "「拡大する」书面感强，多用于规模、范围扩大。" },
+      { id: "014", topic: "词汇搭配", grammar: "注意を払う", sentence: "細かいミスにも注意を____必要がある。", correct: "払う", wrong: "配る", tip: "注意・敬意・金は「払う」。", reason: "「気を配る」可以，但固定搭配是「注意を払う」。" },
+      { id: "015", topic: "词汇搭配", grammar: "勇気を出す", sentence: "勇気を____告白した。", correct: "出す", wrong: "上げる", tip: "勇气是“拿出来”，日语说「勇気を出す」。", reason: "中文“提高勇气”容易直译，但「勇気を上げる」不自然。" },
+      { id: "016", topic: "词汇搭配", grammar: "決心がつく", sentence: "やっと留学する決心が____。", correct: "つく", wrong: "決まる", tip: "自己心里的决定形成，用「決心がつく」。", reason: "「決まる」偏事情、日程、规则决定下来。" },
+      { id: "017", topic: "词汇搭配", grammar: "印象に残る", sentence: "あの先生の言葉は今も印象に____。", correct: "残る", wrong: "残す", tip: "主语自己留在印象中，用自动词「残る」。", reason: "中文“留下印象”容易误导，但这里不是某人主动留下。" },
+      { id: "018", topic: "词汇搭配", grammar: "話をまとめる", sentence: "会議の最後に部長が話を____。", correct: "まとめる", wrong: "集める", tip: "把零散内容整理成结论，用「まとめる」。", reason: "「集める」是收集物、人、资料，不是整理发言内容。" },
+      { id: "019", topic: "词汇搭配", grammar: "関係を築く", sentence: "信頼できる関係を____には時間がかかる。", correct: "築く", wrong: "建てる", tip: "关系、信赖、实绩要建立，用「築く」。", reason: "「建てる」建的是房子等建筑物。" },
+      { id: "020", topic: "词汇搭配", grammar: "疑問を抱く", sentence: "その説明に疑問を____学生もいた。", correct: "抱く", wrong: "持つ", tip: "书面抽象心理常用「疑問を抱く」。", reason: "「疑問を持つ」也可见，但考试书面搭配更常要「抱く」。" },
+      { id: "021", topic: "词汇搭配", grammar: "法律に基づく", sentence: "この判断は法律に____ものだ。", correct: "基づく", wrong: "基づける", tip: "Nに基づく＋名词，表示以 N 为根据。", reason: "「基づける」是他动词，表示使某物以某物为基础。" },
+      { id: "022", topic: "词汇搭配", grammar: "時間に追われる", sentence: "毎日仕事で時間に____生活をしている。", correct: "追われる", wrong: "追いつく", tip: "被时间、工作逼着走，用「追われる」。", reason: "「追いつく」是追上某人或进度。" },
+      { id: "023", topic: "词汇搭配", grammar: "彼に追いつく", sentence: "全力で走って、やっと彼に____。", correct: "追いつく", wrong: "追いかける", tip: "目标是“赶上”就用「追いつく」。", reason: "「追いかける」只是追赶过程，不一定追上。" },
+      { id: "024", topic: "词汇搭配", grammar: "制度を導入する", sentence: "会社は新しい制度を____ことにした。", correct: "導入する", wrong: "取り入れる", tip: "制度、设备、系统正式引入，用「導入する」。", reason: "「取り入れる」更像吸收意见、方法、元素。" },
+      { id: "025", topic: "词汇搭配", grammar: "意見を述べる", sentence: "会議で自分の意見を____。", correct: "述べる", wrong: "言い出す", tip: "正式表达意见，用「意見を述べる」。", reason: "「言い出す」偏突然开始说、提起话题，语域不合。" },
+      { id: "026", topic: "词汇搭配", grammar: "成果を上げる", sentence: "新しい方法で大きな成果を____。", correct: "上げる", wrong: "挙げる", tip: "成果、効果、利益常用「上げる」。", reason: "同音汉字容易混，但固定搭配是「成果を上げる」。" },
+      { id: "027", topic: "词汇搭配", grammar: "手を抜く", sentence: "忙しくても仕事の手を____はいけない。", correct: "抜く", wrong: "捨てる", tip: "偷懒、不认真做是「手を抜く」。", reason: "不要按中文“放弃/丢手”去想，日语固定说法不同。" },
+      { id: "028", topic: "词汇搭配", grammar: "責任を負う", sentence: "事故の責任を誰が____のか。", correct: "負う", wrong: "背負う", tip: "法律、社会责任用「責任を負う」。", reason: "中文“背负责任”会诱导选「背負う」。" },
+      { id: "029", topic: "词汇搭配", grammar: "雰囲気を壊す", sentence: "不用意な一言で場の雰囲気を____。", correct: "壊す", wrong: "破る", tip: "气氛、关系等无形对象多用「壊す」。", reason: "中文“打破气氛”容易直译成「破る」。" },
+      { id: "030", topic: "词汇搭配", grammar: "契約を結ぶ", sentence: "二社は正式に契約を____。", correct: "結ぶ", wrong: "つなぐ", tip: "契约、条约、关系用「結ぶ」。", reason: "「つなぐ」偏物理连接或维持联系，不是签订契约。" },
+      { id: "031", topic: "动词自他", grammar: "ドアが開く", sentence: "このドアは自動で____。", correct: "開く", wrong: "開ける", tip: "が提示状态自己变化，用自动词「開く」。", reason: "中文“开”不分自他，日语要看助词和施事者。" },
+      { id: "032", topic: "动词自他", grammar: "ドアを開ける", sentence: "暑かったので、ドアを____ことにした。", correct: "開ける", wrong: "開く", tip: "を提示人为动作对象，用他动词「開ける」。", reason: "看到宾语「を」时，先排查是不是需要他动词。" },
+      { id: "033", topic: "动词自他", grammar: "電気がつく", sentence: "暗くなると、玄関の電気が自動で____。", correct: "つく", wrong: "つける", tip: "灯亮起来这个状态出现，用「つく」。", reason: "「开灯」和「灯亮」中文接近，日语必须拆开。" },
+      { id: "034", topic: "动词自他", grammar: "電気をつける", sentence: "部屋が暗いので、電気を____ことにした。", correct: "つける", wrong: "つく", tip: "人去操作电灯，用「電気をつける」。", reason: "不要只看「電気」，要看前面是「が」还是「を」。" },
+      { id: "035", topic: "动词自他", grammar: "窓が閉まる", sentence: "強い風で窓が自然に____ことがある。", correct: "閉まる", wrong: "閉める", tip: "窗户自己进入关闭状态，用「閉まる」。", reason: "中文“关”一词通吃，日语自他分开。" },
+      { id: "036", topic: "动词自他", grammar: "窓を閉める", sentence: "寒いので窓を____ことにした。", correct: "閉める", wrong: "閉まる", tip: "有人主动关窗，用「窓を閉める」。", reason: "对象前是「を」，通常需要他动词。" },
+      { id: "037", topic: "动词自他", grammar: "会議が始まる", sentence: "会議が三時に____予定だ。", correct: "始まる", wrong: "始める", tip: "会议这件事自己开始，用「始まる」。", reason: "中文“开始会议”会让人忽视主语是会議。" },
+      { id: "038", topic: "动词自他", grammar: "会議を始める", sentence: "予定通り会議を____ことにした。", correct: "始める", wrong: "始まる", tip: "人为开始某件事，用「始める」。", reason: "「を」支配的对象一般要求他动词。" },
+      { id: "039", topic: "动词自他", grammar: "値段が上がる", sentence: "来月から値段が____らしい。", correct: "上がる", wrong: "上げる", tip: "价格自己上涨，用「上がる」。", reason: "中文“涨价/提高价格”容易混，先看是否有人主动调价。" },
+      { id: "040", topic: "动词自他", grammar: "値段を上げる", sentence: "店は来月から値段を____ことにした。", correct: "上げる", wrong: "上がる", tip: "店家主动提高价格，用「上げる」。", reason: "主语是店或公司并且对象是价格时，要用他动词。" },
+      { id: "041", topic: "动词自他", grammar: "人口が増える", sentence: "この町では人口が少しずつ____。", correct: "増える", wrong: "増やす", tip: "数量自然变多，用「増える」。", reason: "中文“增加”不分自他，日语要看动作主。" },
+      { id: "042", topic: "动词自他", grammar: "社員を増やす", sentence: "会社は来年、社員を____予定だ。", correct: "増やす", wrong: "増える", tip: "组织主动增加人手，用「増やす」。", reason: "前面有「社員を」，不是员工自己增加。" },
+      { id: "043", topic: "动词自他", grammar: "荷物が落ちる", sentence: "棚から荷物が____ことがある。", correct: "落ちる", wrong: "落とす", tip: "东西自己掉下来，用「落ちる」。", reason: "中文“掉了/弄掉”不拆，日语要区分自动他动。" },
+      { id: "044", topic: "动词自他", grammar: "財布を落とす", sentence: "駅で財布を____しまった。", correct: "落とす", wrong: "落ちる", tip: "我把某物弄丢、弄掉，用「を＋落とす」。", reason: "「財布が落とした」这类结构是自他方向错。" },
+      { id: "045", topic: "动词自他", grammar: "子どもを集める", sentence: "先生は校庭に子どもを____。", correct: "集める", wrong: "集まる", tip: "把对象召集过来，用「集める」。", reason: "自己聚过来是「集まる」，有对象「を」时用「集める」。" },
+      { id: "046", topic: "语感与副词", grammar: "わざと", sentence: "彼はみんなを困らせるために____遅れて来た。", correct: "わざと", wrong: "わざわざ", tip: "故意做坏事或造成麻烦，用「わざと」。", reason: "「わざわざ」是特意费心做某事，常带感谢语气。" },
+      { id: "047", topic: "语感与副词", grammar: "わざわざ", sentence: "遠いところを____来てくれてありがとう。", correct: "わざわざ", wrong: "わざと", tip: "感谢别人专门来、特意做，用「わざわざ」。", reason: "「わざと来てくれて」会变成“故意来”，语气怪。" },
+      { id: "048", topic: "语感与副词", grammar: "ようやく", sentence: "何年も努力して、____合格した。", correct: "ようやく", wrong: "ついに", tip: "好不容易经过努力终于达成，用「ようやく」。", reason: "「ついに」更强调终局到来，不一定有辛苦过程感。" },
+      { id: "049", topic: "语感与副词", grammar: "ついに", sentence: "長い沈黙のあと、彼は____真実を語った。", correct: "ついに", wrong: "ようやく", tip: "关键时刻终于到来、进入终局，用「ついに」。", reason: "这里重点不是费力完成任务，而是沉默后的最终行动。" },
+      { id: "050", topic: "语感与副词", grammar: "とうとう", sentence: "何度注意しても、彼は____来なかった。", correct: "とうとう", wrong: "ようやく", tip: "和否定、坏结果搭配时，常用「とうとう」。", reason: "「ようやく」偏终于达成期待结果，不适合这里的坏结果。" },
+      { id: "051", topic: "语感与副词", grammar: "なかなか", sentence: "この映画は____おもしろい。", correct: "なかなか", wrong: "かなり", tip: "肯定句中表示超出预期、还挺不错，用「なかなか」。", reason: "「かなり」只是程度相当高，少了“比预想好”的语感。" },
+      { id: "052", topic: "语感与副词", grammar: "なかなか＋否定", sentence: "時間がなくて、宿題が____できない。", correct: "なかなか", wrong: "かなり", tip: "和否定连用，表示怎么也不容易实现，用「なかなか」。", reason: "「かなりできない」不自然，程度副词不能这样搭。" },
+      { id: "053", topic: "语感与副词", grammar: "ぜひ", sentence: "明日の説明会には____参加してください。", correct: "ぜひ", wrong: "きっと", tip: "请求、邀请、愿望时用「ぜひ」。", reason: "「きっと」是说话人的确定判断，不用于要求对方务必做。" },
+      { id: "054", topic: "语感与副词", grammar: "きっと", sentence: "彼なら____成功する。", correct: "きっと", wrong: "ぜひ", tip: "推测未来一定会发生，用「きっと」。", reason: "「ぜひ」表达强烈希望或邀请，不是判断。" },
+      { id: "055", topic: "语感与副词", grammar: "かえって", sentence: "失敗するかと思ったが、____良い結果になった。", correct: "かえって", wrong: "むしろ", tip: "与预期相反，结果反而变好，用「かえって」。", reason: "「むしろ」偏比较选择：与其 A 不如 B。" },
+      { id: "056", topic: "语感与副词", grammar: "むしろ", sentence: "甘い物を食べるより、____果物のほうが好きだ。", correct: "むしろ", wrong: "かえって", tip: "AよりBだ 的比较取舍，用「むしろ」。", reason: "这里不是预期相反的实际结果，所以不用「かえって」。" },
+      { id: "057", topic: "语感与副词", grammar: "ぴったり", sentence: "このかばんは棚に____入る。", correct: "ぴったり", wrong: "しっかり", tip: "尺寸、时间、数量刚好吻合，用「ぴったり」。", reason: "「しっかり」强调牢固、认真，不强调大小正合适。" },
+      { id: "058", topic: "语感与副词", grammar: "ちゃんと", sentence: "資料を____読んでから来てください。", correct: "ちゃんと", wrong: "しっかり", tip: "按要求、规规矩矩完成，用「ちゃんと」。", reason: "「しっかり」也可表示认真，但这里更像要求对方不要敷衍。" },
+      { id: "059", topic: "语感与副词", grammar: "しっかり", sentence: "基礎を____固める。", correct: "しっかり", wrong: "ちゃんと", tip: "基础、结构、抓牢、巩固，用「しっかり」。", reason: "「ちゃんと」偏按规则做好，不如「しっかり」贴合牢固感。" },
+      { id: "060", topic: "语感与副词", grammar: "まもなく", sentence: "列車は____到着します。", correct: "まもなく", wrong: "そろそろ", tip: "广播、通知、正式场合的“即将”用「まもなく」。", reason: "「そろそろ」更口语，常带“差不多该……”的人为判断。" },
+      { id: "061", topic: "语法点", grammar: "わけではない", sentence: "日本語が話せる人が、みんな敬語が上手な____。", correct: "わけではない", wrong: "とは限らない", tip: "否定从前项推出的“必然如此”，用「わけではない」。", reason: "两者都像“并不一定”，但这里是在否定整体结论。" },
+      { id: "062", topic: "语法点", grammar: "とは限らない", sentence: "有名大学を卒業しても、必ず就職できる____。", correct: "とは限らない", wrong: "わけではない", tip: "表示“未必总是如此”的概率判断，用「とは限らない」。", reason: "看到「必ず」被否定时，常考「とは限らない」。" },
+      { id: "063", topic: "语法点", grammar: "わけがない", sentence: "あんな簡単な問題、彼が解けない____。", correct: "わけがない", wrong: "はずがない", tip: "强烈主观断定“不可能”，用「わけがない」。", reason: "「はずがない」也是否定推量，但更依赖根据、按理判断。" },
+      { id: "064", topic: "语法点", grammar: "はずがない", sentence: "連絡したのに返事がないなんて、彼が知らない____。", correct: "はずがない", wrong: "わけがない", tip: "有明确根据，按理说不可能，用「はずがない」。", reason: "这里根据是已经联系过，所以更适合「はず」。" },
+      { id: "065", topic: "语法点", grammar: "ために", sentence: "合格する____、毎日単語を覚えている。", correct: "ために", wrong: "ように", tip: "前项是自己可控制的意志目标，用「ために」。", reason: "「ように」多接可能、状态、非意志目标。" },
+      { id: "066", topic: "语法点", grammar: "ように", sentence: "忘れない____、メモしておこう。", correct: "ように", wrong: "ために", tip: "前项是状态或非意志控制，用「ように」。", reason: "「忘れない」不是直接意志动作，所以不用「ために」。" },
+      { id: "067", topic: "语法点", grammar: "ことになる", sentence: "来週から出張に行く____。", correct: "ことになる", wrong: "ことにする", tip: "外部安排、规定、结果决定，用「ことになる」。", reason: "「ことにする」是自己做决定。" },
+      { id: "068", topic: "语法点", grammar: "ことにする", sentence: "今年こそ毎日運動する____。", correct: "ことにする", wrong: "ことになる", tip: "自己决定要做某事，用「ことにする」。", reason: "这里不是公司、规定或别人安排，而是自我决定。" },
+      { id: "069", topic: "语法点", grammar: "ようになる", sentence: "日本へ来てから、刺身が食べられる____。", correct: "ようになる", wrong: "ようにする", tip: "能力、习惯自然变化结果，用「ようになる」。", reason: "「ようにする」表示有意识努力保持某习惯。" },
+      { id: "070", topic: "语法点", grammar: "ようにする", sentence: "健康のために、野菜を多く食べる____。", correct: "ようにする", wrong: "ようになる", tip: "有意识地养成或维持习惯，用「ようにする」。", reason: "这里是自己努力做到，不是自然变成。" },
+      { id: "071", topic: "语法点", grammar: "おかげで", sentence: "先生にほめられた____、やる気が出た。", correct: "おかげで", wrong: "せいで", tip: "好结果、带感谢感，用「おかげで」。", reason: "「せいで」多用于坏结果和责怪。" },
+      { id: "072", topic: "语法点", grammar: "せいで", sentence: "寝不足の____、頭が痛い。", correct: "せいで", wrong: "おかげで", tip: "后项是消极结果，用「せいで」。", reason: "「おかげで」用于好结果，不能配头痛这种坏结果。" },
+      { id: "073", topic: "语法点", grammar: "に違いない", sentence: "彼はプロなのだから、そのくらい簡単にできる____。", correct: "に違いない", wrong: "に相違ない", tip: "一般会话、作文里的强推量，用「に違いない」。", reason: "「に相違ない」更正式、公文语体。" },
+      { id: "074", topic: "语法点", grammar: "に相違ない", sentence: "本件は事実____。", correct: "に相違ない", wrong: "に違いない", tip: "官方、书面、郑重断定偏「に相違ない」。", reason: "意思接近，但语体差异是考点。" },
+      { id: "075", topic: "语法点", grammar: "にすぎない", sentence: "彼はまだ学生に____。", correct: "すぎない", wrong: "しかない", tip: "Nにすぎない 表示“只不过是 N”。", reason: "「しかない」表示只有某物或只剩某办法，结构不同。" },
+      { id: "076", topic: "语法点", grammar: "しかない", sentence: "時間がないから、タクシーで行く____。", correct: "しかない", wrong: "にすぎない", tip: "无奈只剩唯一办法，用「しかない」。", reason: "「にすぎない」是“不过是”，不能表示只好做某事。" },
+      { id: "077", topic: "语法点", grammar: "わりに", sentence: "忙しい____、彼はいつも元気だ。", correct: "わりに", wrong: "くせに", tip: "中性观察“按理说却”，用「わりに」。", reason: "「くせに」带责备、不满语气。" },
+      { id: "078", topic: "语法点", grammar: "くせに", sentence: "知っている____、どうして教えてくれなかったの。", correct: "くせに", wrong: "わりに", tip: "带责怪、抱怨口气，用「くせに」。", reason: "这里不是中性评价，而是在责备对方明明知道。" },
+      { id: "079", topic: "语法点", grammar: "まま", sentence: "着替えもせず、コートを着た____寝てしまった。", correct: "まま", wrong: "っぱなし", tip: "AたままB 表示保持 A 状态做 B。", reason: "「っぱなし」常表示放着不管、一直开着。" },
+      { id: "080", topic: "语法点", grammar: "っぱなし", sentence: "電気をつけ____で出かけた。", correct: "っぱなし", wrong: "まま", tip: "设备、门、水龙头等开着不管，用「っぱなし」。", reason: "「つけままで」不自然；这里要接成「つけっぱなしで」。" },
+      { id: "081", topic: "接续与助词", grammar: "につれて", sentence: "年を取る____、新しいことを覚えにくくなる。", correct: "につれて", wrong: "にしたがって", tip: "自然变化同步推进，优先「につれて」。", reason: "「にしたがって」也表随着，但更常有规则、进程推进感。" },
+      { id: "082", topic: "接续与助词", grammar: "に伴って", sentence: "規模が大きくなる____、予算も増えた。", correct: "に伴って", wrong: "につれて", tip: "正式书面、规模或社会变化伴随发生，用「に伴って」。", reason: "「につれて」偏自然同步变化，语体不如这里正式。" },
+      { id: "083", topic: "接续与助词", grammar: "に応じて", sentence: "収入____税額が決まる。", correct: "に応じて", wrong: "によって", tip: "A 变化，B 按 A 对应变化，用「に応じて」。", reason: "「によって」范围很广，但这里重点是按收入分级对应。" },
+      { id: "084", topic: "接续与助词", grammar: "によって", sentence: "文化の違い____、考え方はさまざまだ。", correct: "によって", wrong: "に応じて", tip: "因原因、根据、条件不同而变化，用「によって」。", reason: "这里不是按文化差异分级对应税额那种「に応じて」。" },
+      { id: "085", topic: "接续与助词", grammar: "にとって", sentence: "私____一番大切なのは家族だ。", correct: "にとって", wrong: "について", tip: "从某人的立场评价判断，用「にとって」。", reason: "「について」是关于某主题，不表示评价立场。" },
+      { id: "086", topic: "接续与助词", grammar: "について", sentence: "環境問題____発表します。", correct: "について", wrong: "にとって", tip: "关于某主题进行说明、发表，用「について」。", reason: "这里不是对环境问题而言重要不重要，而是话题内容。" },
+      { id: "087", topic: "接续与助词", grammar: "によると", sentence: "天気予報____、明日は雨だそうだ。", correct: "によると", wrong: "によれば", tip: "后项接传闻、推量、引用时常用「によると」。", reason: "两者接近，但「〜そうだ」传闻句尤其常见「によると」。" },
+      { id: "088", topic: "接续与助词", grammar: "によれば", sentence: "調査結果____、若者の読書量は減っている。", correct: "によれば", wrong: "によると", tip: "依据数据、资料来看，可用较书面的「によれば」。", reason: "「によると」也常见，但这里考更硬的资料依据语感。" },
+      { id: "089", topic: "接续与助词", grammar: "からこそ", sentence: "難しいから____、やる価値がある。", correct: "こそ", wrong: "には", tip: "强调“正因为如此”，用「からこそ」。", reason: "「からには」是既然前项成立，后项多接义务或决心。" },
+      { id: "090", topic: "接续与助词", grammar: "からには", sentence: "約束した____、最後まで責任を持つべきだ。", correct: "からには", wrong: "こそ", tip: "既然已经……，就应该……，用「からには」。", reason: "后项是义务、决心、当然性，不是单纯强调理由。" },
+      { id: "091", topic: "敬语", grammar: "ご覧になる", sentence: "先生はもう資料を____か。", correct: "ご覧になりました", wrong: "拝見しました", tip: "对方或老师的动作，要用尊敬语「ご覧になる」。", reason: "「拝見する」是自己看的自谦语，不能用于老师动作。" },
+      { id: "092", topic: "敬语", grammar: "拝見する", sentence: "では、私が先に資料を____。", correct: "拝見します", wrong: "ご覧になります", tip: "自己看资料，用自谦语「拝見する」。", reason: "「ご覧になる」是抬高对方动作，不用于自己。" },
+      { id: "093", topic: "敬语", grammar: "召し上がる", sentence: "どうぞお弁当を____ください。", correct: "召し上がって", wrong: "いただいて", tip: "劝别人吃喝，用尊敬语「召し上がる」。", reason: "「いただく」是自己吃喝、收受的自谦语。" },
+      { id: "094", topic: "敬语", grammar: "いただく", sentence: "では、先に私が____。", correct: "いただきます", wrong: "召し上がります", tip: "自己吃喝时用自谦语「いただく」。", reason: "「召し上がる」用于对方吃喝，不能抬高自己。" },
+      { id: "095", topic: "敬语", grammar: "いらっしゃる", sentence: "部長はもう会社に____。", correct: "いらっしゃいました", wrong: "参りました", tip: "对方来、去、在，用尊敬语「いらっしゃる」。", reason: "「参る」是自己或己方移动的自谦语。" },
+      { id: "096", topic: "敬语", grammar: "参る", sentence: "明日三時にこちらから____。", correct: "参ります", wrong: "いらっしゃいます", tip: "自己或己方去、来，用自谦语「参る」。", reason: "「いらっしゃる」用于对方，不用于己方。" },
+      { id: "097", topic: "敬语", grammar: "くださる", sentence: "ご確認____ようお願いいたします。", correct: "くださいます", wrong: "いただきます", tip: "对方做确认动作，用「くださいますよう」。", reason: "「いただく」是我方承受恩惠的视角，句型方向不同。" },
+      { id: "098", topic: "敬语", grammar: "いただけます", sentence: "明日までにご返信____と幸いです。", correct: "いただけます", wrong: "くださいます", tip: "商务句型「〜ていただけますと幸いです」很常见。", reason: "这里是我方希望能得到对方回复，使用受益视角更自然。" },
+      { id: "099", topic: "敬语", grammar: "おっしゃる", sentence: "先生は何と____か。", correct: "おっしゃいました", wrong: "申しました", tip: "对方说话，用尊敬语「おっしゃる」。", reason: "「申す」是自己说话、自报姓名的自谦语。" },
+      { id: "100", topic: "敬语", grammar: "申す", sentence: "田中と____。よろしくお願いいたします。", correct: "申します", wrong: "おっしゃいます", tip: "自我介绍、自称姓名，用「申します」。", reason: "「おっしゃる」是尊敬语，不能用于自己。" }
     ];
+
+    const questions = rawQuestions.map((item) => ({
+      ...item,
+      correctNote: `正解：「${item.correct}」。${item.tip}`,
+      wrongNote: `易错原因：${item.reason}`,
+      example: `完整句：${item.sentence.replace("____", item.correct)}`
+    }));
 
     let current = 0;
     let correctCount = 0;
@@ -258,7 +323,7 @@
     let signedInUser = null;
     let activeSession = null;
     let cloudReady = false;
-    const wrongBookKey = "n2-grammar-wrong-book-v1";
+    const wrongBookKey = "n2-two-choice-wrong-book-v2";
     let wrongBook = loadWrongBook();
     const $ = (id) => document.getElementById(id);
     const questionEl = $("question"), choicesEl = $("choices"), grammarTag = $("grammarTag");
@@ -268,7 +333,7 @@
     function render() {
       const item = questions[current];
       locked = false;
-      grammarTag.textContent = item.grammar;
+      grammarTag.textContent = `${item.id}｜${item.topic}`;
       questionEl.textContent = item.sentence.replace("____", "（　　）");
       choicesEl.innerHTML = "";
       shuffled([item.correct, item.wrong]).forEach((answer) => {
@@ -316,7 +381,7 @@
     }
 
     function showExplanation(item, isCorrect) {
-      $("modalTitle").textContent = isCorrect ? "答對了！文法重點" : "這題的語法重點";
+      $("modalTitle").textContent = isCorrect ? "答对了！本题重点" : "这题的陷阱重点";
       $("explanation").textContent = isCorrect ? item.correctNote : item.correctNote + " " + item.wrongNote;
       $("example").textContent = item.example;
       $("next").textContent = current === questions.length - 1 ? "查看結果" : "下一題";
@@ -552,23 +617,32 @@
       try { return JSON.parse(localStorage.getItem(wrongBookKey)) || {}; } catch { return {}; }
     }
 
+    function questionLabel(item) { return `${item.id}｜${item.topic}｜${item.grammar}`; }
+
     function recordWrong(item, selected) {
-      wrongBook[item.grammar] = { grammar: item.grammar, sentence: item.sentence, selected, correct: item.correct, note: item.correctNote };
+      wrongBook[questionId(item)] = { id: item.id, topic: item.topic, grammar: item.grammar, label: questionLabel(item), sentence: item.sentence, selected, correct: item.correct, note: item.correctNote };
       try { localStorage.setItem(wrongBookKey, JSON.stringify(wrongBook)); } catch {}
       renderWrongBook();
       if (signedInUser) {
         supabaseClient.from("mistake_notebook").upsert({
-          user_id: signedInUser.id, question_id: questionId(item), grammar: item.grammar,
+          user_id: signedInUser.id, question_id: questionId(item), grammar: questionLabel(item),
           sentence: item.sentence, selected_answer: selected, correct_answer: item.correct, note: item.correctNote
         }, { onConflict: "user_id,question_id" }).then(({ error }) => { if (error) console.warn("Could not save mistake", error); });
       }
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char]));
     }
 
     function renderWrongBook() {
       const items = Object.values(wrongBook);
       $("wrongbookCount").textContent = items.length;
       $("wrongbookEmpty").hidden = items.length > 0;
-      $("wrongbookList").innerHTML = items.map((item) => `<article class="wrongbook-item"><strong>${item.grammar}</strong><br>${item.sentence.replace("____", "（　　）")}<br>你的答案：${item.selected}　正解：${item.correct}<br>${item.note}</article>`).join("");
+      $("wrongbookList").innerHTML = items.map((item) => {
+        const label = item.label || [item.id, item.topic, item.grammar].filter(Boolean).join("｜") || item.grammar;
+        return `<article class="wrongbook-item"><strong>${escapeHtml(label)}</strong><br>${escapeHtml(item.sentence.replace("____", "（　　）"))}<br>你的答案：${escapeHtml(item.selected)}　正解：${escapeHtml(item.correct)}<br>${escapeHtml(item.note)}</article>`;
+      }).join("");
     }
 
     function showCelebration() {
@@ -597,7 +671,7 @@
     function showResult() {
       grammarTag.textContent = "完成！";
       questionEl.textContent = `你答對了 ${correctCount} / ${questions.length} 題`;
-      const message = correctCount === questions.length ? "全答對！N2 接續表現掌握得很好。" : "把錯題提示再讀一次，下次會更穩。";
+      const message = correctCount === questions.length ? "全答对！这 100 组 N2 陷阱你掌握得很稳。" : "把错题提示再读一次，下次在二选一里会更快。";
       choicesEl.innerHTML = `<div class="example" style="font-size:1rem; text-align:center; padding:22px;">${message}</div>`;
       $("progressText").textContent = "練習完成";
       $("progressBar").style.width = "100%";
@@ -608,7 +682,7 @@
       }
     }
 
-    function questionId(item) { return item.grammar; }
+    function questionId(item) { return item.id || item.grammar; }
 
     function updateAccountUI() {
       $("account").classList.toggle("signed-in", Boolean(signedInUser));
@@ -636,7 +710,9 @@
       }
       const { data: mistakes, error: mistakesError } = await supabaseClient.from("mistake_notebook").select("*");
       if (!mistakesError && mistakes) {
-        mistakes.forEach((item) => { wrongBook[item.grammar] = { grammar: item.grammar, sentence: item.sentence, selected: item.selected_answer, correct: item.correct_answer, note: item.note }; });
+        mistakes.forEach((item) => {
+          wrongBook[item.question_id || item.grammar] = { id: item.question_id, grammar: item.grammar, label: item.grammar, sentence: item.sentence, selected: item.selected_answer, correct: item.correct_answer, note: item.note };
+        });
         renderWrongBook();
       }
     }
@@ -645,7 +721,7 @@
       if (!signedInUser || !activeSession) return;
       const nextIndex = current + 1;
       const nextScore = correctCount;
-      supabaseClient.from("practice_attempts").insert({ user_id: signedInUser.id, session_id: activeSession.id, question_id: questionId(item), grammar: item.grammar, selected_answer: selected, is_correct: isCorrect }).then(({ error }) => { if (error) console.warn("Could not save answer", error); });
+      supabaseClient.from("practice_attempts").insert({ user_id: signedInUser.id, session_id: activeSession.id, question_id: questionId(item), grammar: questionLabel(item), selected_answer: selected, is_correct: isCorrect }).then(({ error }) => { if (error) console.warn("Could not save answer", error); });
       activeSession.current_index = nextIndex;
       activeSession.correct_count = nextScore;
       supabaseClient.from("study_sessions").update({ current_index: nextIndex, correct_count: nextScore }).eq("id", activeSession.id).then(({ error }) => { if (error) console.warn("Could not save session", error); });
