@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>N2 押题词汇表｜Study with Sandy</title>
+  <style>
+    :root {
+      --pink-50: #fff8fb;
+      --pink-100: #ffeaf2;
+      --pink-200: #ffd3e2;
+      --pink-400: #ee79a4;
+      --pink-600: #bd3e6b;
+      --blue-50: #f5f8ff;
+      --blue-100: #e8efff;
+      --blue-500: #527bd2;
+      --ink: #422d36;
+      --muted: #856a76;
+      --white: #fff;
+      --shadow: 0 18px 50px rgba(157, 68, 103, .14);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: radial-gradient(circle at 10% 10%, #fff 0 11%, transparent 11.5%),
+                  radial-gradient(circle at 92% 12%, #ffe4ee 0 12%, transparent 12.5%),
+                  linear-gradient(135deg, #fff8fb, #fff0f5 52%, #f7faff);
+    }
+
+    .app { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 42px; }
+    header { text-align: center; margin-bottom: 16px; }
+    .eyebrow { color: var(--pink-600); font-size: .7rem; font-weight: 900; letter-spacing: .14em; }
+    h1 { margin: 5px 0 5px; font-size: clamp(1.55rem, 4.6vw, 2.25rem); letter-spacing: .02em; }
+    .subtitle { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.7; }
+    .nav { display: flex; justify-content: center; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+    .nav a { padding: 7px 12px; border: 1px solid #f0c9d7; border-radius: 999px; color: var(--pink-600); background: rgba(255,255,255,.78); font-size: .8rem; font-weight: 900; text-decoration: none; }
+    .nav a:hover { background: white; box-shadow: 0 7px 18px rgba(157,68,103,.12); }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 15px;
+      padding: 12px;
+      border: 1px solid rgba(238,121,164,.18);
+      border-radius: 20px;
+      background: rgba(255,255,255,.84);
+      box-shadow: var(--shadow);
+    }
+
+    .search {
+      min-width: 0;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #f0c9d7;
+      border-radius: 13px;
+      color: var(--ink);
+      background: white;
+      font: inherit;
+      font-weight: 700;
+    }
+
+    .voice-picker { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .8rem; font-weight: 800; white-space: nowrap; }
+    .voice-picker select { max-width: 170px; border: 1px solid #f0c9d7; border-radius: 9px; padding: 8px; color: var(--pink-600); background: white; font: inherit; }
+    .sound-toggle { border: 0; padding: 10px 12px; border-radius: 12px; color: white; background: linear-gradient(135deg, #ef85aa, #d85888); cursor: pointer; font: inherit; font-weight: 900; white-space: nowrap; }
+    .sound-toggle[aria-pressed="false"] { color: var(--muted); background: #f4edf0; }
+
+    .status { margin: 0 4px 12px; color: var(--muted); font-size: .86rem; font-weight: 800; }
+    .list { display: grid; gap: 10px; }
+    .entry {
+      display: grid;
+      grid-template-columns: 64px minmax(180px, 1.05fr) minmax(150px, .95fr) minmax(220px, 1.35fr);
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid rgba(238,121,164,.16);
+      border-radius: 18px;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 8px 22px rgba(157,68,103,.08);
+    }
+
+    .num { color: var(--muted); font-size: .85rem; font-weight: 900; text-align: center; }
+    .word-button {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--pink-200);
+      border-radius: 13px;
+      color: var(--pink-600);
+      background: var(--pink-50);
+      cursor: pointer;
+      font: inherit;
+      font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
+      font-size: 1.2rem;
+      font-weight: 900;
+      text-align: left;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .word-button:hover, .word-button:focus-visible { border-color: var(--pink-400); background: white; transform: translateY(-1px); outline: none; }
+    .word-button.speaking { border-color: #75c8a4; background: #edfbf4; }
+    .reading { color: var(--blue-500); font-family: "Yu Gothic", "Hiragino Sans", sans-serif; font-size: 1rem; font-weight: 900; }
+    .meaning { color: #5d4650; line-height: 1.6; font-size: .94rem; }
+    .tag { display: inline-flex; align-items: center; justify-content: center; width: fit-content; padding: 4px 9px; border-radius: 999px; color: var(--blue-500); background: var(--blue-100); font-size: .75rem; font-weight: 900; }
+    .meta { display: grid; gap: 5px; }
+
+    .sandy-tip { margin: 17px 0 0; padding: 13px 15px; border: 1px solid rgba(238,121,164,.16); border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.82); font-size: .86rem; line-height: 1.7; }
+    .empty { display: none; padding: 30px; border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.8); text-align: center; font-weight: 800; }
+
+    @media (max-width: 780px) {
+      .toolbar { grid-template-columns: 1fr; }
+      .voice-picker { justify-content: space-between; }
+      .voice-picker select { max-width: min(100%, 260px); }
+      .entry { grid-template-columns: 48px 1fr; }
+      .meta, .meaning { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="eyebrow">N2 VOCABULARY LIST</div>
+      <h1>N2 押题词汇表</h1>
+      <p class="subtitle">点日语单词会自动朗读日语；中文意思只是说明，不会朗读。</p>
+      <nav class="nav" aria-label="学习页面">
+        <a href="index.html">🐾 回到 Sandy 练习</a>
+      </nav>
+    </header>
+
+    <section class="toolbar" aria-label="词汇工具">
+      <input class="search" id="search" type="search" placeholder="搜索单词、读音或中文意思，例如：募る / つのる / 招募">
+      <label class="voice-picker">日语声音<select id="voiceSelect" aria-label="选择日文语音"><option>载入中…</option></select></label>
+      <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 语音：开</button>
+    </section>
+
+    <p class="status" id="status">共 160 个词</p>
+    <section class="list" id="list" aria-live="polite"></section>
+    <p class="empty" id="empty">没有找到这个词。换个关键词试试看。</p>
+    <p class="sandy-tip">小提示：如果声音听起来太机器，可以在“日语声音”里试试系统里的 Kyoko、Otoya、Siri、Haruka 或 Nanami。不同设备可用声音会不一样。</p>
+  </main>
+
+  <script>
+    const vocab = [
+      { id: 1, word: "整える", reading: "ととのえる", meaning: "整理，备齐；谈妥" },
+      { id: 2, word: "蓄える", reading: "たくわえる", meaning: "储藏，积蓄" },
+      { id: 3, word: "備える", reading: "そなえる", meaning: "准备，备置；具备" },
+      { id: 4, word: "抱える", reading: "かかえる", meaning: "抱，夹；承担（问题等）" },
+      { id: 5, word: "募る", reading: "つのる", meaning: "招募；加剧；越来越强烈" },
+      { id: 6, word: "雇う", reading: "やとう", meaning: "雇用" },
+      { id: 7, word: "競う", reading: "きそう", meaning: "竞争，竞赛" },
+      { id: 8, word: "争う", reading: "あらそう", meaning: "争夺，争吵" },
+      { id: 9, word: "譲る", reading: "ゆずる", meaning: "让给；让步" },
+      { id: 10, word: "恵まれる", reading: "めぐまれる", meaning: "受惠于，富有" },
+      { id: 11, word: "憧れる", reading: "あこがれる", meaning: "憧憬，向往" },
+      { id: 12, word: "保つ", reading: "たもつ", meaning: "保持，维持" },
+      { id: 13, word: "暴く", reading: "あばく", meaning: "揭露；挖掘" },
+      { id: 14, word: "頼る", reading: "たよる", meaning: "依靠，依赖，仰仗" },
+      { id: 15, word: "補う", reading: "おぎなう", meaning: "补充，弥补" },
+      { id: 16, word: "破れる", reading: "やぶれる", meaning: "破损，破裂" },
+      { id: 17, word: "乱れる", reading: "みだれる", meaning: "混乱，紊乱" },
+      { id: 18, word: "荒れる", reading: "あれる", meaning: "荒芜；汹涌；（天气）恶劣" },
+      { id: 19, word: "納める", reading: "おさめる", meaning: "缴纳；供应；结束" },
+      { id: 20, word: "潰れる", reading: "つぶれる", meaning: "毁坏；倒闭；破产；消磨时间" },
+      { id: 21, word: "倒れる", reading: "たおれる", meaning: "倒下；倒塌；倒闭；失败" },
+      { id: 22, word: "配る", reading: "くばる", meaning: "分发；分配" },
+      { id: 23, word: "占う", reading: "うらなう", meaning: "占卜，算命" },
+      { id: 24, word: "痺れる", reading: "しびれる", meaning: "发麻，麻木" },
+      { id: 25, word: "衰える", reading: "おとろえる", meaning: "衰弱，衰退" },
+      { id: 26, word: "誘う", reading: "さそう", meaning: "邀请；引起" },
+      { id: 27, word: "導く", reading: "みちびく", meaning: "引导，带领" },
+      { id: 28, word: "請け合う", reading: "うけあう", meaning: "保证，承担" },
+      { id: 29, word: "招く", reading: "まねく", meaning: "招待；招致；招呼" },
+      { id: 30, word: "損なう", reading: "そこなう", meaning: "损害，伤害；错过（时机）" },
+      { id: 31, word: "縮む", reading: "ちぢむ", meaning: "收缩；缩水；畏缩；退缩" },
+      { id: 32, word: "削る", reading: "けずる", meaning: "削；削减" },
+      { id: 33, word: "隔てる", reading: "へだてる", meaning: "隔开，分隔" },
+      { id: 34, word: "裁く", reading: "さばく", meaning: "裁判；审判" },
+      { id: 35, word: "傾く", reading: "かたむく", meaning: "倾斜；倾向；衰落" },
+      { id: 36, word: "劣る", reading: "おとる", meaning: "劣，差，不如" },
+      { id: 37, word: "躓く", reading: "つまずく", meaning: "绊倒；受挫" },
+      { id: 38, word: "弄る", reading: "いじる", meaning: "摆弄，玩弄" },
+      { id: 39, word: "取り組む", reading: "とりくむ", meaning: "致力于；与……交手" },
+      { id: 40, word: "思い切る", reading: "おもいきる", meaning: "下定决心；断念" },
+      { id: 41, word: "渋い", reading: "しぶい", meaning: "涩的；素雅的；小气的" },
+      { id: 42, word: "なだらか", reading: "なだらか", meaning: "平缓的；顺利的" },
+      { id: 43, word: "和やか", reading: "なごやか", meaning: "和睦的；平静的" },
+      { id: 44, word: "爽やか", reading: "さわやか", meaning: "清爽的；爽朗的" },
+      { id: 45, word: "快い", reading: "こころよい", meaning: "愉快的；感觉舒服的" },
+      { id: 46, word: "険しい", reading: "けわしい", meaning: "险峻的；严峻的" },
+      { id: 47, word: "著しい", reading: "いちじるしい", meaning: "显著的；明显的" },
+      { id: 48, word: "だらしない", reading: "だらしない", meaning: "邋遢的；没出息的" },
+      { id: 49, word: "頼もしい", reading: "たのもしい", meaning: "可靠的；有出息的" },
+      { id: 50, word: "乏しい", reading: "とぼしい", meaning: "缺乏的；不足的" },
+      { id: 51, word: "貧しい", reading: "まずしい", meaning: "贫穷的；贫乏的" },
+      { id: 52, word: "しつこい", reading: "しつこい", meaning: "执拗；纠缠不休的" },
+      { id: 53, word: "図々しい", reading: "ずうずうしい", meaning: "厚颜无耻的 ≒ 厚かましい" },
+      { id: 54, word: "鮮やか", reading: "あざやか", meaning: "鲜艳的；巧妙的" },
+      { id: 55, word: "賢い", reading: "かしこい", meaning: "聪明；周到，不疏忽" },
+      { id: 56, word: "穏やか", reading: "おだやか", meaning: "平稳的；温和的" },
+      { id: 57, word: "逞しい", reading: "たくましい", meaning: "强健的；茁壮的" },
+      { id: 58, word: "圧倒的", reading: "あっとうてき", meaning: "压倒性的" },
+      { id: 59, word: "順調", reading: "じゅんちょう", meaning: "顺利的" },
+      { id: 60, word: "鋭い", reading: "するどい", meaning: "锋利的；尖锐的；敏锐的" },
+      { id: 61, word: "勇ましい", reading: "いさましい", meaning: "勇敢的；雄壮的" },
+      { id: 62, word: "激しい", reading: "はげしい", meaning: "激烈的；剧烈的" },
+      { id: 63, word: "輝かしい", reading: "かがやかしい", meaning: "辉煌的；灿烂的" },
+      { id: 64, word: "怪しい", reading: "あやしい", meaning: "可疑的；奇怪的；靠不住的" },
+      { id: 65, word: "騒がしい", reading: "さわがしい", meaning: "吵闹的；骚然的" },
+      { id: 66, word: "臆病", reading: "おくびょう", meaning: "胆小的；胆怯的" },
+      { id: 67, word: "卑怯", reading: "ひきょう", meaning: "卑鄙的；怯懦的" },
+      { id: 68, word: "地道", reading: "じみち", meaning: "踏实；勤恳" },
+      { id: 69, word: "皮肉", reading: "ひにく", meaning: "讽刺；挖苦" },
+      { id: 70, word: "追加", reading: "ついか", meaning: "追加；添加" },
+      { id: 71, word: "内緒", reading: "ないしょ", meaning: "秘密；保密" },
+      { id: 72, word: "討論", reading: "とうろん", meaning: "讨论；辩论" },
+      { id: 73, word: "新米", reading: "しんまい", meaning: "新手；初学者；新米" },
+      { id: 74, word: "細工", reading: "さいく", meaning: "工艺品；手工；耍花招" },
+      { id: 75, word: "結束", reading: "けっそく", meaning: "团结；捆绑" },
+      { id: 76, word: "器用", reading: "きよう", meaning: "灵巧的；手巧的" },
+      { id: 77, word: "没頭", reading: "ぼっとう", meaning: "埋头；专心致志" },
+      { id: 78, word: "合意", reading: "ごうい", meaning: "同意；达成一致" },
+      { id: 79, word: "文句", reading: "もんく", meaning: "牢骚；意见；词句" },
+      { id: 80, word: "稼働", reading: "かどう", meaning: "运作；运转；工作" },
+      { id: 81, word: "残高", reading: "ざんだか", meaning: "余额；剩余金额" },
+      { id: 82, word: "腕前", reading: "うでまえ", meaning: "本事；技能；手腕" },
+      { id: 83, word: "夢中", reading: "むちゅう", meaning: "沉迷；入迷；忘我" },
+      { id: 84, word: "大筋", reading: "おおすじ", meaning: "梗概；大纲；主要经过" },
+      { id: 85, word: "粗筋", reading: "あらすじ", meaning: "梗概；概要；大纲" },
+      { id: 86, word: "意地悪", reading: "いじわる", meaning: "心眼坏，使坏" },
+      { id: 87, word: "生意気", reading: "なまいき", meaning: "自大，傲慢，臭美" },
+      { id: 88, word: "臆病者", reading: "おくびょうもの", meaning: "胆小鬼，懦夫" },
+      { id: 89, word: "無口", reading: "むくち", meaning: "沉默寡言，不爱说话" },
+      { id: 90, word: "手際", reading: "てぎわ", meaning: "手法，技巧；手艺" },
+      { id: 91, word: "見当", reading: "けんとう", meaning: "估计，推测；方向，目标" },
+      { id: 92, word: "行儀", reading: "ぎょうぎ", meaning: "礼仪；举止" },
+      { id: 93, word: "出世", reading: "しゅっせ", meaning: "出息，发迹，出人头地" },
+      { id: 94, word: "楽器", reading: "がっき", meaning: "乐器" },
+      { id: 95, word: "伝言", reading: "でんごん", meaning: "口信，传言" },
+      { id: 96, word: "競争", reading: "きょうそう", meaning: "竞争，竞赛" },
+      { id: 97, word: "募集", reading: "ぼしゅう", meaning: "招募，征集" },
+      { id: 98, word: "発揮", reading: "はっき", meaning: "发挥，施展" },
+      { id: 99, word: "妥当", reading: "だとう", meaning: "妥当，妥善" },
+      { id: 100, word: "辛抱", reading: "しんぼう", meaning: "忍耐；忍受" },
+      { id: 101, word: "尊重", reading: "そんちょう", meaning: "尊重，重视" },
+      { id: 102, word: "開催", reading: "かいさい", meaning: "召开，举办" },
+      { id: 103, word: "催促", reading: "さいそく", meaning: "催促，催办" },
+      { id: 104, word: "油断", reading: "ゆだん", meaning: "疏忽大意，麻痹大意" },
+      { id: 105, word: "調達", reading: "ちょうたつ", meaning: "筹措，采购；供应" },
+      { id: 106, word: "寄付", reading: "きふ", meaning: "捐赠，捐款" },
+      { id: 107, word: "用心", reading: "ようじん", meaning: "小心，注意，提防" },
+      { id: 108, word: "栽培", reading: "さいばい", meaning: "栽培，种植" },
+      { id: 109, word: "中継", reading: "ちゅうけい", meaning: "转播，中转，中继" },
+      { id: 110, word: "強引", reading: "ごういん", meaning: "强行，强制，硬干" },
+      { id: 111, word: "賛否", reading: "さんぴ", meaning: "赞成与反对，赞同与否" },
+      { id: 112, word: "気配", reading: "けはい", meaning: "迹象，苗头；行情" },
+      { id: 113, word: "圧勝", reading: "あっしょう", meaning: "大胜，压倒性胜利" },
+      { id: 114, word: "評判", reading: "ひょうばん", meaning: "名声，评价；传闻" },
+      { id: 115, word: "愚痴", reading: "ぐち", meaning: "牢骚，抱怨" },
+      { id: 116, word: "続出", reading: "ぞくしゅつ", meaning: "接连不断的出现" },
+      { id: 117, word: "活躍", reading: "かつやく", meaning: "活跃，大显身手" },
+      { id: 118, word: "たちまち", reading: "たちまち", meaning: "转瞬间，立刻" },
+      { id: 119, word: "ぎっしり", reading: "ぎっしり", meaning: "满满地，紧密地" },
+      { id: 120, word: "ぐっすり", reading: "ぐっすり", meaning: "（睡得）香甜，熟睡貌" },
+      { id: 121, word: "せいぜい", reading: "せいぜい", meaning: "最多，充其量；尽力" },
+      { id: 122, word: "ぼんやり", reading: "ぼんやり", meaning: "模糊；发呆；隐约" },
+      { id: 123, word: "ぶらぶら", reading: "ぶらぶら", meaning: "溜达；摇晃；无所事事" },
+      { id: 124, word: "ばらばら", reading: "ばらばら", meaning: "分散，零乱；哗啦哗啦声" },
+      { id: 125, word: "がらがら", reading: "がらがら", meaning: "空荡荡；哗啦哗啦声；轰隆声" },
+      { id: 126, word: "とっくに", reading: "とっくに", meaning: "早就，老早" },
+      { id: 127, word: "さっぱり", reading: "さっぱり", meaning: "清爽；干净；彻底；完全" },
+      { id: 128, word: "うとうと", reading: "うとうと", meaning: "迷迷糊糊，打盹儿" },
+      { id: 129, word: "じめじめ", reading: "じめじめ", meaning: "潮湿，湿漉漉，阴郁" },
+      { id: 130, word: "はなはだ", reading: "はなはだ", meaning: "非常，很，甚" },
+      { id: 131, word: "うろうろ", reading: "うろうろ", meaning: "徘徊，彷徨" },
+      { id: 132, word: "ほっと", reading: "ほっと", meaning: "松了口气" },
+      { id: 133, word: "仮に", reading: "かりに", meaning: "假设，暂时；姑且" },
+      { id: 134, word: "ぴったり", reading: "ぴったり", meaning: "严丝合缝；恰好；完全一致" },
+      { id: 135, word: "あくまで", reading: "あくまで", meaning: "彻底，到底；坚决" },
+      { id: 136, word: "わざわざ", reading: "わざわざ", meaning: "特意，专程" },
+      { id: 137, word: "どうやら", reading: "どうやら", meaning: "总觉得；好歹，总算" },
+      { id: 138, word: "アクセス", reading: "アクセス", meaning: "连接；交通" },
+      { id: 139, word: "プロセス", reading: "プロセス", meaning: "过程，程序，流程" },
+      { id: 140, word: "システム", reading: "システム", meaning: "系统，体系" },
+      { id: 141, word: "タイミング", reading: "タイミング", meaning: "时机，时间安排" },
+      { id: 142, word: "インパクト", reading: "インパクト", meaning: "冲击，强烈影响" },
+      { id: 143, word: "レンタル", reading: "レンタル", meaning: "租赁，出租" },
+      { id: 144, word: "シリーズ", reading: "シリーズ", meaning: "系列；丛书" },
+      { id: 145, word: "アプローチ", reading: "アプローチ", meaning: "接近；方法；进场；探讨" },
+      { id: 146, word: "クリア", reading: "クリア", meaning: "清除；通关；跳过" },
+      { id: 147, word: "インテリア", reading: "インテリア", meaning: "室内装饰；内饰" },
+      { id: 148, word: "ギャップ", reading: "ギャップ", meaning: "间隙；裂缝" },
+      { id: 149, word: "カタログ", reading: "カタログ", meaning: "商品目录，产品样本" },
+      { id: 150, word: "キャプテン", reading: "キャプテン", meaning: "队长，船长；首领" },
+      { id: 151, word: "コメント", reading: "コメント", meaning: "评论，意见" },
+      { id: 152, word: "ダメージ", reading: "ダメージ", meaning: "伤害，损伤；损害" },
+      { id: 153, word: "チャージ", reading: "チャージ", meaning: "充电；收费" },
+      { id: 154, word: "トンネル", reading: "トンネル", meaning: "隧道，通道" },
+      { id: 155, word: "ノイローゼ", reading: "ノイローゼ", meaning: "神经官能症，神经衰弱" },
+      { id: 156, word: "ベテラン", reading: "ベテラン", meaning: "老手，经验丰富者" },
+      { id: 157, word: "リズム", reading: "リズム", meaning: "节奏，韵律" },
+      { id: 158, word: "リフォーム", reading: "リフォーム", meaning: "翻新；改造" },
+      { id: 159, word: "レジャー", reading: "レジャー", meaning: "闲暇，业余时间；休闲娱乐" },
+      { id: 160, word: "プレッシャー", reading: "プレッシャー", meaning: "压力；压迫感" }
+    ];
+
+    let soundEnabled = "speechSynthesis" in window;
+    let japaneseVoices = [];
+    const $ = (id) => document.getElementById(id);
+
+    function categoryFor(id) {
+      if (id <= 40) return "动词";
+      if (id <= 62) return "形容词";
+      if (id <= 117) return "名词";
+      if (id <= 137) return "副词";
+      return "外来语";
+    }
+
+    function speakJapanese(text, button) {
+      if (!soundEnabled || !("SpeechSynthesisUtterance" in window)) return;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ja-JP";
+      utterance.rate = 0.82;
+      utterance.pitch = 1;
+      const selected = $("voiceSelect").value;
+      const voice = japaneseVoices.find((item) => item.name === selected) || japaneseVoices.find((item) => /siri|kyoko|haruka|nanami|female/i.test(item.name)) || japaneseVoices[0];
+      if (voice) utterance.voice = voice;
+      if (button) {
+        button.classList.add("speaking");
+        utterance.onend = () => button.classList.remove("speaking");
+        utterance.onerror = () => button.classList.remove("speaking");
+      }
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function renderList() {
+      const query = $("search").value.trim().toLowerCase();
+      const results = vocab.filter((item) => [item.word, item.reading, item.meaning, categoryFor(item.id)].some((value) => value.toLowerCase().includes(query)));
+      $("status").textContent = query ? `找到 ${results.length} / ${vocab.length} 个词` : `共 ${vocab.length} 个词`;
+      $("empty").style.display = results.length ? "none" : "block";
+      const list = $("list");
+      list.innerHTML = "";
+      const fragment = document.createDocumentFragment();
+      results.forEach((item) => {
+        const article = document.createElement("article");
+        article.className = "entry";
+
+        const num = document.createElement("div");
+        num.className = "num";
+        num.textContent = String(item.id).padStart(3, "0");
+
+        const wordButton = document.createElement("button");
+        wordButton.className = "word-button";
+        wordButton.type = "button";
+        wordButton.textContent = item.word;
+        wordButton.setAttribute("aria-label", `朗读日语：${item.word}`);
+        wordButton.addEventListener("click", () => speakJapanese(item.reading || item.word, wordButton));
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        const reading = document.createElement("div");
+        reading.className = "reading";
+        reading.textContent = item.reading;
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = categoryFor(item.id);
+        meta.append(reading, tag);
+
+        const meaning = document.createElement("div");
+        meaning.className = "meaning";
+        meaning.textContent = item.meaning;
+
+        article.append(num, wordButton, meta, meaning);
+        fragment.appendChild(article);
+      });
+      list.appendChild(fragment);
+    }
+
+    function updateSoundToggle() {
+      const toggle = $("soundToggle");
+      toggle.setAttribute("aria-pressed", String(soundEnabled));
+      toggle.textContent = soundEnabled ? "🔊 语音：开" : "🔇 语音：关";
+      if (!("speechSynthesis" in window)) {
+        toggle.textContent = "语音不支援";
+        toggle.disabled = true;
+      }
+    }
+
+    function loadVoices() {
+      const select = $("voiceSelect");
+      let savedVoice = "";
+      try { savedVoice = localStorage.getItem("n2-vocab-voice") || ""; } catch {}
+      const previous = savedVoice || select.value;
+      japaneseVoices = window.speechSynthesis ? window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("ja")) : [];
+      select.innerHTML = "";
+      if (!japaneseVoices.length) {
+        select.innerHTML = "<option value=\"\">装置预设</option>";
+        return;
+      }
+      japaneseVoices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = voice.name;
+        select.appendChild(option);
+      });
+      const preferred = japaneseVoices.find((voice) => voice.name === previous) || japaneseVoices.find((voice) => /siri|kyoko|haruka|nanami|female/i.test(voice.name)) || japaneseVoices[0];
+      select.value = preferred.name;
+    }
+
+    $("search").addEventListener("input", renderList);
+    $("soundToggle").addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      if (!soundEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      updateSoundToggle();
+    });
+    $("voiceSelect").addEventListener("change", () => {
+      try { localStorage.setItem("n2-vocab-voice", $("voiceSelect").value); } catch {}
+    });
+    updateSoundToggle();
+    loadVoices();
+    if ("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    renderList();
+  </script>
+</body>
+</html>

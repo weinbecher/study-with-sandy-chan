@@ -39,6 +39,9 @@
     .account a { color: var(--pink-600); font-weight: 800; text-decoration: none; }
     .account a:hover { text-decoration: underline; }
     .account:not(.signed-in) #accountAction, .account.signed-in #loginLink { display: none; }
+    .quick-links { display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .quick-links a { padding: 7px 12px; border: 1px solid #f0c9d7; border-radius: 999px; color: var(--pink-600); background: rgba(255,255,255,.74); font-size: .78rem; font-weight: 900; text-decoration: none; }
+    .quick-links a:hover { background: white; box-shadow: 0 7px 18px rgba(157,68,103,.12); }
 
     .progress-wrap { display: flex; align-items: center; gap: 12px; margin: 0 4px 14px; color: var(--muted); font-size: .86rem; font-weight: 700; }
     .progress { overflow: hidden; flex: 1; height: 10px; border-radius: 999px; background: var(--pink-200); }
@@ -139,6 +142,9 @@
         <a id="loginLink" href="login.html">Sign in</a>
         <button id="accountAction" type="button">Sign out</button>
       </div>
+      <nav class="quick-links" aria-label="学习页面">
+        <a href="vocab.html">📚 N2 词汇表</a>
+      </nav>
     </header>
 
     <div class="progress-wrap"><span id="progressText">第 1 / 6 題</span><div class="progress"><span id="progressBar"></span></div></div>
