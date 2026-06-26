@@ -83,7 +83,9 @@
       border-radius: 18px;
       background: rgba(255,255,255,.9);
       box-shadow: 0 8px 22px rgba(157,68,103,.08);
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
     }
+    .entry.playing { border-color: rgba(117,200,164,.75); box-shadow: 0 12px 28px rgba(75,150,114,.16); transform: translateY(-1px); }
 
     .num { color: var(--muted); font-size: .85rem; font-weight: 900; text-align: center; }
     .word-button {
@@ -159,13 +161,13 @@
       <input class="search" id="search" type="search" placeholder="搜索单词、读音或中文意思，例如：募る / つのる / 招募">
       <label class="voice-picker">日语声音<select id="voiceSelect" aria-label="选择日文语音"><option>载入中…</option></select></label>
       <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 语音：开</button>
-      <button class="scroll-toggle" id="scrollToggle" type="button" aria-pressed="false">▶ 自动滚动</button>
+      <button class="scroll-toggle" id="scrollToggle" type="button" aria-pressed="false">▶ 自动听读</button>
     </section>
 
     <p class="status" id="status">共 160 个词</p>
     <section class="list" id="list" aria-live="polite"></section>
     <p class="empty" id="empty">没有找到这个词。换个关键词试试看。</p>
-    <p class="sandy-tip">小提示：点“自动滚动”后页面会慢慢往下走；点“停止滚动”、滚轮、触摸屏幕或按方向键都会停。声音如果太机器，可以在“日语声音”里试试系统里的 Kyoko、Otoya、Siri、Haruka 或 Nanami。</p>
+    <p class="sandy-tip">小提示：点“自动听读”后，页面会滚到当前词，先读单词，再读例句，然后继续下一张。点“停止听读”、滚轮、触摸屏幕或按方向键都会停。声音如果太机器，可以在“日语声音”里试试系统里的 Kyoko、Otoya、Siri、Haruka 或 Nanami。</p>
   </main>
 
   <script>
@@ -502,9 +504,11 @@
     let soundEnabled = "speechSynthesis" in window;
     let japaneseVoices = [];
     let autoScrollActive = false;
-    let autoScrollFrame = null;
-    let lastScrollTime = 0;
+    let autoReviewIndex = 0;
+    let autoReviewToken = 0;
+    let autoReviewTimer = null;
     const $ = (id) => document.getElementById(id);
+    const delay = (ms) => new Promise((resolve) => { autoReviewTimer = setTimeout(resolve, ms); });
 
     function categoryFor(id) {
       if (id <= 40) return "动词";
@@ -514,24 +518,33 @@
       return "外来语";
     }
 
-    function speakJapanese(text, button) {
-      if (!soundEnabled || !("SpeechSynthesisUtterance" in window)) return;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.resume();
-      document.querySelectorAll(".speaking").forEach((item) => item.classList.remove("speaking"));
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ja-JP";
-      utterance.rate = 0.82;
-      utterance.pitch = 1;
-      const selected = $("voiceSelect").value;
-      const voice = japaneseVoices.find((item) => item.name === selected) || japaneseVoices.find((item) => /siri|kyoko|haruka|nanami|female/i.test(item.name)) || japaneseVoices[0];
-      if (voice) utterance.voice = voice;
-      if (button) {
-        button.classList.add("speaking");
-        utterance.onend = () => button.classList.remove("speaking");
-        utterance.onerror = () => button.classList.remove("speaking");
-      }
-      window.speechSynthesis.speak(utterance);
+    function speakJapanese(text, button, options = {}) {
+      if (!soundEnabled || !("SpeechSynthesisUtterance" in window)) return Promise.resolve(false);
+      return new Promise((resolve) => {
+        if (options.cancelCurrent !== false) window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+        document.querySelectorAll(".speaking").forEach((item) => item.classList.remove("speaking"));
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "ja-JP";
+        utterance.rate = 0.82;
+        utterance.pitch = 1;
+        const selected = $("voiceSelect").value;
+        const voice = japaneseVoices.find((item) => item.name === selected) || japaneseVoices.find((item) => /siri|kyoko|haruka|nanami|female/i.test(item.name)) || japaneseVoices[0];
+        if (voice) utterance.voice = voice;
+        if (button) button.classList.add("speaking");
+        let finished = false;
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          clearTimeout(fallbackTimer);
+          if (button) button.classList.remove("speaking");
+          resolve(true);
+        };
+        const fallbackTimer = setTimeout(finish, Math.min(16000, Math.max(2400, text.length * 230)));
+        utterance.onend = finish;
+        utterance.onerror = finish;
+        window.speechSynthesis.speak(utterance);
+      });
     }
 
     function renderList() {
@@ -545,6 +558,7 @@
       results.forEach((item) => {
         const article = document.createElement("article");
         article.className = "entry";
+        article.dataset.vocabId = item.id;
 
         const num = document.createElement("div");
         num.className = "num";
@@ -598,35 +612,79 @@
     function updateScrollToggle() {
       const toggle = $("scrollToggle");
       toggle.setAttribute("aria-pressed", String(autoScrollActive));
-      toggle.textContent = autoScrollActive ? "⏸ 停止滚动" : "▶ 自动滚动";
+      toggle.textContent = autoScrollActive ? "⏸ 停止听读" : "▶ 自动听读";
+    }
+
+    function firstVisibleEntryIndex(entries) {
+      const visibleIndex = entries.findIndex((entry) => entry.getBoundingClientRect().bottom > 120);
+      return Math.max(0, visibleIndex);
+    }
+
+    async function playAutoReview(token) {
+      const entries = [...document.querySelectorAll(".entry")];
+      if (!autoScrollActive || token !== autoReviewToken) return;
+      if (!entries.length) {
+        stopAutoScroll();
+        return;
+      }
+      if (autoReviewIndex >= entries.length) {
+        stopAutoScroll();
+        return;
+      }
+      const entry = entries[autoReviewIndex];
+      const item = vocab.find((vocabItem) => String(vocabItem.id) === entry.dataset.vocabId);
+      if (!item) {
+        autoReviewIndex++;
+        playAutoReview(token);
+        return;
+      }
+
+      document.querySelectorAll(".entry.playing").forEach((node) => node.classList.remove("playing"));
+      entry.classList.add("playing");
+      entry.scrollIntoView({ behavior: "smooth", block: "center" });
+      await delay(450);
+      if (!autoScrollActive || token !== autoReviewToken) return;
+
+      await speakJapanese(item.reading || item.word, entry.querySelector(".word-button"));
+      if (!autoScrollActive || token !== autoReviewToken) return;
+      await delay(220);
+      if (!autoScrollActive || token !== autoReviewToken) return;
+
+      await speakJapanese(item.example, entry.querySelector(".example-button"));
+      if (!autoScrollActive || token !== autoReviewToken) return;
+      await delay(520);
+      if (!autoScrollActive || token !== autoReviewToken) return;
+
+      entry.classList.remove("playing");
+      autoReviewIndex++;
+      playAutoReview(token);
     }
 
     function startAutoScroll() {
       if (autoScrollActive) return;
+      if (!soundEnabled && "speechSynthesis" in window) {
+        soundEnabled = true;
+        updateSoundToggle();
+      }
       autoScrollActive = true;
-      lastScrollTime = performance.now();
+      autoReviewToken++;
+      const entries = [...document.querySelectorAll(".entry")];
+      if (!entries.length) {
+        stopAutoScroll();
+        return;
+      }
+      autoReviewIndex = firstVisibleEntryIndex(entries);
       updateScrollToggle();
-      const scrollStep = (now) => {
-        if (!autoScrollActive) return;
-        const elapsed = Math.min(80, now - lastScrollTime);
-        lastScrollTime = now;
-        window.scrollBy(0, elapsed * 0.035);
-        const pageBottom = window.scrollY + window.innerHeight;
-        const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-        if (pageBottom >= documentHeight - 4) {
-          stopAutoScroll();
-          return;
-        }
-        autoScrollFrame = requestAnimationFrame(scrollStep);
-      };
-      autoScrollFrame = requestAnimationFrame(scrollStep);
+      playAutoReview(autoReviewToken);
     }
 
     function stopAutoScroll() {
       if (!autoScrollActive) return;
       autoScrollActive = false;
-      if (autoScrollFrame) cancelAnimationFrame(autoScrollFrame);
-      autoScrollFrame = null;
+      autoReviewToken++;
+      clearTimeout(autoReviewTimer);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      document.querySelectorAll(".speaking, .entry.playing").forEach((item) => item.classList.remove("speaking", "playing"));
       updateScrollToggle();
     }
 
