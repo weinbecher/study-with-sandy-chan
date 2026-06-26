@@ -86,6 +86,7 @@
       transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
     }
     .entry.playing { border-color: rgba(117,200,164,.75); box-shadow: 0 12px 28px rgba(75,150,114,.16); transform: translateY(-1px); }
+    .entry { cursor: pointer; }
 
     .num { color: var(--muted); font-size: .85rem; font-weight: 900; text-align: center; }
     .word-button {
@@ -167,7 +168,7 @@
     <p class="status" id="status">共 160 个词</p>
     <section class="list" id="list" aria-live="polite"></section>
     <p class="empty" id="empty">没有找到这个词。换个关键词试试看。</p>
-    <p class="sandy-tip">小提示：点“自动听读”后，页面会滚到当前词，先读单词，再读例句，然后继续下一张。点“停止听读”、滚轮、触摸屏幕或按方向键都会停。声音如果太机器，可以在“日语声音”里试试系统里的 Kyoko、Otoya、Siri、Haruka 或 Nanami。</p>
+    <p class="sandy-tip">小提示：点整张卡片可以读这张卡，再点一次会暂停。点“自动听读”后，页面会滚到当前词，先读单词，再读例句，然后继续下一张。点“停止听读”、滚轮、触摸屏幕或按方向键都会停。</p>
   </main>
 
   <script>
@@ -507,6 +508,9 @@
     let autoReviewIndex = 0;
     let autoReviewToken = 0;
     let autoReviewTimer = null;
+    let cardReviewActive = false;
+    let cardReviewToken = 0;
+    let activeCardId = null;
     const $ = (id) => document.getElementById(id);
     const delay = (ms) => new Promise((resolve) => { autoReviewTimer = setTimeout(resolve, ms); });
 
@@ -569,8 +573,10 @@
         wordButton.type = "button";
         wordButton.textContent = item.word;
         wordButton.setAttribute("aria-label", `朗读日语：${item.word}`);
-        wordButton.addEventListener("click", () => {
+        wordButton.addEventListener("click", (event) => {
+          event.stopPropagation();
           stopAutoScroll();
+          stopCardReview();
           speakJapanese(item.reading || item.word, wordButton);
         });
 
@@ -598,15 +604,65 @@
         const exampleSentence = document.createElement("span");
         exampleSentence.textContent = item.example;
         exampleButton.append(exampleLabel, exampleSentence);
-        exampleButton.addEventListener("click", () => {
+        exampleButton.addEventListener("click", (event) => {
+          event.stopPropagation();
           stopAutoScroll();
+          stopCardReview();
           speakJapanese(item.example, exampleButton);
         });
 
         article.append(num, wordButton, meta, meaning, exampleButton);
+        article.addEventListener("click", () => toggleCardReview(article, item));
         fragment.appendChild(article);
       });
       list.appendChild(fragment);
+    }
+
+    async function playCardReview(entry, item, token) {
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      if (!soundEnabled && "speechSynthesis" in window) {
+        soundEnabled = true;
+        updateSoundToggle();
+      }
+      document.querySelectorAll(".entry.playing").forEach((node) => node.classList.remove("playing"));
+      entry.classList.add("playing");
+      entry.scrollIntoView({ behavior: "smooth", block: "center" });
+      await delay(320);
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      await speakJapanese(item.reading || item.word, entry.querySelector(".word-button"));
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      await delay(180);
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      await speakJapanese(item.example, entry.querySelector(".example-button"));
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      stopCardReview();
+    }
+
+    function startCardReview(entry, item) {
+      stopAutoScroll();
+      stopCardReview();
+      cardReviewActive = true;
+      activeCardId = item.id;
+      cardReviewToken++;
+      playCardReview(entry, item, cardReviewToken);
+    }
+
+    function stopCardReview() {
+      if (!cardReviewActive && activeCardId === null) return;
+      cardReviewActive = false;
+      activeCardId = null;
+      cardReviewToken++;
+      clearTimeout(autoReviewTimer);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      document.querySelectorAll(".speaking, .entry.playing").forEach((item) => item.classList.remove("speaking", "playing"));
+    }
+
+    function toggleCardReview(entry, item) {
+      if (cardReviewActive && activeCardId === item.id) {
+        stopCardReview();
+        return;
+      }
+      startCardReview(entry, item);
     }
 
     function updateScrollToggle() {
@@ -666,6 +722,7 @@
         soundEnabled = true;
         updateSoundToggle();
       }
+      stopCardReview();
       autoScrollActive = true;
       autoReviewToken++;
       const entries = [...document.querySelectorAll(".entry")];
@@ -726,6 +783,7 @@
 
     $("search").addEventListener("input", () => {
       stopAutoScroll();
+      stopCardReview();
       renderList();
     });
     $("scrollToggle").addEventListener("click", toggleAutoScroll);
