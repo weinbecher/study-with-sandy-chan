@@ -42,7 +42,7 @@
 
     .toolbar {
       display: grid;
-      grid-template-columns: 1fr auto auto;
+      grid-template-columns: 1fr auto auto auto;
       gap: 10px;
       align-items: center;
       margin: 0 0 15px;
@@ -67,8 +67,9 @@
 
     .voice-picker { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .8rem; font-weight: 800; white-space: nowrap; }
     .voice-picker select { max-width: 170px; border: 1px solid #f0c9d7; border-radius: 9px; padding: 8px; color: var(--pink-600); background: white; font: inherit; }
-    .sound-toggle { border: 0; padding: 10px 12px; border-radius: 12px; color: white; background: linear-gradient(135deg, #ef85aa, #d85888); cursor: pointer; font: inherit; font-weight: 900; white-space: nowrap; }
-    .sound-toggle[aria-pressed="false"] { color: var(--muted); background: #f4edf0; }
+    .sound-toggle, .scroll-toggle { border: 0; padding: 10px 12px; border-radius: 12px; color: white; background: linear-gradient(135deg, #ef85aa, #d85888); cursor: pointer; font: inherit; font-weight: 900; white-space: nowrap; }
+    .scroll-toggle { background: linear-gradient(135deg, #7ea0f0, #527bd2); }
+    .sound-toggle[aria-pressed="false"], .scroll-toggle[aria-pressed="false"] { color: var(--muted); background: #f4edf0; }
 
     .status { margin: 0 4px 12px; color: var(--muted); font-size: .86rem; font-weight: 800; }
     .list { display: grid; gap: 10px; }
@@ -106,6 +107,30 @@
     .meaning { color: #5d4650; line-height: 1.6; font-size: .94rem; }
     .tag { display: inline-flex; align-items: center; justify-content: center; width: fit-content; padding: 4px 9px; border-radius: 999px; color: var(--blue-500); background: var(--blue-100); font-size: .75rem; font-weight: 900; }
     .meta { display: grid; gap: 5px; }
+    .example-button {
+      grid-column: 2 / -1;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: start;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #f6d8e3;
+      border-radius: 13px;
+      color: #60434e;
+      background: #fff9fb;
+      cursor: pointer;
+      font: inherit;
+      font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
+      font-size: .94rem;
+      font-weight: 800;
+      line-height: 1.6;
+      text-align: left;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .example-button:hover, .example-button:focus-visible { border-color: var(--pink-400); background: white; transform: translateY(-1px); outline: none; }
+    .example-button.speaking { border-color: #75c8a4; background: #edfbf4; }
+    .example-label { color: var(--pink-600); font-size: .78rem; font-weight: 900; white-space: nowrap; }
 
     .sandy-tip { margin: 17px 0 0; padding: 13px 15px; border: 1px solid rgba(238,121,164,.16); border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.82); font-size: .86rem; line-height: 1.7; }
     .empty { display: none; padding: 30px; border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.8); text-align: center; font-weight: 800; }
@@ -115,7 +140,7 @@
       .voice-picker { justify-content: space-between; }
       .voice-picker select { max-width: min(100%, 260px); }
       .entry { grid-template-columns: 48px 1fr; }
-      .meta, .meaning { grid-column: 2; }
+      .meta, .meaning, .example-button { grid-column: 2; }
     }
   </style>
 </head>
@@ -124,7 +149,7 @@
     <header>
       <div class="eyebrow">N2 VOCABULARY LIST</div>
       <h1>N2 押题词汇表</h1>
-      <p class="subtitle">点日语单词会自动朗读日语；中文意思只是说明，不会朗读。</p>
+      <p class="subtitle">点日语单词或例句会自动朗读日语；中文意思只是说明，不会朗读。</p>
       <nav class="nav" aria-label="学习页面">
         <a href="index.html">🐾 回到 Sandy 练习</a>
       </nav>
@@ -134,12 +159,13 @@
       <input class="search" id="search" type="search" placeholder="搜索单词、读音或中文意思，例如：募る / つのる / 招募">
       <label class="voice-picker">日语声音<select id="voiceSelect" aria-label="选择日文语音"><option>载入中…</option></select></label>
       <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 语音：开</button>
+      <button class="scroll-toggle" id="scrollToggle" type="button" aria-pressed="false">▶ 自动滚动</button>
     </section>
 
     <p class="status" id="status">共 160 个词</p>
     <section class="list" id="list" aria-live="polite"></section>
     <p class="empty" id="empty">没有找到这个词。换个关键词试试看。</p>
-    <p class="sandy-tip">小提示：如果声音听起来太机器，可以在“日语声音”里试试系统里的 Kyoko、Otoya、Siri、Haruka 或 Nanami。不同设备可用声音会不一样。</p>
+    <p class="sandy-tip">小提示：点“自动滚动”后页面会慢慢往下走；点“停止滚动”、滚轮、触摸屏幕或按方向键都会停。声音如果太机器，可以在“日语声音”里试试系统里的 Kyoko、Otoya、Siri、Haruka 或 Nanami。</p>
   </main>
 
   <script>
@@ -306,8 +332,178 @@
       { id: 160, word: "プレッシャー", reading: "プレッシャー", meaning: "压力；压迫感" }
     ];
 
+    const examples = {
+      1: "机の上をきれいに整えてから勉強を始めた。",
+      2: "冬に備えて食料を蓄えておく。",
+      3: "地震に備えて、水と懐中電灯を用意した。",
+      4: "彼は大きな問題を抱えている。",
+      5: "締め切りが近づくにつれて不安が募った。",
+      6: "店は新しいアルバイトを雇うことにした。",
+      7: "学生たちはロボットの性能を競った。",
+      8: "兄弟は父の遺産をめぐって争った。",
+      9: "電車でお年寄りに席を譲った。",
+      10: "この町は豊かな自然に恵まれている。",
+      11: "子どものころから海外生活に憧れていた。",
+      12: "健康を保つために毎日歩いている。",
+      13: "記者は事件の真相を暴いた。",
+      14: "困ったときは友人に頼ってもいい。",
+      15: "経験の不足を努力で補った。",
+      16: "古い紙は少し触っただけで破れた。",
+      17: "夜更かしをすると生活リズムが乱れる。",
+      18: "台風の影響で海が荒れている。",
+      19: "期限までに税金を納めなければならない。",
+      20: "駅前の小さな店が潰れてしまった。",
+      21: "強い風で庭の木が倒れた。",
+      22: "先生は学生にプリントを配った。",
+      23: "占い師に将来を占ってもらった。",
+      24: "長く正座していたので足が痺れた。",
+      25: "年を取ると体力が衰えやすい。",
+      26: "週末の映画に友人を誘った。",
+      27: "先生は学生を正しい方向へ導いた。",
+      28: "この店は商品の品質を請け合っている。",
+      29: "曖昧な説明は誤解を招くことがある。",
+      30: "その一言で彼の信頼を損なってしまった。",
+      31: "洗濯したらセーターが縮んでしまった。",
+      32: "会社は来年度の予算を削る方針だ。",
+      33: "大きな川が二つの町を隔てている。",
+      34: "裁判官は公平に事件を裁かなければならない。",
+      35: "業績の悪化で会社の経営が傾いた。",
+      36: "体力では彼に劣るが、技術には自信がある。",
+      37: "階段で躓いて転びそうになった。",
+      38: "説明書を読まずに機械をいじらないでください。",
+      39: "チーム全員でこの問題に取り組んでいる。",
+      40: "思い切って新しい仕事に挑戦した。",
+      41: "このお茶は少し渋い味がする。",
+      42: "なだらかな坂道を自転車で下った。",
+      43: "会議は和やかな雰囲気で進んだ。",
+      44: "朝の爽やかな風が気持ちいい。",
+      45: "彼は快い返事をしてくれた。",
+      46: "頂上までは険しい山道が続いている。",
+      47: "この一年で彼の日本語は著しく上達した。",
+      48: "だらしない服装で面接に行くのはよくない。",
+      49: "彼は本当に頼もしい先輩だ。",
+      50: "この地域は水資源に乏しい。",
+      51: "貧しい生活の中でも彼女は明るく生きていた。",
+      52: "同じ質問をしつこく繰り返さないでください。",
+      53: "列に割り込むなんて図々しい。",
+      54: "空には鮮やかな虹がかかっていた。",
+      55: "それはとても賢い選択だと思う。",
+      56: "今日は風もなく、海が穏やかだ。",
+      57: "彼は逞しい体つきの選手だ。",
+      58: "相手チームは圧倒的な強さを見せた。",
+      59: "新しい計画は順調に進んでいる。",
+      60: "彼女は鋭い意見を述べた。",
+      61: "消防士の勇ましい姿に感動した。",
+      62: "昨夜は激しい雨が降った。",
+      63: "彼には輝かしい未来が待っている。",
+      64: "怪しいメールは開かないほうがいい。",
+      65: "休み時間の教室はとても騒がしい。",
+      66: "臆病な性格を少しずつ変えたい。",
+      67: "そんな卑怯な手段は使いたくない。",
+      68: "地道な努力が最後には力になる。",
+      69: "彼は笑いながら皮肉を言った。",
+      70: "資料に新しいデータを追加した。",
+      71: "この話はみんなには内緒にしておいて。",
+      72: "環境問題についてクラスで討論した。",
+      73: "彼はまだ新米だが、やる気は十分ある。",
+      74: "この箱には細かい細工が施されている。",
+      75: "チームの結束が勝利につながった。",
+      76: "彼女は器用に小さな部品を組み立てた。",
+      77: "彼は研究に没頭して、時間を忘れていた。",
+      78: "両社はようやく合意に達した。",
+      79: "文句ばかり言わずに、まずやってみよう。",
+      80: "新しいシステムは来月から稼働する。",
+      81: "銀行口座の残高を確認した。",
+      82: "彼の料理の腕前はプロ並みだ。",
+      83: "子どもたちはゲームに夢中になっている。",
+      84: "大筋ではその案に賛成です。",
+      85: "映画を見る前に小説の粗筋を読んだ。",
+      86: "彼は意地悪なことを言って相手を困らせた。",
+      87: "後輩なのに少し生意気な口をきく。",
+      88: "彼は自分を臆病者だと思っている。",
+      89: "父は無口だが、とても優しい人だ。",
+      90: "彼女は手際よく料理を作った。",
+      91: "駅までどのくらいか、見当がつかない。",
+      92: "公共の場では行儀よくしなさい。",
+      93: "彼は若くして会社で出世した。",
+      94: "妹は毎日楽器の練習をしている。",
+      95: "留守番電話に伝言を残した。",
+      96: "この業界は競争が激しい。",
+      97: "学校はボランティアを募集している。",
+      98: "試合で日ごろの実力を発揮した。",
+      99: "それは妥当な判断だと思います。",
+      100: "結果が出るまで辛抱強く待とう。",
+      101: "相手の意見を尊重することが大切だ。",
+      102: "来月、東京で国際会議が開催される。",
+      103: "返事がないので、もう一度催促した。",
+      104: "最後まで油断してはいけない。",
+      105: "新事業のために資金を調達した。",
+      106: "被災地にお金を寄付した。",
+      107: "夜道では十分に用心してください。",
+      108: "祖父は庭で野菜を栽培している。",
+      109: "その試合はテレビで生中継された。",
+      110: "彼は自分の意見を強引に押し通した。",
+      111: "新しい制度には賛否が分かれている。",
+      112: "廊下に人の気配を感じた。",
+      113: "決勝戦で相手チームに圧勝した。",
+      114: "あの店は地元で評判がいい。",
+      115: "友人に仕事の愚痴をこぼした。",
+      116: "大雨のあと、交通事故が続出した。",
+      117: "彼女は海外でも活躍している。",
+      118: "そのニュースはたちまち全国に広まった。",
+      119: "本棚には専門書がぎっしり並んでいる。",
+      120: "昨夜は久しぶりにぐっすり眠れた。",
+      121: "参加者はせいぜい十人くらいだろう。",
+      122: "彼は窓の外をぼんやり眺めていた。",
+      123: "休日は商店街をぶらぶら歩くのが好きだ。",
+      124: "引き出しの中の書類がばらばらになっている。",
+      125: "朝早い電車はがらがらだった。",
+      126: "宿題ならとっくに終わらせたよ。",
+      127: "シャワーを浴びて気分がさっぱりした。",
+      128: "授業中にうとうとしてしまった。",
+      129: "梅雨の時期は部屋がじめじめする。",
+      130: "今回の対応ははなはだ迷惑だった。",
+      131: "駅前で友人を探してうろうろした。",
+      132: "試験が終わって、ほっとした。",
+      133: "仮に失敗しても、いい経験になる。",
+      134: "この靴はサイズがぴったりだ。",
+      135: "これはあくまで私個人の意見です。",
+      136: "忙しい中、わざわざ来てくれてありがとう。",
+      137: "どうやら明日は雨になりそうだ。",
+      138: "外出先から会社の資料にアクセスした。",
+      139: "作業のプロセスをもう一度見直そう。",
+      140: "会社は新しい予約システムを導入した。",
+      141: "発表するタイミングを間違えてしまった。",
+      142: "その広告は社会に大きなインパクトを与えた。",
+      143: "旅行先で車をレンタルした。",
+      144: "この小説は人気シリーズの最新作だ。",
+      145: "別のアプローチで問題を解決してみよう。",
+      146: "難しい課題をなんとかクリアした。",
+      147: "新しい部屋のインテリアを選ぶのが楽しい。",
+      148: "親子の間には考え方のギャップがある。",
+      149: "家具のカタログを見ながら椅子を選んだ。",
+      150: "彼はチームのキャプテンとして皆をまとめた。",
+      151: "記事を読んでコメントを書いた。",
+      152: "台風で建物が大きなダメージを受けた。",
+      153: "出かける前にスマホをチャージしておく。",
+      154: "長いトンネルを抜けると海が見えた。",
+      155: "働きすぎてノイローゼになりそうだ。",
+      156: "ベテランの先生に相談した。",
+      157: "規則正しい生活のリズムを作りたい。",
+      158: "古い家をリフォームして住みやすくした。",
+      159: "週末は家族でレジャーを楽しんだ。",
+      160: "大事な試験の前はプレッシャーを感じる。"
+    };
+
+    vocab.forEach((item) => {
+      item.example = examples[item.id] || `${item.word}を使った例文を声に出して読んでみましょう。`;
+    });
+
     let soundEnabled = "speechSynthesis" in window;
     let japaneseVoices = [];
+    let autoScrollActive = false;
+    let autoScrollFrame = null;
+    let lastScrollTime = 0;
     const $ = (id) => document.getElementById(id);
 
     function categoryFor(id) {
@@ -322,6 +518,7 @@
       if (!soundEnabled || !("SpeechSynthesisUtterance" in window)) return;
       window.speechSynthesis.cancel();
       window.speechSynthesis.resume();
+      document.querySelectorAll(".speaking").forEach((item) => item.classList.remove("speaking"));
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "ja-JP";
       utterance.rate = 0.82;
@@ -339,7 +536,7 @@
 
     function renderList() {
       const query = $("search").value.trim().toLowerCase();
-      const results = vocab.filter((item) => [item.word, item.reading, item.meaning, categoryFor(item.id)].some((value) => value.toLowerCase().includes(query)));
+      const results = vocab.filter((item) => [item.word, item.reading, item.meaning, item.example, categoryFor(item.id)].some((value) => value.toLowerCase().includes(query)));
       $("status").textContent = query ? `找到 ${results.length} / ${vocab.length} 个词` : `共 ${vocab.length} 个词`;
       $("empty").style.display = results.length ? "none" : "block";
       const list = $("list");
@@ -358,7 +555,10 @@
         wordButton.type = "button";
         wordButton.textContent = item.word;
         wordButton.setAttribute("aria-label", `朗读日语：${item.word}`);
-        wordButton.addEventListener("click", () => speakJapanese(item.reading || item.word, wordButton));
+        wordButton.addEventListener("click", () => {
+          stopAutoScroll();
+          speakJapanese(item.reading || item.word, wordButton);
+        });
 
         const meta = document.createElement("div");
         meta.className = "meta";
@@ -374,10 +574,65 @@
         meaning.className = "meaning";
         meaning.textContent = item.meaning;
 
-        article.append(num, wordButton, meta, meaning);
+        const exampleButton = document.createElement("button");
+        exampleButton.className = "example-button";
+        exampleButton.type = "button";
+        exampleButton.setAttribute("aria-label", `朗读例句：${item.example}`);
+        const exampleLabel = document.createElement("span");
+        exampleLabel.className = "example-label";
+        exampleLabel.textContent = "例句 🔊";
+        const exampleSentence = document.createElement("span");
+        exampleSentence.textContent = item.example;
+        exampleButton.append(exampleLabel, exampleSentence);
+        exampleButton.addEventListener("click", () => {
+          stopAutoScroll();
+          speakJapanese(item.example, exampleButton);
+        });
+
+        article.append(num, wordButton, meta, meaning, exampleButton);
         fragment.appendChild(article);
       });
       list.appendChild(fragment);
+    }
+
+    function updateScrollToggle() {
+      const toggle = $("scrollToggle");
+      toggle.setAttribute("aria-pressed", String(autoScrollActive));
+      toggle.textContent = autoScrollActive ? "⏸ 停止滚动" : "▶ 自动滚动";
+    }
+
+    function startAutoScroll() {
+      if (autoScrollActive) return;
+      autoScrollActive = true;
+      lastScrollTime = performance.now();
+      updateScrollToggle();
+      const scrollStep = (now) => {
+        if (!autoScrollActive) return;
+        const elapsed = Math.min(80, now - lastScrollTime);
+        lastScrollTime = now;
+        window.scrollBy(0, elapsed * 0.035);
+        const pageBottom = window.scrollY + window.innerHeight;
+        const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        if (pageBottom >= documentHeight - 4) {
+          stopAutoScroll();
+          return;
+        }
+        autoScrollFrame = requestAnimationFrame(scrollStep);
+      };
+      autoScrollFrame = requestAnimationFrame(scrollStep);
+    }
+
+    function stopAutoScroll() {
+      if (!autoScrollActive) return;
+      autoScrollActive = false;
+      if (autoScrollFrame) cancelAnimationFrame(autoScrollFrame);
+      autoScrollFrame = null;
+      updateScrollToggle();
+    }
+
+    function toggleAutoScroll() {
+      if (autoScrollActive) stopAutoScroll();
+      else startAutoScroll();
     }
 
     function updateSoundToggle() {
@@ -411,7 +666,11 @@
       select.value = preferred.name;
     }
 
-    $("search").addEventListener("input", renderList);
+    $("search").addEventListener("input", () => {
+      stopAutoScroll();
+      renderList();
+    });
+    $("scrollToggle").addEventListener("click", toggleAutoScroll);
     $("soundToggle").addEventListener("click", () => {
       soundEnabled = !soundEnabled;
       if (!soundEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -421,8 +680,14 @@
       try { localStorage.setItem("n2-vocab-voice", $("voiceSelect").value); } catch {}
     });
     updateSoundToggle();
+    updateScrollToggle();
     loadVoices();
     if ("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    window.addEventListener("wheel", stopAutoScroll, { passive: true });
+    window.addEventListener("touchstart", stopAutoScroll, { passive: true });
+    window.addEventListener("keydown", (event) => {
+      if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(event.key)) stopAutoScroll();
+    });
     renderList();
   </script>
 </body>
