@@ -24,6 +24,7 @@
     body {
       min-height: 100vh;
       margin: 0;
+      padding-bottom: 96px;
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Hiragino Sans", "Yu Gothic", sans-serif;
       background: radial-gradient(circle at 10% 10%, #fff 0 11%, transparent 11.5%),
@@ -70,6 +71,19 @@
     .sound-toggle, .scroll-toggle { border: 0; padding: 10px 12px; border-radius: 12px; color: white; background: linear-gradient(135deg, #ef85aa, #d85888); cursor: pointer; font: inherit; font-weight: 900; white-space: nowrap; }
     .scroll-toggle { background: linear-gradient(135deg, #7ea0f0, #527bd2); }
     .sound-toggle[aria-pressed="false"], .scroll-toggle[aria-pressed="false"] { color: var(--muted); background: #f4edf0; }
+    .floating-controls {
+      position: fixed;
+      z-index: 20;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      display: grid;
+      gap: 7px;
+      justify-items: end;
+      pointer-events: none;
+    }
+    .floating-controls > * { pointer-events: auto; }
+    .floating-scroll-toggle { padding: 13px 16px; border-radius: 999px; box-shadow: 0 12px 28px rgba(82,123,210,.24); }
+    .floating-progress { max-width: 210px; padding: 6px 10px; border: 1px solid #f0c9d7; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.92); box-shadow: 0 8px 18px rgba(157,68,103,.12); font-size: .76rem; font-weight: 900; text-align: center; }
 
     .status { margin: 0 4px 12px; color: var(--muted); font-size: .86rem; font-weight: 800; }
     .list { display: grid; gap: 10px; }
@@ -144,6 +158,9 @@
       .voice-picker select { max-width: min(100%, 260px); }
       .entry { grid-template-columns: 48px 1fr; }
       .meta, .meaning, .example-button { grid-column: 2; }
+      .floating-controls { left: 16px; right: 16px; justify-items: stretch; }
+      .floating-scroll-toggle { width: 100%; }
+      .floating-progress { justify-self: center; }
     }
   </style>
 </head>
@@ -162,7 +179,7 @@
       <input class="search" id="search" type="search" placeholder="搜索单词、读音或中文意思，例如：募る / つのる / 招募">
       <label class="voice-picker">日语声音<select id="voiceSelect" aria-label="选择日文语音"><option>载入中…</option></select></label>
       <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 语音：开</button>
-      <button class="scroll-toggle" id="scrollToggle" type="button" aria-pressed="false">▶ 自动听读</button>
+      <button class="scroll-toggle" id="scrollToggle" data-scroll-toggle type="button" aria-pressed="false">▶ 自动听读</button>
     </section>
 
     <p class="status" id="status">共 160 个词</p>
@@ -170,6 +187,10 @@
     <p class="empty" id="empty">没有找到这个词。换个关键词试试看。</p>
     <p class="sandy-tip">小提示：点整张卡片可以读这张卡，再点一次会暂停。点“自动听读”后，页面会滚到当前词，先读单词，再读例句，然后继续下一张。点“停止听读”、滚轮、触摸屏幕或按方向键都会停。</p>
   </main>
+  <div class="floating-controls" aria-label="悬浮学习控制">
+    <span class="floating-progress" id="floatingProgress">进度：还没开始</span>
+    <button class="scroll-toggle floating-scroll-toggle" id="floatingScrollToggle" data-scroll-toggle type="button" aria-pressed="false">▶ 自动听读</button>
+  </div>
 
   <script>
     const vocab = [
@@ -511,6 +532,8 @@
     let cardReviewActive = false;
     let cardReviewToken = 0;
     let activeCardId = null;
+    let scrollSaveFrame = null;
+    const progressKey = "n2-vocab-last-viewed-v1";
     const $ = (id) => document.getElementById(id);
     const delay = (ms) => new Promise((resolve) => { autoReviewTimer = setTimeout(resolve, ms); });
 
@@ -563,6 +586,7 @@
         const article = document.createElement("article");
         article.className = "entry";
         article.dataset.vocabId = item.id;
+        article.id = `vocab-${item.id}`;
 
         const num = document.createElement("div");
         num.className = "num";
@@ -577,6 +601,7 @@
           event.stopPropagation();
           stopAutoScroll();
           stopCardReview();
+          saveLastViewed(item.id);
           speakJapanese(item.reading || item.word, wordButton);
         });
 
@@ -608,6 +633,7 @@
           event.stopPropagation();
           stopAutoScroll();
           stopCardReview();
+          saveLastViewed(item.id);
           speakJapanese(item.example, exampleButton);
         });
 
@@ -616,6 +642,70 @@
         fragment.appendChild(article);
       });
       list.appendChild(fragment);
+      updateFloatingProgress(loadLastViewed());
+    }
+
+    function loadLastViewed() {
+      try {
+        const saved = Number(localStorage.getItem(progressKey));
+        return Number.isInteger(saved) && saved >= 1 && saved <= vocab.length ? saved : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveLastViewed(id) {
+      const numericId = Number(id);
+      if (!Number.isInteger(numericId) || numericId < 1 || numericId > vocab.length) return;
+      try { localStorage.setItem(progressKey, String(numericId)); } catch {}
+      updateFloatingProgress(numericId);
+    }
+
+    function updateFloatingProgress(id) {
+      const progress = $("floatingProgress");
+      if (!progress) return;
+      const item = vocab.find((vocabItem) => vocabItem.id === Number(id));
+      progress.textContent = item ? `进度：${String(item.id).padStart(3, "0")} / ${vocab.length}　${item.word}` : "进度：还没开始";
+    }
+
+    function currentCenterEntry() {
+      const entries = [...document.querySelectorAll(".entry")];
+      const centerY = window.innerHeight * 0.48;
+      return entries
+        .filter((entry) => {
+          const rect = entry.getBoundingClientRect();
+          return rect.bottom > 0 && rect.top < window.innerHeight;
+        })
+        .sort((a, b) => {
+          const rectA = a.getBoundingClientRect();
+          const rectB = b.getBoundingClientRect();
+          return Math.abs((rectA.top + rectA.bottom) / 2 - centerY) - Math.abs((rectB.top + rectB.bottom) / 2 - centerY);
+        })[0] || null;
+    }
+
+    function saveVisibleProgress() {
+      scrollSaveFrame = null;
+      const entry = currentCenterEntry();
+      if (entry) saveLastViewed(entry.dataset.vocabId);
+    }
+
+    function scheduleProgressSave() {
+      if (scrollSaveFrame) return;
+      scrollSaveFrame = requestAnimationFrame(saveVisibleProgress);
+    }
+
+    function restoreLastViewedPosition() {
+      if ($("search").value.trim()) return;
+      const saved = loadLastViewed();
+      updateFloatingProgress(saved);
+      if (!saved) return;
+      const entry = document.querySelector(`[data-vocab-id="${saved}"]`);
+      if (!entry) return;
+      setTimeout(() => {
+        entry.scrollIntoView({ behavior: "smooth", block: "center" });
+        entry.classList.add("playing");
+        setTimeout(() => entry.classList.remove("playing"), 900);
+      }, 180);
     }
 
     async function playCardReview(entry, item, token) {
@@ -626,6 +716,7 @@
       }
       document.querySelectorAll(".entry.playing").forEach((node) => node.classList.remove("playing"));
       entry.classList.add("playing");
+      saveLastViewed(item.id);
       entry.scrollIntoView({ behavior: "smooth", block: "center" });
       await delay(320);
       if (!cardReviewActive || token !== cardReviewToken) return;
@@ -666,9 +757,10 @@
     }
 
     function updateScrollToggle() {
-      const toggle = $("scrollToggle");
-      toggle.setAttribute("aria-pressed", String(autoScrollActive));
-      toggle.textContent = autoScrollActive ? "⏸ 停止听读" : "▶ 自动听读";
+      document.querySelectorAll("[data-scroll-toggle]").forEach((toggle) => {
+        toggle.setAttribute("aria-pressed", String(autoScrollActive));
+        toggle.textContent = autoScrollActive ? "⏸ 停止听读" : "▶ 自动听读";
+      });
     }
 
     function firstVisibleEntryIndex(entries) {
@@ -697,6 +789,7 @@
 
       document.querySelectorAll(".entry.playing").forEach((node) => node.classList.remove("playing"));
       entry.classList.add("playing");
+      saveLastViewed(item.id);
       entry.scrollIntoView({ behavior: "smooth", block: "center" });
       await delay(450);
       if (!autoScrollActive || token !== autoReviewToken) return;
@@ -786,7 +879,11 @@
       stopCardReview();
       renderList();
     });
-    $("scrollToggle").addEventListener("click", toggleAutoScroll);
+    document.querySelectorAll("[data-scroll-toggle]").forEach((toggle) => {
+      toggle.addEventListener("click", toggleAutoScroll);
+      toggle.addEventListener("touchstart", (event) => event.stopPropagation(), { passive: true });
+      toggle.addEventListener("pointerdown", (event) => event.stopPropagation());
+    });
     $("soundToggle").addEventListener("click", () => {
       soundEnabled = !soundEnabled;
       if (!soundEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -799,12 +896,14 @@
     updateScrollToggle();
     loadVoices();
     if ("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    window.addEventListener("scroll", scheduleProgressSave, { passive: true });
     window.addEventListener("wheel", stopAutoScroll, { passive: true });
     window.addEventListener("touchstart", stopAutoScroll, { passive: true });
     window.addEventListener("keydown", (event) => {
       if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(event.key)) stopAutoScroll();
     });
     renderList();
+    restoreLastViewedPosition();
   </script>
 </body>
 </html>
