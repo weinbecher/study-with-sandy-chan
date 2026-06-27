@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>N2 押题语法表｜Study with Sandy</title>
+  <style>
+    :root {
+      --pink-50: #fff8fb;
+      --pink-100: #ffeaf2;
+      --pink-200: #ffd3e2;
+      --pink-400: #ee79a4;
+      --pink-600: #bd3e6b;
+      --blue-100: #e8efff;
+      --blue-500: #527bd2;
+      --ink: #422d36;
+      --muted: #856a76;
+      --white: #fff;
+      --shadow: 0 18px 50px rgba(157, 68, 103, .14);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding-bottom: 98px;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: radial-gradient(circle at 10% 10%, #fff 0 11%, transparent 11.5%),
+                  radial-gradient(circle at 92% 12%, #ffe4ee 0 12%, transparent 12.5%),
+                  linear-gradient(135deg, #fff8fb, #fff0f5 52%, #f7faff);
+    }
+
+    .app { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 42px; }
+    header { text-align: center; margin-bottom: 16px; }
+    .eyebrow { color: var(--pink-600); font-size: .7rem; font-weight: 900; letter-spacing: .14em; }
+    h1 { margin: 5px 0 5px; font-size: clamp(1.55rem, 4.6vw, 2.25rem); letter-spacing: .02em; }
+    .subtitle { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.7; }
+    .account { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; padding: 5px 9px; border: 1px solid #f3d5e0; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.7); font-size: .74rem; font-weight: 700; }
+    .account button { border: 0; padding: 3px 5px; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-weight: 800; }
+    .account button:hover { text-decoration: underline; }
+    .account a { color: var(--pink-600); font-weight: 800; text-decoration: none; }
+    .account a:hover { text-decoration: underline; }
+    .account:not(.signed-in) #accountAction, .account.signed-in #loginLink { display: none; }
+    .nav { display: flex; justify-content: center; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+    .nav a { padding: 7px 12px; border: 1px solid #f0c9d7; border-radius: 999px; color: var(--pink-600); background: rgba(255,255,255,.78); font-size: .8rem; font-weight: 900; text-decoration: none; }
+    .nav a:hover { background: white; box-shadow: 0 7px 18px rgba(157,68,103,.12); }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto auto;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 15px;
+      padding: 12px;
+      border: 1px solid rgba(238,121,164,.18);
+      border-radius: 20px;
+      background: rgba(255,255,255,.84);
+      box-shadow: var(--shadow);
+    }
+
+    .search { min-width: 0; width: 100%; padding: 12px 14px; border: 1px solid #f0c9d7; border-radius: 13px; color: var(--ink); background: white; font: inherit; font-weight: 700; }
+    .voice-picker { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .8rem; font-weight: 800; white-space: nowrap; }
+    .voice-picker select { max-width: 170px; border: 1px solid #f0c9d7; border-radius: 9px; padding: 8px; color: var(--pink-600); background: white; font: inherit; }
+    .sound-toggle, .scroll-toggle, .favorite-filter { border: 0; padding: 10px 12px; border-radius: 12px; color: white; background: linear-gradient(135deg, #ef85aa, #d85888); cursor: pointer; font: inherit; font-weight: 900; white-space: nowrap; }
+    .scroll-toggle { background: linear-gradient(135deg, #7ea0f0, #527bd2); }
+    .favorite-filter { background: linear-gradient(135deg, #ffb36d, #ee79a4); }
+    .sound-toggle[aria-pressed="false"], .scroll-toggle[aria-pressed="false"], .favorite-filter[aria-pressed="false"] { color: var(--muted); background: #f4edf0; }
+
+    .status { margin: 0 4px 12px; color: var(--muted); font-size: .86rem; font-weight: 800; }
+    .notebook-panel { margin: 0 0 14px; padding: 12px; border: 1px solid rgba(238,121,164,.18); border-radius: 20px; background: rgba(255,255,255,.82); box-shadow: 0 12px 30px rgba(157,68,103,.1); }
+    .notebook-header { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 10px; }
+    .notebook-title { display: grid; gap: 2px; font-size: .94rem; font-weight: 950; }
+    .notebook-help { color: var(--muted); font-size: .78rem; font-weight: 800; line-height: 1.55; }
+    .clear-favorites { border: 1px solid #f0c9d7; border-radius: 999px; padding: 7px 10px; color: var(--pink-600); background: white; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 900; white-space: nowrap; }
+    .clear-favorites:disabled { cursor: not-allowed; opacity: .45; }
+    .notebook-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .notebook-chip { border: 1px solid #f0c9d7; border-radius: 999px; padding: 7px 11px; color: var(--pink-600); background: #fff8fb; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 900; }
+    .notebook-chip:hover, .notebook-chip:focus-visible { border-color: var(--pink-400); background: white; outline: none; }
+    .notebook-empty { color: var(--muted); font-size: .84rem; font-weight: 800; }
+
+    .list { display: grid; gap: 10px; }
+    .entry {
+      display: grid;
+      grid-template-columns: 64px minmax(190px, 1fr) minmax(170px, .9fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid rgba(238,121,164,.16);
+      border-radius: 18px;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 8px 22px rgba(157,68,103,.08);
+      cursor: pointer;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+    .entry.playing { border-color: rgba(117,200,164,.75); box-shadow: 0 12px 28px rgba(75,150,114,.16); transform: translateY(-1px); }
+    .entry.favorited { border-color: rgba(255,179,109,.55); background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,248,251,.94)); }
+    .num { color: var(--muted); font-size: .85rem; font-weight: 900; text-align: center; }
+    .pattern-button {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--pink-200);
+      border-radius: 13px;
+      color: var(--pink-600);
+      background: var(--pink-50);
+      cursor: pointer;
+      font: inherit;
+      font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
+      font-size: 1.15rem;
+      font-weight: 900;
+      text-align: left;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .pattern-button:hover, .pattern-button:focus-visible { border-color: var(--pink-400); background: white; transform: translateY(-1px); outline: none; }
+    .pattern-button.speaking { border-color: #75c8a4; background: #edfbf4; }
+    .meaning { color: #5d4650; line-height: 1.6; font-size: .94rem; }
+    .tag { display: inline-flex; align-items: center; justify-content: center; width: fit-content; padding: 5px 9px; border-radius: 999px; color: var(--blue-500); background: var(--blue-100); font-size: .75rem; font-weight: 900; }
+    .favorite-button { justify-self: end; border: 1px solid #ffd7a8; border-radius: 999px; padding: 9px 11px; color: #a45a1f; background: #fff6e9; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 950; white-space: nowrap; transition: transform .16s ease, background .16s ease, border-color .16s ease; }
+    .favorite-button[aria-pressed="true"] { color: white; border-color: #f2a45f; background: linear-gradient(135deg, #ffbd78, #ee79a4); box-shadow: 0 8px 18px rgba(238,121,164,.18); }
+    .favorite-button:hover, .favorite-button:focus-visible { border-color: #f2a45f; transform: translateY(-1px); outline: none; }
+    .example-button {
+      grid-column: 2 / -1;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: start;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #f6d8e3;
+      border-radius: 13px;
+      color: #60434e;
+      background: #fff9fb;
+      cursor: pointer;
+      font: inherit;
+      font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
+      font-size: .94rem;
+      font-weight: 800;
+      line-height: 1.6;
+      text-align: left;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .example-button:hover, .example-button:focus-visible { border-color: var(--pink-400); background: white; transform: translateY(-1px); outline: none; }
+    .example-button.speaking { border-color: #75c8a4; background: #edfbf4; }
+    .example-label { color: var(--pink-600); font-size: .78rem; font-weight: 900; white-space: nowrap; }
+    .sandy-tip { margin: 17px 0 0; padding: 13px 15px; border: 1px solid rgba(238,121,164,.16); border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.82); font-size: .86rem; line-height: 1.7; }
+    .empty { display: none; padding: 30px; border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.8); text-align: center; font-weight: 800; }
+    .floating-controls { position: fixed; z-index: 20; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); display: grid; gap: 7px; justify-items: end; pointer-events: none; }
+    .floating-controls > * { pointer-events: auto; }
+    .floating-scroll-toggle { padding: 13px 16px; border-radius: 999px; box-shadow: 0 12px 28px rgba(82,123,210,.24); }
+    .floating-progress { max-width: 270px; padding: 6px 10px; border: 1px solid #f0c9d7; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.92); box-shadow: 0 8px 18px rgba(157,68,103,.12); font-size: .76rem; font-weight: 900; text-align: center; }
+
+    @media (max-width: 780px) {
+      .toolbar { grid-template-columns: 1fr; }
+      .voice-picker { justify-content: space-between; }
+      .voice-picker select { max-width: min(100%, 260px); }
+      .entry { grid-template-columns: 48px 1fr; }
+      .meaning, .tag, .favorite-button, .example-button { grid-column: 2; }
+      .favorite-button { justify-self: start; }
+      .notebook-header { display: grid; }
+      .floating-controls { left: 16px; right: 16px; justify-items: stretch; }
+      .floating-scroll-toggle { width: 100%; }
+      .floating-progress { justify-self: center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="eyebrow">N2 GRAMMAR LIST</div>
+      <h1>N2 押题语法表</h1>
+      <p class="subtitle">根据你给的图片整理成 99 个语法卡片；点句型或例句会朗读日语，中文解释不会朗读。</p>
+      <div class="account" id="account">
+        <span id="accountStatus">登录后会云同步语法进度和错题本。</span>
+        <a id="loginLink" href="login.html?redirect=grammar.html">Sign in</a>
+        <button id="accountAction" type="button">Sign out</button>
+      </div>
+      <nav class="nav" aria-label="学习页面">
+        <a href="index.html">🐾 回到 Sandy 练习</a>
+        <a href="vocab.html">📚 N2 词汇表</a>
+      </nav>
+    </header>
+
+    <section class="toolbar" aria-label="语法工具">
+      <input class="search" id="search" type="search" placeholder="搜索语法、中文意思或例句，例如：からには / 既然 / 合格">
+      <label class="voice-picker">日语声音<select id="voiceSelect" aria-label="选择日文语音"><option>载入中…</option></select></label>
+      <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 语音：开</button>
+      <button class="favorite-filter" id="favoritesToggle" type="button" aria-pressed="false">⭐ 错题本 0</button>
+      <button class="scroll-toggle" id="scrollToggle" data-scroll-toggle type="button" aria-pressed="false">▶ 自动听读</button>
+    </section>
+
+    <section class="notebook-panel" id="notebookPanel" aria-label="收藏错题本">
+      <div class="notebook-header">
+        <div class="notebook-title">
+          <span>⭐ 我的语法错题本</span>
+          <span class="notebook-help" id="notebookHelp">点语法卡上的“收藏”就会放进这里；以后想再点一遍，可以直接跳回去。</span>
+        </div>
+        <button class="clear-favorites" id="clearFavorites" type="button">清空错题本</button>
+      </div>
+      <div class="notebook-list" id="notebookList"></div>
+    </section>
+
+    <p class="status" id="status">共 99 个语法</p>
+    <section class="list" id="list" aria-live="polite"></section>
+    <p class="empty" id="empty">没有找到这个语法。换个关键词试试看。</p>
+    <p class="sandy-tip">小提示：点整张卡片可以读“句型 + 例句”，再点同一张会暂停。自动听读会从你上次进度开始，先读句型，再读例句，然后继续下一张。</p>
+  </main>
+  <div class="floating-controls" aria-label="悬浮学习控制">
+    <span class="floating-progress" id="floatingProgress">进度：还没开始</span>
+    <button class="scroll-toggle floating-scroll-toggle" id="floatingScrollToggle" data-scroll-toggle type="button" aria-pressed="false">▶ 自动听读</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const grammarItems = [
+      { id: 1, group: "20+ 真题高频", pattern: "〜からといって", meaning: "虽说……也不能……；不能仅因为……就……", example: "美味しいからといって、食べ過ぎてはいけない。" },
+      { id: 2, group: "20+ 真题高频", pattern: "〜からには", meaning: "既然……就……", example: "受験するからには、合格を目指して頑張りたい。" },
+      { id: 3, group: "20+ 真题高频", pattern: "〜おかげで", meaning: "多亏……；因为……而得到好结果", example: "先生のおかげで、苦手だった文法が分かるようになった。" },
+      { id: 4, group: "20+ 真题高频", pattern: "〜せいだ", meaning: "都是因为……；不好的原因，带责怪语气", example: "寝不足のせいで、今日は頭がぼんやりしている。" },
+      { id: 5, group: "20+ 真题高频", pattern: "〜たところで", meaning: "即使……也……；就算做了也没有好结果", example: "今から急いだところで、始発には間に合わない。" },
+      { id: 6, group: "20+ 真题高频", pattern: "〜どころか", meaning: "岂止……；哪谈得上……，甚至……", example: "疲れすぎて、歩くどころか立つこともできない。" },
+      { id: 7, group: "20+ 真题高频", pattern: "〜ながら", meaning: "一边……一边……；虽然……但是……", example: "彼は知っていながら、何も教えてくれなかった。" },
+      { id: 8, group: "20+ 真题高频", pattern: "〜うちに", meaning: "趁着……；在……期间", example: "若いうちに、いろいろな経験をしておきたい。" },
+      { id: 9, group: "20+ 真题高频", pattern: "〜としたら / 〜とすれば", meaning: "如果……的话；轻微假定", example: "留学するとしたら、まず生活費を計算しなければならない。" },
+      { id: 10, group: "20+ 真题高频", pattern: "〜として / 〜としては / 〜としても", meaning: "作为……；即使作为……也……", example: "学生として、自分の意見をきちんと述べたい。" },
+      { id: 11, group: "20+ 真题高频", pattern: "〜に関して / 〜に関する", meaning: "关于……；有关……", example: "試験に関して分からないことがあれば、先生に聞いてください。" },
+      { id: 12, group: "20+ 真题高频", pattern: "〜に対して / 〜に対する", meaning: "对……；对于……", example: "上司に対して、失礼な言い方をしてしまった。" },
+      { id: 13, group: "20+ 真题高频", pattern: "〜をめぐって / 〜をめぐる", meaning: "围绕……；关于……发生讨论或争论", example: "新しい制度をめぐって、社内で議論が続いている。" },
+      { id: 14, group: "20+ 真题高频", pattern: "〜さえすれば", meaning: "只要……就……", example: "毎日少しずつ復習さえすれば、力は必ずついてくる。" },
+      { id: 15, group: "20+ 真题高频", pattern: "〜も〜ば〜も", meaning: "既……又……", example: "この町は景色もよければ、食べ物もおいしい。" },
+      { id: 16, group: "20+ 真题高频", pattern: "〜ように", meaning: "为了……；以便……", example: "忘れないように、予定を手帳に書いておいた。" },
+      { id: 17, group: "20+ 真题高频", pattern: "〜わけではない / 〜わけでもない", meaning: "并不是……；并不会……", example: "日本語が話せるからといって、敬語が上手なわけではない。" },
+      { id: 18, group: "20+ 真题高频", pattern: "〜わけにはいかない / 〜わけにもいかない", meaning: "不能……；也不能……", example: "明日は試験なので、今夜遊びに行くわけにはいかない。" },
+      { id: 19, group: "20+ 真题高频", pattern: "〜だけ / 〜だけあって / 〜だけに / 〜だけの", meaning: "正因为……；到底是……；毕竟……", example: "経験が長いだけあって、彼の説明はとても分かりやすい。" },
+      { id: 20, group: "20+ 真题高频", pattern: "〜ないことには〜ない", meaning: "不……就不能……", example: "実物を見ないことには、買うかどうか決められない。" },
+      { id: 21, group: "10+ 重要语法", pattern: "〜しかない", meaning: "只好……；只有……", example: "電車が止まったので、歩いて帰るしかない。" },
+      { id: 22, group: "10+ 重要语法", pattern: "〜にすぎない", meaning: "只不过是……", example: "これは一つの例にすぎない。" },
+      { id: 23, group: "10+ 重要语法", pattern: "〜にほかならない", meaning: "无非是……；正是……", example: "今回の成功は、皆の努力の結果にほかならない。" },
+      { id: 24, group: "10+ 重要语法", pattern: "〜ずにはいられない", meaning: "不能不……；忍不住……", example: "その話を聞いて、笑わずにはいられなかった。" },
+      { id: 25, group: "10+ 重要语法", pattern: "〜ないことはない / 〜ないこともない", meaning: "不是不……；也不是没有可能……", example: "少し高いが、買えないこともない。" },
+      { id: 26, group: "10+ 重要语法", pattern: "〜ほかない / 〜よりほかない", meaning: "只有……；不得不……", example: "ここまで来たら、最後までやるほかない。" },
+      { id: 27, group: "10+ 重要语法", pattern: "〜のみならず", meaning: "不仅……而且……", example: "彼は日本語のみならず、英語も流暢に話せる。" },
+      { id: 28, group: "10+ 重要语法", pattern: "たとえ〜ても", meaning: "即使……也……", example: "たとえ失敗しても、もう一度挑戦したい。" },
+      { id: 29, group: "10+ 重要语法", pattern: "〜ば〜ほど", meaning: "越……越……", example: "勉強すればするほど、日本語が面白くなる。" },
+      { id: 30, group: "10+ 重要语法", pattern: "〜ことに / 〜ことには", meaning: "令人……的是……", example: "驚いたことに、彼は一晩でその本を読み終えた。" },
+      { id: 31, group: "10+ 重要语法", pattern: "〜ことだから", meaning: "因为是……，所以想必……", example: "真面目な彼のことだから、きっと約束を守るだろう。" },
+      { id: 32, group: "10+ 重要语法", pattern: "〜かねない", meaning: "有可能……；可能会导致坏结果", example: "このまま放っておくと、大きな問題になりかねない。" },
+      { id: 33, group: "10+ 重要语法", pattern: "〜次第", meaning: "一……就……；取决于……", example: "結果が分かり次第、すぐに連絡します。" },
+      { id: 34, group: "10+ 重要语法", pattern: "一方 / 一方で / 一方では", meaning: "一方面……另一方面……", example: "この町は便利な一方で、家賃が高い。" },
+      { id: 35, group: "10+ 重要语法", pattern: "〜一方だ", meaning: "越来越……；一直朝某方向发展", example: "仕事の量は増える一方だ。" },
+      { id: 36, group: "10+ 重要语法", pattern: "〜にかけては / 〜にかけても", meaning: "在……方面；说到……", example: "料理にかけては、彼にかなう人はいない。" },
+      { id: 37, group: "10+ 重要语法", pattern: "〜によって / 〜により / 〜による", meaning: "由于……；根据……；被……", example: "結果は努力によって大きく変わる。" },
+      { id: 38, group: "10+ 重要语法", pattern: "〜にあたって / 〜にあたり", meaning: "在……之际", example: "発表にあたって、資料をもう一度確認した。" },
+      { id: 39, group: "10+ 重要语法", pattern: "〜にしては", meaning: "照……来说；作为……却……", example: "初めてにしては、よくできている。" },
+      { id: 40, group: "10+ 重要语法", pattern: "〜に限って / 〜に限り / 〜に限らず", meaning: "只限……；不仅限于……", example: "このサービスは学生に限り、無料で利用できる。" },
+      { id: 41, group: "10+ 重要语法", pattern: "〜といっても", meaning: "虽说……但是……", example: "旅行といっても、近くの温泉に行くだけだ。" },
+      { id: 42, group: "10+ 重要语法", pattern: "〜というものだ", meaning: "这才是真正的……；这就是所谓……", example: "困っている人を助けるのが、思いやりというものだ。" },
+      { id: 43, group: "10+ 重要语法", pattern: "〜を問わず", meaning: "不论……；不管……", example: "経験を問わず、誰でも応募できます。" },
+      { id: 44, group: "10+ 重要语法", pattern: "〜からすると / 〜からすれば", meaning: "从……来看；根据……判断", example: "彼の表情からすると、結果はよくなかったようだ。" },
+      { id: 45, group: "10+ 重要语法", pattern: "〜さえ / 〜でさえ", meaning: "连……都……；甚至……", example: "先生でさえ答えられない問題だった。" },
+      { id: 46, group: "10+ 重要语法", pattern: "〜たとたん / 〜たとたんに", meaning: "刚一……就……", example: "家を出たとたん、雨が降り出した。" },
+      { id: 47, group: "10+ 重要语法", pattern: "〜たび / 〜たびに", meaning: "每当……就……", example: "この曲を聞くたびに、故郷を思い出す。" },
+      { id: 48, group: "10+ 重要语法", pattern: "〜だらけ", meaning: "满是……；净是……", example: "引っ越しの後、部屋は箱だらけになった。" },
+      { id: 49, group: "10+ 重要语法", pattern: "〜べき / 〜べきだ / 〜べきではない", meaning: "应该……；不应该……", example: "学生はもっと自分の意見を述べるべきだ。" },
+      { id: 50, group: "5+ 重要语法", pattern: "〜しかねる", meaning: "难以……；不能……", example: "その提案には賛成しかねます。" },
+      { id: 51, group: "5+ 重要语法", pattern: "〜ことはない", meaning: "用不着……；没必要……", example: "少し失敗したくらいで、そんなに落ち込むことはない。" },
+      { id: 52, group: "5+ 重要语法", pattern: "〜てならない / 〜でならない", meaning: "……得不得了；非常……", example: "試験の結果が気になってならない。" },
+      { id: 53, group: "5+ 重要语法", pattern: "〜どころではない", meaning: "哪儿谈得上……；根本没心情……", example: "熱が高くて、勉強どころではない。" },
+      { id: 54, group: "5+ 重要语法", pattern: "〜ないではいられない", meaning: "不能不……；忍不住……", example: "その映画を見て、泣かないではいられなかった。" },
+      { id: 55, group: "5+ 重要语法", pattern: "〜ようがない / 〜ようもない", meaning: "无法……；没办法……", example: "名前が分からないので、調べようがない。" },
+      { id: 56, group: "5+ 重要语法", pattern: "〜わけがない / 〜わけはない", meaning: "不可能……；不会……", example: "毎日練習している彼が、できないわけがない。" },
+      { id: 57, group: "5+ 重要语法", pattern: "〜てしょうがない / 〜てしかたがない", meaning: "……得不得了；非常……", example: "明日の旅行が楽しみでしかたがない。" },
+      { id: 58, group: "5+ 重要语法", pattern: "〜ざるをえない", meaning: "不得不……", example: "予定が変わったので、出発を延期せざるをえない。" },
+      { id: 59, group: "5+ 重要语法", pattern: "〜ということだ", meaning: "听说……；也就是说……", example: "天気予報によると、明日は雨だということだ。" },
+      { id: 60, group: "5+ 重要语法", pattern: "〜ことか", meaning: "多么……啊", example: "合格の知らせを聞いて、どれほど嬉しかったことか。" },
+      { id: 61, group: "5+ 重要语法", pattern: "〜かのようだ", meaning: "就好像……似的", example: "彼は何も知らないかのように話している。" },
+      { id: 62, group: "5+ 重要语法", pattern: "〜きる / 〜きれる / 〜きれない", meaning: "完全……；能……完；不能……完", example: "この量は一人では食べきれない。" },
+      { id: 63, group: "5+ 重要语法", pattern: "〜かけだ / 〜かけの / 〜かける", meaning: "刚开始……；做了一半……", example: "読みかけの本を机の上に置いた。" },
+      { id: 64, group: "5+ 重要语法", pattern: "〜得る", meaning: "可能……；能够……", example: "この方法なら、問題を解決し得る。" },
+      { id: 65, group: "5+ 重要语法", pattern: "〜抜く", meaning: "坚持到底；完全……", example: "最後まで走り抜いた選手に拍手が送られた。" },
+      { id: 66, group: "5+ 重要语法", pattern: "〜がち", meaning: "往往……；容易……", example: "忙しいと、朝ご飯を抜きがちだ。" },
+      { id: 67, group: "5+ 重要语法", pattern: "〜はともかく", meaning: "暂且不说……", example: "値段はともかく、デザインはとても気に入っている。" },
+      { id: 68, group: "5+ 重要语法", pattern: "〜つつある", meaning: "正在……；不断……", example: "この町の人口は少しずつ増えつつある。" },
+      { id: 69, group: "5+ 重要语法", pattern: "〜か〜ないかのうちに", meaning: "刚一……就……", example: "授業が終わるか終わらないかのうちに、学生たちは教室を出た。" },
+      { id: 70, group: "5+ 重要语法", pattern: "〜から〜にかけて", meaning: "从……到……；断断续续", example: "夕方から夜にかけて、雨が強くなるでしょう。" },
+      { id: 71, group: "5+ 重要语法", pattern: "〜てからでないと", meaning: "如果不先……就不能……", example: "予約してからでないと、この店には入れない。" },
+      { id: 72, group: "5+ 重要语法", pattern: "〜かわりに", meaning: "代替……；不……而……", example: "電車で行くかわりに、自転車で行くことにした。" },
+      { id: 73, group: "5+ 重要语法", pattern: "〜くせに", meaning: "明明……却……；带责备语气", example: "知っているくせに、どうして教えてくれなかったの。" },
+      { id: 74, group: "5+ 重要语法", pattern: "〜たところ", meaning: "一……却……；刚刚……", example: "先生に聞いたところ、明日までに提出すればよいそうだ。" },
+      { id: 75, group: "5+ 重要语法", pattern: "〜ばかりに", meaning: "就因为……；不好的原因", example: "確認を怠ったばかりに、大きなミスになってしまった。" },
+      { id: 76, group: "5+ 重要语法", pattern: "〜ついでに", meaning: "顺便……", example: "買い物に行くついでに、郵便局にも寄った。" },
+      { id: 77, group: "5+ 重要语法", pattern: "〜のもとで / 〜のもとに", meaning: "在……之下；按照……", example: "先生の指導のもとで、研究を進めている。" },
+      { id: 78, group: "5+ 重要语法", pattern: "〜わりに", meaning: "虽然……却……；相对比较", example: "この店は安いわりに、料理がおいしい。" },
+      { id: 79, group: "5+ 重要语法", pattern: "〜とともに", meaning: "和……一起；随着……", example: "卒業とともに、新しい生活が始まった。" },
+      { id: 80, group: "5+ 重要语法", pattern: "〜を通じて / 〜を通して", meaning: "通过……；经过……", example: "留学を通じて、多くの友人ができた。" },
+      { id: 81, group: "5+ 重要语法", pattern: "〜において / 〜における", meaning: "在……；在……方面", example: "現代社会において、情報の扱いはとても重要だ。" },
+      { id: 82, group: "5+ 重要语法", pattern: "〜にしたがって / 〜にしたがい", meaning: "随着……；按照……", example: "年を取るにしたがって、健康の大切さが分かってきた。" },
+      { id: 83, group: "5+ 重要语法", pattern: "〜にしたら / 〜にすれば / 〜にしても", meaning: "从……立场看；即使对……来说", example: "親にすれば、子どもの安全が一番心配だ。" },
+      { id: 84, group: "5+ 重要语法", pattern: "〜にしろ / 〜にせよ / 〜にもせよ", meaning: "无论……；即使……也……", example: "行くにせよ行かないにせよ、早く返事をしてください。" },
+      { id: 85, group: "5+ 重要语法", pattern: "〜について / 〜についての", meaning: "关于……", example: "日本の文化について、発表することになった。" },
+      { id: 86, group: "5+ 重要语法", pattern: "〜に反して / 〜に反する", meaning: "与……相反；违反……", example: "予想に反して、試験はそれほど難しくなかった。" },
+      { id: 87, group: "5+ 重要语法", pattern: "〜にわたって / 〜にわたり", meaning: "历经……；范围涉及……", example: "会議は三時間にわたって行われた。" },
+      { id: 88, group: "5+ 重要语法", pattern: "〜に基づいて / 〜に基づき", meaning: "根据……；按照……", example: "調査結果に基づいて、計画を立て直した。" },
+      { id: 89, group: "5+ 重要语法", pattern: "〜ものがある", meaning: "确实有……；令人感到……", example: "彼の努力には、胸を打つものがある。" },
+      { id: 90, group: "5+ 重要语法", pattern: "〜ものだ / 〜ものではない", meaning: "应该……；不应该……；感叹", example: "人の悪口は言うものではない。" },
+      { id: 91, group: "5+ 重要语法", pattern: "〜ものだから", meaning: "因为……；所以……", example: "道が混んでいたものだから、遅れてしまいました。" },
+      { id: 92, group: "5+ 重要语法", pattern: "〜ものなら", meaning: "要是能……；如果……的话", example: "できるものなら、もう一度あの日に戻りたい。" },
+      { id: 93, group: "5+ 重要语法", pattern: "〜あまり", meaning: "由于过于……", example: "緊張のあまり、言いたいことを忘れてしまった。" },
+      { id: 94, group: "5+ 重要语法", pattern: "〜上 / 〜上に", meaning: "不仅……而且……；在……方面", example: "この部屋は広い上に、駅からも近い。" },
+      { id: 95, group: "5+ 重要语法", pattern: "〜上で / 〜上の / 〜上では", meaning: "在……之后；在……方面", example: "内容を確認した上で、申し込みをしてください。" },
+      { id: 96, group: "5+ 重要语法", pattern: "〜こそ", meaning: "正是……；才是……", example: "今度こそ、最後までやり抜きたい。" },
+      { id: 97, group: "5+ 重要语法", pattern: "〜とおり / 〜どおり", meaning: "正如……；按照……", example: "先生が言ったとおりに、もう一度練習した。" },
+      { id: 98, group: "5+ 重要语法", pattern: "〜最中に / 〜最中だ", meaning: "正在……的时候", example: "食事の最中に、電話がかかってきた。" },
+      { id: 99, group: "5+ 重要语法", pattern: "〜など / 〜なんか / 〜なんて", meaning: "……之类；表示轻视或举例", example: "一人で海外旅行なんて、私にはまだ無理だ。" }
+    ];
+
+    let soundEnabled = "speechSynthesis" in window;
+    let japaneseVoices = [];
+    let autoScrollActive = false;
+    let autoReviewIndex = 0;
+    let autoReviewToken = 0;
+    let autoReviewTimer = null;
+    let cardReviewActive = false;
+    let cardReviewToken = 0;
+    let activeCardId = null;
+    let scrollSaveFrame = null;
+    const progressKey = "n2-grammar-list-last-viewed-v1";
+    const favoritesKey = "n2-grammar-list-favorites-v1";
+    const supabaseUrl = "https://dqkulgkvzawpboaoysum.supabase.co";
+    const supabasePublishableKey = "sb_publishable_kd_u18OSCcjCkLLAohOHig_67kwF35H";
+    const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabasePublishableKey) : null;
+    const cloudPrefix = "grammar-list-";
+    const cloudProgressId = "grammar-list-progress-v1";
+    let favoritesOnly = false;
+    let favoriteIds = loadFavorites();
+    let signedInUser = null;
+    let cloudReady = false;
+    let cloudProgressTimer = null;
+    let pendingCloudProgressId = null;
+    const $ = (id) => document.getElementById(id);
+    const delay = (ms) => new Promise((resolve) => { autoReviewTimer = setTimeout(resolve, ms); });
+
+    function cloudId(id) { return `${cloudPrefix}${id}`; }
+    function idFromCloudId(questionId) {
+      const raw = String(questionId || "");
+      return raw.startsWith(cloudPrefix) ? Number(raw.slice(cloudPrefix.length)) : null;
+    }
+    function speechPattern(item) { return item.pattern.replaceAll("〜", "").replaceAll("/", "、"); }
+
+    function updateAccountUI() {
+      $("account").classList.toggle("signed-in", Boolean(signedInUser));
+      $("accountStatus").textContent = !supabaseClient
+        ? "云同步暂时不可用。"
+        : signedInUser
+          ? `云同步中：${signedInUser.email}`
+          : "登录后会云同步语法进度和错题本。";
+    }
+
+    function speakJapanese(text, button, options = {}) {
+      if (!soundEnabled || !("SpeechSynthesisUtterance" in window)) return Promise.resolve(false);
+      return new Promise((resolve) => {
+        if (options.cancelCurrent !== false) window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+        document.querySelectorAll(".speaking").forEach((item) => item.classList.remove("speaking"));
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "ja-JP";
+        utterance.rate = 0.82;
+        utterance.pitch = 1;
+        const selected = $("voiceSelect").value;
+        const voice = japaneseVoices.find((item) => item.name === selected) || japaneseVoices.find((item) => /siri|kyoko|haruka|nanami|female/i.test(item.name)) || japaneseVoices[0];
+        if (voice) utterance.voice = voice;
+        if (button) button.classList.add("speaking");
+        let finished = false;
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          clearTimeout(fallbackTimer);
+          if (button) button.classList.remove("speaking");
+          resolve(true);
+        };
+        const fallbackTimer = setTimeout(finish, Math.min(16000, Math.max(2400, text.length * 230)));
+        utterance.onend = finish;
+        utterance.onerror = finish;
+        window.speechSynthesis.speak(utterance);
+      });
+    }
+
+    function renderList() {
+      const query = $("search").value.trim().toLowerCase();
+      const matched = grammarItems.filter((item) => [item.pattern, item.meaning, item.example, item.group].some((value) => value.toLowerCase().includes(query)));
+      const results = favoritesOnly ? matched.filter((item) => isFavorite(item.id)) : matched;
+      $("status").textContent = favoritesOnly
+        ? (query ? `错题本里找到 ${results.length} / ${favoriteIds.size} 个语法` : `错题本：${results.length} 个语法`)
+        : (query ? `找到 ${results.length} / ${grammarItems.length} 个语法` : `共 ${grammarItems.length} 个语法`);
+      $("empty").textContent = favoritesOnly ? "错题本里暂时没有这个语法。可以先点语法卡上的“收藏”。" : "没有找到这个语法。换个关键词试试看。";
+      $("empty").style.display = results.length ? "none" : "block";
+      const list = $("list");
+      list.innerHTML = "";
+      const fragment = document.createDocumentFragment();
+      results.forEach((item) => {
+        const article = document.createElement("article");
+        article.className = `entry${isFavorite(item.id) ? " favorited" : ""}`;
+        article.dataset.grammarId = item.id;
+        article.id = `grammar-${item.id}`;
+
+        const num = document.createElement("div");
+        num.className = "num";
+        num.textContent = String(item.id).padStart(3, "0");
+
+        const patternButton = document.createElement("button");
+        patternButton.className = "pattern-button";
+        patternButton.type = "button";
+        patternButton.textContent = item.pattern;
+        patternButton.setAttribute("aria-label", `朗读语法：${item.pattern}`);
+        patternButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          stopAutoScroll();
+          stopCardReview();
+          saveLastViewed(item.id);
+          speakJapanese(speechPattern(item), patternButton);
+        });
+
+        const meaning = document.createElement("div");
+        meaning.className = "meaning";
+        meaning.textContent = item.meaning;
+
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = item.group;
+
+        const favoriteButton = document.createElement("button");
+        favoriteButton.className = "favorite-button";
+        favoriteButton.type = "button";
+        updateFavoriteButton(favoriteButton, item.id);
+        favoriteButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          stopAutoScroll();
+          stopCardReview();
+          toggleFavorite(item.id, article, favoriteButton);
+        });
+
+        const exampleButton = document.createElement("button");
+        exampleButton.className = "example-button";
+        exampleButton.type = "button";
+        exampleButton.setAttribute("aria-label", `朗读例句：${item.example}`);
+        const exampleLabel = document.createElement("span");
+        exampleLabel.className = "example-label";
+        exampleLabel.textContent = "例句 🔊";
+        const exampleSentence = document.createElement("span");
+        exampleSentence.textContent = item.example;
+        exampleButton.append(exampleLabel, exampleSentence);
+        exampleButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          stopAutoScroll();
+          stopCardReview();
+          saveLastViewed(item.id);
+          speakJapanese(item.example, exampleButton);
+        });
+
+        article.append(num, patternButton, meaning, tag, favoriteButton, exampleButton);
+        article.addEventListener("click", () => toggleCardReview(article, item));
+        fragment.appendChild(article);
+      });
+      list.appendChild(fragment);
+      updateFavoriteControls();
+      updateFloatingProgress(loadLastViewed());
+    }
+
+    function loadFavorites() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(favoritesKey) || "[]");
+        if (!Array.isArray(saved)) return new Set();
+        return new Set(saved.map(Number).filter((id) => Number.isInteger(id) && id >= 1 && id <= grammarItems.length));
+      } catch {
+        return new Set();
+      }
+    }
+
+    function saveFavorites() {
+      try { localStorage.setItem(favoritesKey, JSON.stringify([...favoriteIds].sort((a, b) => a - b))); } catch {}
+    }
+
+    function cloudFavoritePayload(id) {
+      const item = grammarItems.find((grammarItem) => grammarItem.id === Number(id));
+      if (!item || !signedInUser) return null;
+      return {
+        user_id: signedInUser.id,
+        question_id: cloudId(item.id),
+        grammar: `语法表｜${item.pattern}`,
+        sentence: item.example,
+        selected_answer: "收藏复习",
+        correct_answer: item.pattern,
+        note: item.meaning
+      };
+    }
+
+    async function saveFavoriteToCloud(id) {
+      if (!supabaseClient || !signedInUser) return;
+      const payload = cloudFavoritePayload(id);
+      if (!payload) return;
+      const { error } = await supabaseClient.from("mistake_notebook").upsert(payload, { onConflict: "user_id,question_id" });
+      if (error) console.warn("Could not save grammar favorite", error);
+    }
+
+    async function removeFavoriteFromCloud(id) {
+      if (!supabaseClient || !signedInUser) return;
+      const { error } = await supabaseClient.from("mistake_notebook").delete().eq("user_id", signedInUser.id).eq("question_id", cloudId(id));
+      if (error) console.warn("Could not remove grammar favorite", error);
+    }
+
+    async function syncFavoritesToCloud() {
+      if (!supabaseClient || !signedInUser || !favoriteIds.size) return;
+      const payload = [...favoriteIds].map(cloudFavoritePayload).filter(Boolean);
+      if (!payload.length) return;
+      const { error } = await supabaseClient.from("mistake_notebook").upsert(payload, { onConflict: "user_id,question_id" });
+      if (error) console.warn("Could not sync grammar favorites", error);
+    }
+
+    function queueCloudProgressSave(id) {
+      if (!supabaseClient || !signedInUser) return;
+      pendingCloudProgressId = Number(id);
+      clearTimeout(cloudProgressTimer);
+      cloudProgressTimer = setTimeout(saveProgressToCloud, 900);
+    }
+
+    async function saveProgressToCloud() {
+      if (!supabaseClient || !signedInUser || !pendingCloudProgressId) return;
+      const item = grammarItems.find((grammarItem) => grammarItem.id === Number(pendingCloudProgressId));
+      if (!item) return;
+      const { error } = await supabaseClient.from("mistake_notebook").upsert({
+        user_id: signedInUser.id,
+        question_id: cloudProgressId,
+        grammar: "语法表进度",
+        sentence: item.example,
+        selected_answer: String(item.id),
+        correct_answer: item.pattern,
+        note: item.meaning
+      }, { onConflict: "user_id,question_id" });
+      if (error) console.warn("Could not save grammar progress", error);
+    }
+
+    async function loadCloudState() {
+      if (!supabaseClient || !signedInUser || cloudReady) return;
+      cloudReady = true;
+      const { data, error } = await supabaseClient.from("mistake_notebook").select("*").like("question_id", "grammar-list-%");
+      if (error) { console.warn("Could not load grammar cloud state", error); return; }
+      let cloudProgress = null;
+      (data || []).forEach((row) => {
+        if (row.question_id === cloudProgressId) {
+          cloudProgress = Number(row.selected_answer);
+          return;
+        }
+        const id = idFromCloudId(row.question_id);
+        if (Number.isInteger(id) && id >= 1 && id <= grammarItems.length) favoriteIds.add(id);
+      });
+      saveFavorites();
+      renderList();
+      if (Number.isInteger(cloudProgress) && cloudProgress >= 1 && cloudProgress <= grammarItems.length) {
+        saveLastViewed(cloudProgress, { syncCloud: false });
+        restoreLastViewedPosition();
+      }
+      await syncFavoritesToCloud();
+      pendingCloudProgressId = loadLastViewed();
+      saveProgressToCloud();
+    }
+
+    async function initialiseAccount() {
+      if (!supabaseClient) { updateAccountUI(); return; }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      signedInUser = session?.user || null;
+      updateAccountUI();
+      if (signedInUser) await loadCloudState();
+    }
+
+    function isFavorite(id) { return favoriteIds.has(Number(id)); }
+    function updateFavoriteButton(button, id) {
+      const active = isFavorite(id);
+      button.setAttribute("aria-pressed", String(active));
+      button.setAttribute("aria-label", active ? "从错题本移除" : "收藏到错题本");
+      button.textContent = active ? "★ 已收藏" : "☆ 收藏";
+    }
+
+    function jumpToGrammar(id) {
+      favoritesOnly = false;
+      $("search").value = "";
+      renderList();
+      updateFavoriteControls();
+      const entry = document.querySelector(`[data-grammar-id="${id}"]`);
+      if (!entry) return;
+      saveLastViewed(id);
+      setTimeout(() => {
+        entry.scrollIntoView({ behavior: "smooth", block: "center" });
+        entry.classList.add("playing");
+        setTimeout(() => entry.classList.remove("playing"), 900);
+      }, 80);
+    }
+
+    function updateFavoriteControls() {
+      const count = favoriteIds.size;
+      $("favoritesToggle").setAttribute("aria-pressed", String(favoritesOnly));
+      $("favoritesToggle").textContent = favoritesOnly ? `★ 看全部 (${count})` : `⭐ 错题本 ${count}`;
+      $("clearFavorites").disabled = count === 0;
+      $("notebookHelp").textContent = count ? `已收藏 ${count} 个语法。点下面的小标签可以直接跳回那张卡。` : "点语法卡上的“收藏”就会放进这里；以后想再点一遍，可以直接跳回去。";
+      const list = $("notebookList");
+      list.innerHTML = "";
+      if (!count) {
+        const empty = document.createElement("span");
+        empty.className = "notebook-empty";
+        empty.textContent = "还没有收藏。看到想复习的语法，就点一下 ☆ 收藏。";
+        list.appendChild(empty);
+        return;
+      }
+      [...favoriteIds].sort((a, b) => a - b).forEach((id) => {
+        const item = grammarItems.find((grammarItem) => grammarItem.id === id);
+        if (!item) return;
+        const chip = document.createElement("button");
+        chip.className = "notebook-chip";
+        chip.type = "button";
+        chip.textContent = `${String(item.id).padStart(3, "0")} ${item.pattern}`;
+        chip.setAttribute("aria-label", `跳到语法：${item.pattern}`);
+        chip.addEventListener("click", () => {
+          stopAutoScroll();
+          stopCardReview();
+          jumpToGrammar(item.id);
+        });
+        list.appendChild(chip);
+      });
+    }
+
+    function toggleFavorite(id, article, button) {
+      const numericId = Number(id);
+      if (!Number.isInteger(numericId) || numericId < 1 || numericId > grammarItems.length) return;
+      const wasFavorite = favoriteIds.has(numericId);
+      if (wasFavorite) {
+        favoriteIds.delete(numericId);
+        removeFavoriteFromCloud(numericId);
+      } else {
+        favoriteIds.add(numericId);
+        saveFavoriteToCloud(numericId);
+      }
+      saveFavorites();
+      saveLastViewed(numericId);
+      if (button) updateFavoriteButton(button, numericId);
+      if (article) article.classList.toggle("favorited", isFavorite(numericId));
+      updateFavoriteControls();
+      if (favoritesOnly && !isFavorite(numericId)) renderList();
+    }
+
+    function clearFavorites() {
+      if (!favoriteIds.size) return;
+      const ok = window.confirm("要清空整个语法错题本吗？这只会删除收藏记录，不会删除语法表。");
+      if (!ok) return;
+      const idsToDelete = [...favoriteIds];
+      favoriteIds = new Set();
+      saveFavorites();
+      renderList();
+      if (supabaseClient && signedInUser && idsToDelete.length) {
+        supabaseClient.from("mistake_notebook").delete()
+          .eq("user_id", signedInUser.id)
+          .in("question_id", idsToDelete.map(cloudId))
+          .then(({ error }) => { if (error) console.warn("Could not clear grammar cloud favorites", error); });
+      }
+    }
+
+    function loadLastViewed() {
+      try {
+        const saved = Number(localStorage.getItem(progressKey));
+        return Number.isInteger(saved) && saved >= 1 && saved <= grammarItems.length ? saved : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveLastViewed(id, options = {}) {
+      const numericId = Number(id);
+      if (!Number.isInteger(numericId) || numericId < 1 || numericId > grammarItems.length) return;
+      try { localStorage.setItem(progressKey, String(numericId)); } catch {}
+      updateFloatingProgress(numericId);
+      if (options.syncCloud !== false) queueCloudProgressSave(numericId);
+    }
+
+    function updateFloatingProgress(id) {
+      const progress = $("floatingProgress");
+      const item = grammarItems.find((grammarItem) => grammarItem.id === Number(id));
+      progress.textContent = item ? `进度：${String(item.id).padStart(3, "0")} / ${grammarItems.length}　${item.pattern}` : "进度：还没开始";
+    }
+
+    function currentCenterEntry() {
+      const entries = [...document.querySelectorAll(".entry")];
+      const centerY = window.innerHeight * 0.48;
+      return entries
+        .filter((entry) => {
+          const rect = entry.getBoundingClientRect();
+          return rect.bottom > 0 && rect.top < window.innerHeight;
+        })
+        .sort((a, b) => {
+          const rectA = a.getBoundingClientRect();
+          const rectB = b.getBoundingClientRect();
+          return Math.abs((rectA.top + rectA.bottom) / 2 - centerY) - Math.abs((rectB.top + rectB.bottom) / 2 - centerY);
+        })[0] || null;
+    }
+
+    function saveVisibleProgress() {
+      scrollSaveFrame = null;
+      const entry = currentCenterEntry();
+      if (entry) saveLastViewed(entry.dataset.grammarId);
+    }
+    function scheduleProgressSave() {
+      if (scrollSaveFrame) return;
+      scrollSaveFrame = requestAnimationFrame(saveVisibleProgress);
+    }
+
+    function restoreLastViewedPosition() {
+      if ($("search").value.trim()) return;
+      const saved = loadLastViewed();
+      updateFloatingProgress(saved);
+      if (!saved) return;
+      const entry = document.querySelector(`[data-grammar-id="${saved}"]`);
+      if (!entry) return;
+      setTimeout(() => {
+        entry.scrollIntoView({ behavior: "smooth", block: "center" });
+        entry.classList.add("playing");
+        setTimeout(() => entry.classList.remove("playing"), 900);
+      }, 180);
+    }
+
+    async function playCardReview(entry, item, token) {
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      if (!soundEnabled && "speechSynthesis" in window) {
+        soundEnabled = true;
+        updateSoundToggle();
+      }
+      document.querySelectorAll(".entry.playing").forEach((node) => node.classList.remove("playing"));
+      entry.classList.add("playing");
+      saveLastViewed(item.id);
+      entry.scrollIntoView({ behavior: "smooth", block: "center" });
+      await delay(320);
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      await speakJapanese(speechPattern(item), entry.querySelector(".pattern-button"));
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      await delay(180);
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      await speakJapanese(item.example, entry.querySelector(".example-button"));
+      if (!cardReviewActive || token !== cardReviewToken) return;
+      stopCardReview();
+    }
+
+    function startCardReview(entry, item) {
+      stopAutoScroll();
+      stopCardReview();
+      cardReviewActive = true;
+      activeCardId = item.id;
+      cardReviewToken++;
+      playCardReview(entry, item, cardReviewToken);
+    }
+    function stopCardReview() {
+      if (!cardReviewActive && activeCardId === null) return;
+      cardReviewActive = false;
+      activeCardId = null;
+      cardReviewToken++;
+      clearTimeout(autoReviewTimer);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      document.querySelectorAll(".speaking, .entry.playing").forEach((item) => item.classList.remove("speaking", "playing"));
+    }
+    function toggleCardReview(entry, item) {
+      if (cardReviewActive && activeCardId === item.id) { stopCardReview(); return; }
+      startCardReview(entry, item);
+    }
+    function updateScrollToggle() {
+      document.querySelectorAll("[data-scroll-toggle]").forEach((toggle) => {
+        toggle.setAttribute("aria-pressed", String(autoScrollActive));
+        toggle.textContent = autoScrollActive ? "⏸ 停止听读" : "▶ 自动听读";
+      });
+    }
+    function firstVisibleEntryIndex(entries) {
+      const visibleIndex = entries.findIndex((entry) => entry.getBoundingClientRect().bottom > 120);
+      return Math.max(0, visibleIndex);
+    }
+    function autoReviewStartIndex(entries) {
+      const saved = loadLastViewed();
+      if (saved) {
+        const savedIndex = entries.findIndex((entry) => Number(entry.dataset.grammarId) === Number(saved));
+        if (savedIndex >= 0) return savedIndex;
+      }
+      return firstVisibleEntryIndex(entries);
+    }
+
+    async function playAutoReview(token) {
+      const entries = [...document.querySelectorAll(".entry")];
+      if (!autoScrollActive || token !== autoReviewToken) return;
+      if (!entries.length || autoReviewIndex >= entries.length) { stopAutoScroll(); return; }
+      const entry = entries[autoReviewIndex];
+      const item = grammarItems.find((grammarItem) => String(grammarItem.id) === entry.dataset.grammarId);
+      if (!item) { autoReviewIndex++; playAutoReview(token); return; }
+
+      document.querySelectorAll(".entry.playing").forEach((node) => node.classList.remove("playing"));
+      entry.classList.add("playing");
+      saveLastViewed(item.id);
+      entry.scrollIntoView({ behavior: "smooth", block: "center" });
+      await delay(450);
+      if (!autoScrollActive || token !== autoReviewToken) return;
+      await speakJapanese(speechPattern(item), entry.querySelector(".pattern-button"));
+      if (!autoScrollActive || token !== autoReviewToken) return;
+      await delay(220);
+      if (!autoScrollActive || token !== autoReviewToken) return;
+      await speakJapanese(item.example, entry.querySelector(".example-button"));
+      if (!autoScrollActive || token !== autoReviewToken) return;
+      await delay(520);
+      if (!autoScrollActive || token !== autoReviewToken) return;
+      entry.classList.remove("playing");
+      autoReviewIndex++;
+      playAutoReview(token);
+    }
+
+    function startAutoScroll() {
+      if (autoScrollActive) return;
+      if (!soundEnabled && "speechSynthesis" in window) {
+        soundEnabled = true;
+        updateSoundToggle();
+      }
+      stopCardReview();
+      autoScrollActive = true;
+      autoReviewToken++;
+      const entries = [...document.querySelectorAll(".entry")];
+      if (!entries.length) { stopAutoScroll(); return; }
+      autoReviewIndex = autoReviewStartIndex(entries);
+      updateScrollToggle();
+      playAutoReview(autoReviewToken);
+    }
+    function stopAutoScroll() {
+      if (!autoScrollActive) return;
+      autoScrollActive = false;
+      autoReviewToken++;
+      clearTimeout(autoReviewTimer);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      document.querySelectorAll(".speaking, .entry.playing").forEach((item) => item.classList.remove("speaking", "playing"));
+      updateScrollToggle();
+    }
+    function toggleAutoScroll() { if (autoScrollActive) stopAutoScroll(); else startAutoScroll(); }
+
+    function updateSoundToggle() {
+      const toggle = $("soundToggle");
+      toggle.setAttribute("aria-pressed", String(soundEnabled));
+      toggle.textContent = soundEnabled ? "🔊 语音：开" : "🔇 语音：关";
+      if (!("speechSynthesis" in window)) {
+        toggle.textContent = "语音不支援";
+        toggle.disabled = true;
+      }
+    }
+    function loadVoices() {
+      const select = $("voiceSelect");
+      let savedVoice = "";
+      try { savedVoice = localStorage.getItem("n2-grammar-list-voice") || ""; } catch {}
+      const previous = savedVoice || select.value;
+      japaneseVoices = window.speechSynthesis ? window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("ja")) : [];
+      select.innerHTML = "";
+      if (!japaneseVoices.length) {
+        select.innerHTML = "<option value=\"\">装置预设</option>";
+        return;
+      }
+      japaneseVoices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = voice.name;
+        select.appendChild(option);
+      });
+      const preferred = japaneseVoices.find((voice) => voice.name === previous) || japaneseVoices.find((voice) => /siri|kyoko|haruka|nanami|female/i.test(voice.name)) || japaneseVoices[0];
+      select.value = preferred.name;
+    }
+
+    $("search").addEventListener("input", () => {
+      stopAutoScroll();
+      stopCardReview();
+      renderList();
+    });
+    $("favoritesToggle").addEventListener("click", () => {
+      stopAutoScroll();
+      stopCardReview();
+      favoritesOnly = !favoritesOnly;
+      $("search").value = "";
+      renderList();
+      if (!favoritesOnly) restoreLastViewedPosition();
+    });
+    $("clearFavorites").addEventListener("click", () => {
+      stopAutoScroll();
+      stopCardReview();
+      clearFavorites();
+    });
+    document.querySelectorAll("[data-scroll-toggle]").forEach((toggle) => {
+      toggle.addEventListener("click", toggleAutoScroll);
+      toggle.addEventListener("touchstart", (event) => event.stopPropagation(), { passive: true });
+      toggle.addEventListener("pointerdown", (event) => event.stopPropagation());
+    });
+    $("soundToggle").addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      if (!soundEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      updateSoundToggle();
+    });
+    $("voiceSelect").addEventListener("change", () => {
+      try { localStorage.setItem("n2-grammar-list-voice", $("voiceSelect").value); } catch {}
+    });
+    $("accountAction").addEventListener("click", () => {
+      if (supabaseClient) supabaseClient.auth.signOut();
+    });
+
+    updateSoundToggle();
+    updateScrollToggle();
+    updateAccountUI();
+    loadVoices();
+    if ("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    window.addEventListener("scroll", scheduleProgressSave, { passive: true });
+    window.addEventListener("wheel", stopAutoScroll, { passive: true });
+    window.addEventListener("touchstart", stopAutoScroll, { passive: true });
+    window.addEventListener("keydown", (event) => {
+      if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(event.key)) stopAutoScroll();
+    });
+    renderList();
+    restoreLastViewedPosition();
+    if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        signedInUser = session?.user || null;
+        cloudReady = false;
+        updateAccountUI();
+        if (signedInUser) loadCloudState();
+      });
+    }
+    initialiseAccount();
+  </script>
+</body>
+</html>

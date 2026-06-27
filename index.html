@@ -147,6 +147,7 @@
       </div>
       <nav class="quick-links" aria-label="学习页面">
         <a href="vocab.html">📚 N2 词汇表</a>
+        <a href="grammar.html">📝 N2 语法表</a>
       </nav>
     </header>
 
@@ -788,7 +789,7 @@
       }
       const { data: mistakes, error: mistakesError } = await supabaseClient.from("mistake_notebook").select("*");
       if (!mistakesError && mistakes) {
-        mistakes.filter((item) => !String(item.question_id || "").startsWith("vocab-")).forEach((item) => {
+        mistakes.filter((item) => !/^(vocab-|grammar-list-)/.test(String(item.question_id || ""))).forEach((item) => {
           wrongBook[item.question_id || item.grammar] = { id: item.question_id, grammar: item.grammar, label: item.grammar, sentence: item.sentence, selected: item.selected_answer, correct: item.correct_answer, note: item.note };
         });
         renderWrongBook();
