@@ -212,7 +212,7 @@
     <header>
       <div class="eyebrow">N2 VOCABULARY LIST</div>
       <h1>N2 押题词汇表</h1>
-      <p class="subtitle">点日语单词或例句会自动朗读日语；中文意思只是说明，不会朗读。</p>
+      <p class="subtitle">假名读音在前，汉字/原词在后；点日语单词或例句会自动朗读日语，中文意思不会朗读。</p>
       <div class="account" id="account">
         <span id="accountStatus">登录后会云同步词汇进度和错题本。</span>
         <a id="loginLink" href="login.html?redirect=vocab.html">Sign in</a>
@@ -694,8 +694,8 @@
         const wordButton = document.createElement("button");
         wordButton.className = "word-button";
         wordButton.type = "button";
-        wordButton.textContent = item.word;
-        wordButton.setAttribute("aria-label", `朗读日语：${item.word}`);
+        wordButton.textContent = item.reading || item.word;
+        wordButton.setAttribute("aria-label", `朗读日语：${item.reading || item.word}，${item.word}`);
         wordButton.addEventListener("click", (event) => {
           event.stopPropagation();
           stopAutoScroll();
@@ -708,7 +708,7 @@
         meta.className = "meta";
         const reading = document.createElement("div");
         reading.className = "reading";
-        reading.textContent = item.reading;
+        reading.textContent = item.word;
         const tag = document.createElement("span");
         tag.className = "tag";
         tag.textContent = categoryFor(item.id);
@@ -778,7 +778,7 @@
       return {
         user_id: signedInUser.id,
         question_id: vocabCloudId(item.id),
-        grammar: `词汇｜${item.word}（${item.reading}）`,
+        grammar: `词汇｜${item.reading || item.word}｜${item.word}`,
         sentence: item.example,
         selected_answer: "收藏复习",
         correct_answer: item.word,
@@ -926,8 +926,8 @@
         const chip = document.createElement("button");
         chip.className = "notebook-chip";
         chip.type = "button";
-        chip.textContent = `${String(item.id).padStart(3, "0")} ${item.word}`;
-        chip.setAttribute("aria-label", `跳到错题本词汇：${item.word}`);
+        chip.textContent = `${String(item.id).padStart(3, "0")} ${item.reading || item.word}｜${item.word}`;
+        chip.setAttribute("aria-label", `跳到错题本词汇：${item.reading || item.word}，${item.word}`);
         chip.addEventListener("click", () => {
           stopAutoScroll();
           stopCardReview();
@@ -993,7 +993,7 @@
       const progress = $("floatingProgress");
       if (!progress) return;
       const item = vocab.find((vocabItem) => vocabItem.id === Number(id));
-      progress.textContent = item ? `进度：${String(item.id).padStart(3, "0")} / ${vocab.length}　${item.word}` : "进度：还没开始";
+      progress.textContent = item ? `进度：${String(item.id).padStart(3, "0")} / ${vocab.length}　${item.reading || item.word}｜${item.word}` : "进度：还没开始";
     }
 
     function currentCenterEntry() {
