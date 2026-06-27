@@ -41,12 +41,14 @@
       <button id="resetPassword" type="button">Reset password</button>
     </div>
     <p class="message" id="message" aria-live="polite"></p>
-    <a class="back" href="index.html">← Back to practice</a>
+    <a class="back" id="backLink" href="index.html">← Back to practice</a>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const client = window.supabase.createClient("https://dqkulgkvzawpboaoysum.supabase.co", "sb_publishable_kd_u18OSCcjCkLLAohOHig_67kwF35H");
     const $ = (id) => document.getElementById(id);
+    const redirectParam = new URLSearchParams(window.location.search).get("redirect");
+    const redirectTarget = redirectParam === "vocab.html" ? "vocab.html" : "index.html";
     let mode = "signin";
     let recovery = window.location.hash.includes("type=recovery");
 
@@ -65,7 +67,8 @@
       setMessage("");
     }
     function credentials() { return { email: $("email").value.trim(), password: $("password").value }; }
-    function redirectToPractice() { window.location.replace("index.html"); }
+    function loginRedirectUrl() { return new URL(`login.html?redirect=${encodeURIComponent(redirectTarget)}`, window.location.href).href; }
+    function redirectToPractice() { window.location.replace(redirectTarget); }
 
     $("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -73,7 +76,7 @@
       if (password.length < 8) { setMessage("Use a password of at least 8 characters.", true); return; }
       let result;
       if (mode === "recovery") result = await client.auth.updateUser({ password });
-      else if (mode === "signup") result = await client.auth.signUp({ email, password, options: { emailRedirectTo: new URL("login.html", window.location.href).href } });
+      else if (mode === "signup") result = await client.auth.signUp({ email, password, options: { emailRedirectTo: loginRedirectUrl() } });
       else result = await client.auth.signInWithPassword({ email, password });
       if (result.error) { setMessage(result.error.message, true); return; }
       if (mode === "signup" && !result.data.session) { setMessage("Account created. Check the email-confirmation setting in Supabase before trying again.", true); return; }
@@ -84,9 +87,10 @@
     $("resetPassword").addEventListener("click", async () => {
       const email = $("email").value.trim();
       if (!email) { setMessage("Enter your email address first.", true); return; }
-      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: new URL("login.html", window.location.href).href });
+      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: loginRedirectUrl() });
       setMessage(error ? error.message : "Password reset link sent.", Boolean(error));
     });
+    $("backLink").href = redirectTarget;
     client.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") { recovery = true; setMode("recovery"); }
       else if (event === "SIGNED_IN" && session && !recovery) redirectToPractice();

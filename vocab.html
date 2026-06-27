@@ -37,6 +37,12 @@
     .eyebrow { color: var(--pink-600); font-size: .7rem; font-weight: 900; letter-spacing: .14em; }
     h1 { margin: 5px 0 5px; font-size: clamp(1.55rem, 4.6vw, 2.25rem); letter-spacing: .02em; }
     .subtitle { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.7; }
+    .account { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; padding: 5px 9px; border: 1px solid #f3d5e0; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.7); font-size: .74rem; font-weight: 700; }
+    .account button { border: 0; padding: 3px 5px; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-weight: 800; }
+    .account button:hover { text-decoration: underline; }
+    .account a { color: var(--pink-600); font-weight: 800; text-decoration: none; }
+    .account a:hover { text-decoration: underline; }
+    .account:not(.signed-in) #accountAction, .account.signed-in #loginLink { display: none; }
     .nav { display: flex; justify-content: center; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
     .nav a { padding: 7px 12px; border: 1px solid #f0c9d7; border-radius: 999px; color: var(--pink-600); background: rgba(255,255,255,.78); font-size: .8rem; font-weight: 900; text-decoration: none; }
     .nav a:hover { background: white; box-shadow: 0 7px 18px rgba(157,68,103,.12); }
@@ -207,6 +213,11 @@
       <div class="eyebrow">N2 VOCABULARY LIST</div>
       <h1>N2 押题词汇表</h1>
       <p class="subtitle">点日语单词或例句会自动朗读日语；中文意思只是说明，不会朗读。</p>
+      <div class="account" id="account">
+        <span id="accountStatus">登录后会云同步词汇进度和错题本。</span>
+        <a id="loginLink" href="login.html?redirect=vocab.html">Sign in</a>
+        <button id="accountAction" type="button">Sign out</button>
+      </div>
       <nav class="nav" aria-label="学习页面">
         <a href="index.html">🐾 回到 Sandy 练习</a>
       </nav>
@@ -241,6 +252,7 @@
     <button class="scroll-toggle floating-scroll-toggle" id="floatingScrollToggle" data-scroll-toggle type="button" aria-pressed="false">▶ 自动听读</button>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const vocab = [
       { id: 1, word: "整える", reading: "ととのえる", meaning: "整理，备齐；谈妥" },
@@ -584,8 +596,17 @@
     let scrollSaveFrame = null;
     const progressKey = "n2-vocab-last-viewed-v1";
     const favoritesKey = "n2-vocab-favorites-v1";
+    const supabaseUrl = "https://dqkulgkvzawpboaoysum.supabase.co";
+    const supabasePublishableKey = "sb_publishable_kd_u18OSCcjCkLLAohOHig_67kwF35H";
+    const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabasePublishableKey) : null;
+    const vocabCloudPrefix = "vocab-word-";
+    const vocabCloudProgressId = "vocab-progress-v1";
     let favoritesOnly = false;
     let favoriteIds = loadFavorites();
+    let signedInUser = null;
+    let cloudReady = false;
+    let cloudProgressTimer = null;
+    let pendingCloudProgressId = null;
     const $ = (id) => document.getElementById(id);
     const delay = (ms) => new Promise((resolve) => { autoReviewTimer = setTimeout(resolve, ms); });
 
@@ -595,6 +616,28 @@
       if (id <= 117) return "名词";
       if (id <= 137) return "副词";
       return "外来语";
+    }
+
+    function vocabCloudId(id) {
+      return `${vocabCloudPrefix}${id}`;
+    }
+
+    function idFromVocabCloudId(questionId) {
+      const raw = String(questionId || "");
+      if (raw.startsWith(vocabCloudPrefix)) return Number(raw.slice(vocabCloudPrefix.length));
+      if (/^vocab-\d+$/.test(raw)) return Number(raw.replace("vocab-", ""));
+      return null;
+    }
+
+    function updateAccountUI() {
+      const account = $("account");
+      if (!account) return;
+      account.classList.toggle("signed-in", Boolean(signedInUser));
+      $("accountStatus").textContent = !supabaseClient
+        ? "云同步暂时不可用。"
+        : signedInUser
+          ? `云同步中：${signedInUser.email}`
+          : "登录后会云同步词汇进度和错题本。";
     }
 
     function speakJapanese(text, button, options = {}) {
@@ -729,6 +772,103 @@
       } catch {}
     }
 
+    function cloudFavoritePayload(id) {
+      const item = vocab.find((vocabItem) => vocabItem.id === Number(id));
+      if (!item || !signedInUser) return null;
+      return {
+        user_id: signedInUser.id,
+        question_id: vocabCloudId(item.id),
+        grammar: `词汇｜${item.word}（${item.reading}）`,
+        sentence: item.example,
+        selected_answer: "收藏复习",
+        correct_answer: item.word,
+        note: `中文：${item.meaning}`
+      };
+    }
+
+    async function saveFavoriteToCloud(id) {
+      if (!supabaseClient || !signedInUser) return;
+      const payload = cloudFavoritePayload(id);
+      if (!payload) return;
+      const { error } = await supabaseClient.from("mistake_notebook").upsert(payload, { onConflict: "user_id,question_id" });
+      if (error) console.warn("Could not save vocab favorite", error);
+    }
+
+    async function removeFavoriteFromCloud(id) {
+      if (!supabaseClient || !signedInUser) return;
+      const { error } = await supabaseClient.from("mistake_notebook").delete().eq("user_id", signedInUser.id).eq("question_id", vocabCloudId(id));
+      if (error) console.warn("Could not remove vocab favorite", error);
+    }
+
+    async function syncFavoritesToCloud() {
+      if (!supabaseClient || !signedInUser || !favoriteIds.size) return;
+      const payload = [...favoriteIds].map(cloudFavoritePayload).filter(Boolean);
+      if (!payload.length) return;
+      const { error } = await supabaseClient.from("mistake_notebook").upsert(payload, { onConflict: "user_id,question_id" });
+      if (error) console.warn("Could not sync vocab favorites", error);
+    }
+
+    function queueCloudProgressSave(id) {
+      if (!supabaseClient || !signedInUser) return;
+      pendingCloudProgressId = Number(id);
+      clearTimeout(cloudProgressTimer);
+      cloudProgressTimer = setTimeout(saveProgressToCloud, 900);
+    }
+
+    async function saveProgressToCloud() {
+      if (!supabaseClient || !signedInUser || !pendingCloudProgressId) return;
+      const item = vocab.find((vocabItem) => vocabItem.id === Number(pendingCloudProgressId));
+      if (!item) return;
+      const { error } = await supabaseClient.from("mistake_notebook").upsert({
+        user_id: signedInUser.id,
+        question_id: vocabCloudProgressId,
+        grammar: "词汇进度",
+        sentence: item.example,
+        selected_answer: String(item.id),
+        correct_answer: item.word,
+        note: item.reading
+      }, { onConflict: "user_id,question_id" });
+      if (error) console.warn("Could not save vocab progress", error);
+    }
+
+    async function loadCloudVocabState() {
+      if (!supabaseClient || !signedInUser || cloudReady) return;
+      cloudReady = true;
+      const { data, error } = await supabaseClient.from("mistake_notebook").select("*").like("question_id", "vocab-%");
+      if (error) { console.warn("Could not load vocab cloud state", error); return; }
+
+      let cloudProgressId = null;
+      (data || []).forEach((row) => {
+        if (row.question_id === vocabCloudProgressId) {
+          cloudProgressId = Number(row.selected_answer);
+          return;
+        }
+        const id = idFromVocabCloudId(row.question_id);
+        if (Number.isInteger(id) && id >= 1 && id <= vocab.length) favoriteIds.add(id);
+      });
+
+      saveFavorites();
+      renderList();
+      if (Number.isInteger(cloudProgressId) && cloudProgressId >= 1 && cloudProgressId <= vocab.length) {
+        saveLastViewed(cloudProgressId, { syncCloud: false });
+        restoreLastViewedPosition();
+      }
+      await syncFavoritesToCloud();
+      pendingCloudProgressId = loadLastViewed();
+      saveProgressToCloud();
+    }
+
+    async function initialiseAccount() {
+      if (!supabaseClient) {
+        updateAccountUI();
+        return;
+      }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      signedInUser = session?.user || null;
+      updateAccountUI();
+      if (signedInUser) await loadCloudVocabState();
+    }
+
     function isFavorite(id) {
       return favoriteIds.has(Number(id));
     }
@@ -800,8 +940,14 @@
     function toggleFavorite(id, article, button) {
       const numericId = Number(id);
       if (!Number.isInteger(numericId) || numericId < 1 || numericId > vocab.length) return;
-      if (favoriteIds.has(numericId)) favoriteIds.delete(numericId);
-      else favoriteIds.add(numericId);
+      const wasFavorite = favoriteIds.has(numericId);
+      if (wasFavorite) {
+        favoriteIds.delete(numericId);
+        removeFavoriteFromCloud(numericId);
+      } else {
+        favoriteIds.add(numericId);
+        saveFavoriteToCloud(numericId);
+      }
       saveFavorites();
       saveLastViewed(numericId);
       if (button) updateFavoriteButton(button, numericId);
@@ -814,9 +960,16 @@
       if (!favoriteIds.size) return;
       const ok = window.confirm("要清空整个错题本吗？这只会删除收藏记录，不会删除词库。");
       if (!ok) return;
+      const idsToDelete = [...favoriteIds];
       favoriteIds = new Set();
       saveFavorites();
       renderList();
+      if (supabaseClient && signedInUser && idsToDelete.length) {
+        supabaseClient.from("mistake_notebook").delete()
+          .eq("user_id", signedInUser.id)
+          .in("question_id", idsToDelete.map(vocabCloudId))
+          .then(({ error }) => { if (error) console.warn("Could not clear vocab cloud favorites", error); });
+      }
     }
 
     function loadLastViewed() {
@@ -828,11 +981,12 @@
       }
     }
 
-    function saveLastViewed(id) {
+    function saveLastViewed(id, options = {}) {
       const numericId = Number(id);
       if (!Number.isInteger(numericId) || numericId < 1 || numericId > vocab.length) return;
       try { localStorage.setItem(progressKey, String(numericId)); } catch {}
       updateFloatingProgress(numericId);
+      if (options.syncCloud !== false) queueCloudProgressSave(numericId);
     }
 
     function updateFloatingProgress(id) {
@@ -1079,8 +1233,12 @@
     $("voiceSelect").addEventListener("change", () => {
       try { localStorage.setItem("n2-vocab-voice", $("voiceSelect").value); } catch {}
     });
+    $("accountAction").addEventListener("click", () => {
+      if (supabaseClient) supabaseClient.auth.signOut();
+    });
     updateSoundToggle();
     updateScrollToggle();
+    updateAccountUI();
     loadVoices();
     if ("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
     window.addEventListener("scroll", scheduleProgressSave, { passive: true });
@@ -1091,6 +1249,15 @@
     });
     renderList();
     restoreLastViewedPosition();
+    if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        signedInUser = session?.user || null;
+        cloudReady = false;
+        updateAccountUI();
+        if (signedInUser) loadCloudVocabState();
+      });
+    }
+    initialiseAccount();
   </script>
 </body>
 </html>

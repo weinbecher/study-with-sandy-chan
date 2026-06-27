@@ -81,7 +81,8 @@
     .wrongbook-clear { border: 0; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 800; }
     .wrongbook-empty { margin: 12px 0 0; color: var(--muted); font-size: .86rem; }
     .wrongbook-list { display: grid; gap: 10px; margin-top: 13px; }
-    .wrongbook-item { padding: 12px; border-radius: 12px; background: #fff7fa; font-size: .86rem; line-height: 1.6; }
+    .wrongbook-item { width: 100%; padding: 12px; border: 0; border-radius: 12px; color: inherit; background: #fff7fa; cursor: pointer; font: inherit; font-size: .86rem; line-height: 1.6; text-align: left; }
+    .wrongbook-item:hover, .wrongbook-item:focus-visible { outline: 2px solid rgba(238,121,164,.35); background: white; }
     .wrongbook-item strong { color: var(--pink-600); font-family: "Yu Gothic", sans-serif; }
 
     .overlay { position: fixed; z-index: 5; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(58, 31, 42, .33); opacity: 0; pointer-events: none; transition: opacity .2s; }
@@ -330,6 +331,8 @@
     let activeSession = null;
     let cloudReady = false;
     const wrongBookKey = "n2-two-choice-wrong-book-v2";
+    const lastWrongKey = "n2-two-choice-last-wrong-v1";
+    let initialWrongJumpDone = false;
     let wrongBook = loadWrongBook();
     const $ = (id) => document.getElementById(id);
     const questionEl = $("question"), choicesEl = $("choices"), grammarTag = $("grammarTag");
@@ -626,12 +629,14 @@
     function questionLabel(item) { return `${item.id}｜${item.topic}｜${item.grammar}`; }
 
     function recordWrong(item, selected) {
-      wrongBook[questionId(item)] = { id: item.id, topic: item.topic, grammar: item.grammar, label: questionLabel(item), sentence: item.sentence, selected, correct: item.correct, note: item.correctNote };
+      const id = questionId(item);
+      wrongBook[id] = { id: item.id, topic: item.topic, grammar: item.grammar, label: questionLabel(item), sentence: item.sentence, selected, correct: item.correct, note: item.correctNote };
       try { localStorage.setItem(wrongBookKey, JSON.stringify(wrongBook)); } catch {}
+      try { localStorage.setItem(lastWrongKey, id); } catch {}
       renderWrongBook();
       if (signedInUser) {
         supabaseClient.from("mistake_notebook").upsert({
-          user_id: signedInUser.id, question_id: questionId(item), grammar: questionLabel(item),
+          user_id: signedInUser.id, question_id: id, grammar: questionLabel(item),
           sentence: item.sentence, selected_answer: selected, correct_answer: item.correct, note: item.correctNote
         }, { onConflict: "user_id,question_id" }).then(({ error }) => { if (error) console.warn("Could not save mistake", error); });
       }
@@ -647,8 +652,61 @@
       $("wrongbookEmpty").hidden = items.length > 0;
       $("wrongbookList").innerHTML = items.map((item) => {
         const label = item.label || [item.id, item.topic, item.grammar].filter(Boolean).join("｜") || item.grammar;
-        return `<article class="wrongbook-item"><strong>${escapeHtml(label)}</strong><br>${escapeHtml(item.sentence.replace("____", "（　　）"))}<br>你的答案：${escapeHtml(item.selected)}　正解：${escapeHtml(item.correct)}<br>${escapeHtml(item.note)}</article>`;
+        const id = item.id || "";
+        return `<button class="wrongbook-item" type="button" data-question-id="${escapeHtml(id)}"><strong>${escapeHtml(label)}</strong><br>${escapeHtml(item.sentence.replace("____", "（　　）"))}<br>你的答案：${escapeHtml(item.selected)}　正解：${escapeHtml(item.correct)}<br>${escapeHtml(item.note)}</button>`;
       }).join("");
+    }
+
+    function findQuestionIndex(id) {
+      const target = String(id || "");
+      const targetNumber = Number(target);
+      return questions.findIndex((item) => questionId(item) === target || item.id === target || Number(item.id) === targetNumber);
+    }
+
+    function jumpToQuestion(id, options = {}) {
+      const index = findQuestionIndex(id);
+      if (index < 0) return false;
+      current = index;
+      locked = false;
+      render();
+      if (options.message) setSandyMessage("跳到上次错题啦，喵～这次我们拆掉陷阱。");
+      if (options.scroll) {
+        requestAnimationFrame(() => document.querySelector(".card")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+      }
+      return true;
+    }
+
+    function localLastWrongQuestionId() {
+      try {
+        const saved = localStorage.getItem(lastWrongKey);
+        if (saved) return saved;
+      } catch {}
+      const items = Object.values(wrongBook);
+      return items.length ? items[items.length - 1].id : null;
+    }
+
+    async function cloudLastWrongQuestionId() {
+      if (!signedInUser) return null;
+      try {
+        const { data, error } = await supabaseClient.from("practice_attempts")
+          .select("question_id")
+          .eq("is_correct", false)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error) { console.warn("Could not load last cloud mistake", error); return null; }
+        return data?.question_id || null;
+      } catch (error) {
+        console.warn("Could not load last cloud mistake", error);
+        return null;
+      }
+    }
+
+    async function jumpToLastWrongOnOpen() {
+      if (initialWrongJumpDone) return;
+      const id = await cloudLastWrongQuestionId() || localLastWrongQuestionId();
+      if (!id) return;
+      if (jumpToQuestion(id, { scroll: true, message: true })) initialWrongJumpDone = true;
     }
 
     function showCelebration() {
@@ -716,7 +774,7 @@
       }
       const { data: mistakes, error: mistakesError } = await supabaseClient.from("mistake_notebook").select("*");
       if (!mistakesError && mistakes) {
-        mistakes.forEach((item) => {
+        mistakes.filter((item) => !String(item.question_id || "").startsWith("vocab-")).forEach((item) => {
           wrongBook[item.question_id || item.grammar] = { id: item.question_id, grammar: item.grammar, label: item.grammar, sentence: item.sentence, selected: item.selected_answer, correct: item.correct_answer, note: item.note };
         });
         renderWrongBook();
@@ -768,10 +826,17 @@
       if (speechUnlocked) speakQuestion();
     });
     $("wrongbookClear").addEventListener("click", () => {
+      const idsToDelete = Object.keys(wrongBook);
       wrongBook = {};
       try { localStorage.removeItem(wrongBookKey); } catch {}
+      try { localStorage.removeItem(lastWrongKey); } catch {}
       renderWrongBook();
-      if (signedInUser) supabaseClient.from("mistake_notebook").delete().then(({ error }) => { if (error) console.warn("Could not clear cloud mistakes", error); });
+      if (signedInUser && idsToDelete.length) supabaseClient.from("mistake_notebook").delete().eq("user_id", signedInUser.id).in("question_id", idsToDelete).then(({ error }) => { if (error) console.warn("Could not clear cloud mistakes", error); });
+    });
+    $("wrongbookList").addEventListener("click", (event) => {
+      const item = event.target.closest("[data-question-id]");
+      if (!item) return;
+      jumpToQuestion(item.dataset.questionId, { scroll: true, message: true });
     });
     $("sandy").addEventListener("pointerdown", beginSandyDrag);
     $("sandy").addEventListener("pointermove", moveSandy);
@@ -802,9 +867,9 @@
       activeSession = null;
       cloudReady = false;
       updateAccountUI();
-      if (signedInUser) loadCloudProgress();
+      if (signedInUser) loadCloudProgress().then(jumpToLastWrongOnOpen);
     });
-    initialiseAccount();
+    initialiseAccount().then(jumpToLastWrongOnOpen);
   </script>
 </body>
 </html>
