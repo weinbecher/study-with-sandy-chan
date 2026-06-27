@@ -345,6 +345,70 @@
       background: linear-gradient(135deg, #70d5f4, #2b9ccd);
       box-shadow: 0 8px 18px rgba(43,156,205,.16);
     }
+    .ai-panel {
+      margin: 0 0 14px;
+      padding: 12px;
+      border: 1px solid rgba(75,177,218,.18);
+      border-radius: 20px;
+      background: rgba(255,255,255,.84);
+      box-shadow: 0 12px 30px rgba(28,111,145,.1);
+    }
+    .ai-header { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 10px; }
+    .ai-title { display: grid; gap: 2px; font-size: .94rem; font-weight: 950; }
+    .ai-help, .ai-status { color: var(--muted); font-size: .78rem; font-weight: 800; line-height: 1.55; }
+    .ai-controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .ai-file {
+      width: 100%;
+      padding: 10px;
+      border: 1px dashed #9edcf1;
+      border-radius: 13px;
+      color: var(--muted);
+      background: #f7fdff;
+      font: inherit;
+      font-size: .84rem;
+      font-weight: 800;
+    }
+    .ai-button, .ai-secondary {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 13px;
+      color: white;
+      background: linear-gradient(135deg, #70d5f4, #2b9ccd);
+      cursor: pointer;
+      font: inherit;
+      font-size: .84rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+    .ai-secondary { color: var(--pink-600); border: 1px solid #bfe9f7; background: white; }
+    .ai-button:disabled, .ai-secondary:disabled { cursor: not-allowed; opacity: .5; }
+    .ai-text {
+      width: 100%;
+      min-height: 118px;
+      resize: vertical;
+      padding: 12px;
+      border: 1px solid #bfe9f7;
+      border-radius: 13px;
+      color: var(--ink);
+      background: white;
+      font: inherit;
+      line-height: 1.55;
+    }
+    .ai-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+    .ai-suggestions { display: grid; gap: 8px; margin-top: 11px; }
+    .ai-suggestion {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #d8f2ff;
+      border-radius: 14px;
+      background: #f7fdff;
+    }
+    .ai-suggestion input { margin-top: 4px; }
+    .ai-suggestion strong { color: var(--pink-600); font-family: "Yu Gothic", "Hiragino Sans", sans-serif; }
+    .ai-suggestion p { margin: 3px 0 0; color: #315b70; font-size: .86rem; line-height: 1.55; }
+    .ai-suggestion .tag { margin-top: 6px; }
     .list { display: grid; gap: 10px; }
     .entry {
       display: grid;
@@ -443,6 +507,8 @@
       .writing-board-header { align-items: start; }
       .writing-controls { max-width: 132px; }
       .writing-launcher { left: 12px; bottom: 144px; }
+      .ai-header, .ai-controls { display: grid; grid-template-columns: 1fr; }
+      .ai-actions { display: grid; }
       .floating-controls { left: 16px; right: 16px; justify-items: stretch; }
       .floating-sandy-toggle { justify-self: end; width: 98px; }
       .floating-progress { justify-self: center; }
@@ -484,6 +550,26 @@
         <button class="clear-favorites" id="clearFavorites" type="button">清空错题本</button>
       </div>
       <div class="notebook-list" id="notebookList"></div>
+    </section>
+
+    <section class="ai-panel" id="aiPanel" aria-label="AI 词汇生成">
+      <div class="ai-header">
+        <div class="ai-title">
+          <span>✨ AI 生成词汇</span>
+          <span class="ai-help">上传或粘贴阅读材料，先生成草稿；确认后才会加入词汇表。</span>
+        </div>
+        <span class="ai-status" id="aiStatus">等待材料</span>
+      </div>
+      <div class="ai-controls">
+        <input class="ai-file" id="documentFile" type="file" accept=".txt,.md,.csv,.html,.json,.pdf,application/pdf">
+        <button class="ai-secondary" id="clearDocument" type="button">清空</button>
+      </div>
+      <textarea class="ai-text" id="documentText" placeholder="也可以直接把文章内容粘贴到这里。"></textarea>
+      <div class="ai-actions">
+        <button class="ai-button" id="generateVocab" type="button">生成词汇草稿</button>
+        <button class="ai-secondary" id="addSelectedVocab" type="button" disabled>加入选中的词</button>
+      </div>
+      <div class="ai-suggestions" id="aiSuggestions"></div>
     </section>
 
     <p class="status" id="status">共 160 个词</p>
@@ -859,6 +945,11 @@
       item.example = examples[item.id] || `${item.word}を使った例文を声に出して読んでみましょう。`;
     });
 
+    const baseVocabCount = vocab.length;
+    const generatedVocabEndpoint = "generate-vocab";
+    let generatedSuggestions = [];
+    let uploadedDocument = null;
+
     let soundEnabled = "speechSynthesis" in window;
     let japaneseVoices = [];
     let autoScrollActive = false;
@@ -907,7 +998,24 @@
     let writingHasInk = false;
     let writingBoardDrag = null;
 
-    function categoryFor(id) {
+    function cleanText(value, maxLength = 9000) {
+      return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+    }
+
+    function normaliseSuggestion(item) {
+      const word = cleanText(item?.word, 80);
+      const reading = cleanText(item?.reading || word, 80);
+      const meaning = cleanText(item?.meaning, 180);
+      const example = cleanText(item?.example, 220);
+      const category = cleanText(item?.category || "AI生成", 30);
+      if (!word || !meaning) return null;
+      return { word, reading, meaning, example: example || `${word}を使った例文を作ってみましょう。`, category };
+    }
+
+    function categoryFor(itemOrId) {
+      const item = typeof itemOrId === "object" ? itemOrId : vocab.find((vocabItem) => vocabItem.id === Number(itemOrId));
+      if (item?.category) return item.category;
+      const id = Number(typeof itemOrId === "object" ? itemOrId.id : itemOrId);
       if (id <= 40) return "动词";
       if (id <= 62) return "形容词";
       if (id <= 117) return "名词";
@@ -968,7 +1076,7 @@
 
     function renderList() {
       const query = $("search").value.trim().toLowerCase();
-      const matched = vocab.filter((item) => [item.word, item.reading, item.meaning, item.example, categoryFor(item.id)].some((value) => value.toLowerCase().includes(query)));
+      const matched = vocab.filter((item) => [item.word, item.reading, item.meaning, item.example, categoryFor(item)].some((value) => value.toLowerCase().includes(query)));
       const results = favoritesOnly ? matched.filter((item) => isFavorite(item.id)) : matched;
       $("status").textContent = favoritesOnly
         ? (query ? `错题本里找到 ${results.length} / ${favoriteIds.size} 个词` : `错题本：${results.length} 个词`)
@@ -1008,7 +1116,7 @@
         reading.textContent = item.word;
         const tag = document.createElement("span");
         tag.className = "tag";
-        tag.textContent = categoryFor(item.id);
+        tag.textContent = categoryFor(item);
         meta.append(reading, tag);
 
         const meaning = document.createElement("div");
@@ -1054,6 +1162,138 @@
       updateFavoriteControls();
       updateFloatingProgress(loadLastViewed());
       updateWritingBoard(loadLastViewed());
+    }
+
+    function setAiStatus(message) {
+      const status = $("aiStatus");
+      if (status) status.textContent = message;
+    }
+
+    function renderSuggestions() {
+      const list = $("aiSuggestions");
+      const addButton = $("addSelectedVocab");
+      if (!list || !addButton) return;
+      list.innerHTML = "";
+      addButton.disabled = !generatedSuggestions.length;
+      generatedSuggestions.forEach((item, index) => {
+        const label = document.createElement("label");
+        label.className = "ai-suggestion";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = item.selected !== false;
+        checkbox.dataset.suggestionIndex = index;
+
+        const body = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = `${item.reading || item.word}｜${item.word}`;
+        const meaning = document.createElement("p");
+        meaning.textContent = item.meaning;
+        const example = document.createElement("p");
+        example.textContent = item.example;
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = item.category || "AI生成";
+        body.append(title, meaning, example, tag);
+        label.append(checkbox, body);
+        list.appendChild(label);
+      });
+    }
+
+    async function generateVocabFromDocument() {
+      const text = $("documentText").value.trim();
+      if (!text && !uploadedDocument) {
+        setAiStatus("请先上传或粘贴材料");
+        return;
+      }
+      if (!supabaseClient || !signedInUser) {
+        setAiStatus("请先登录，再使用 AI 生成");
+        return;
+      }
+      $("generateVocab").disabled = true;
+      $("addSelectedVocab").disabled = true;
+      setAiStatus("正在生成...");
+      try {
+        const { data, error } = await supabaseClient.functions.invoke(generatedVocabEndpoint, {
+          body: {
+            text: text.slice(0, 18000),
+            file: uploadedDocument,
+            existingWords: vocab.map((item) => item.word).slice(0, 300)
+          }
+        });
+        if (error) throw error;
+        const suggestions = Array.isArray(data?.entries) ? data.entries : [];
+        generatedSuggestions = suggestions.map(normaliseSuggestion).filter(Boolean).slice(0, 12).map((item) => ({ ...item, selected: true }));
+        renderSuggestions();
+        setAiStatus(generatedSuggestions.length ? `生成了 ${generatedSuggestions.length} 个草稿` : "没有找到合适词汇");
+      } catch (error) {
+        console.warn("Could not generate vocab", error);
+        setAiStatus("生成失败，请稍后再试");
+      } finally {
+        $("generateVocab").disabled = false;
+      }
+    }
+
+    async function addSelectedGeneratedVocab() {
+      const selectedIndexes = [...document.querySelectorAll("[data-suggestion-index]:checked")].map((input) => Number(input.dataset.suggestionIndex));
+      const additions = selectedIndexes.map((index) => generatedSuggestions[index]).map(normaliseSuggestion).filter(Boolean);
+      if (!additions.length) {
+        setAiStatus("请选择要加入的词");
+        return;
+      }
+      if (!supabaseClient || !signedInUser) {
+        setAiStatus("请先登录，再保存词汇");
+        return;
+      }
+      $("addSelectedVocab").disabled = true;
+      const payload = additions.map((item) => ({
+        user_id: signedInUser.id,
+        word: item.word,
+        reading: item.reading,
+        meaning: item.meaning,
+        example: item.example,
+        category: item.category
+      }));
+      const { error } = await supabaseClient.from("generated_vocab_entries").insert(payload);
+      if (error) {
+        console.warn("Could not save generated vocab", error);
+        setAiStatus("保存失败，请稍后再试");
+        $("addSelectedVocab").disabled = false;
+        return;
+      }
+      additions.forEach((item) => vocab.push({ id: vocab.length + 1, ...item, source: "ai" }));
+      generatedSuggestions = [];
+      $("aiSuggestions").innerHTML = "";
+      $("addSelectedVocab").disabled = true;
+      $("search").value = "";
+      favoritesOnly = false;
+      renderList();
+      setAiStatus(`已加入 ${additions.length} 个词`);
+      setTimeout(() => jumpToVocab(vocab.length - additions.length + 1), 80);
+    }
+
+    function readUploadedDocument(file) {
+      if (!file) return;
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      const textExtensions = new Set(["txt", "md", "csv", "html", "json"]);
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (textExtensions.has(extension || "")) {
+          $("documentText").value = String(reader.result || "").slice(0, 18000);
+          uploadedDocument = null;
+        } else {
+          uploadedDocument = {
+            name: file.name,
+            type: file.type || "application/octet-stream",
+            data: String(reader.result || "")
+          };
+          $("documentText").value = "";
+        }
+        setAiStatus(`已选择：${file.name}`);
+      };
+      reader.onerror = () => setAiStatus("文件读取失败");
+      if (textExtensions.has(extension || "")) reader.readAsText(file);
+      else reader.readAsDataURL(file);
     }
 
     function loadFavorites() {
@@ -1206,7 +1446,29 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       signedInUser = session?.user || null;
       updateAccountUI();
-      if (signedInUser) await loadCloudVocabState();
+      if (signedInUser) {
+        await loadGeneratedVocabEntries();
+        await loadCloudVocabState();
+      }
+    }
+
+    async function loadGeneratedVocabEntries() {
+      if (!supabaseClient || !signedInUser) return;
+      const { data, error } = await supabaseClient
+        .from("generated_vocab_entries")
+        .select("word,reading,meaning,example,category,created_at")
+        .order("created_at", { ascending: true });
+      if (error) {
+        console.warn("Could not load generated vocab", error);
+        setAiStatus("AI 词汇云端读取失败");
+        return;
+      }
+      vocab.splice(baseVocabCount);
+      (data || []).map(normaliseSuggestion).filter(Boolean).forEach((item) => {
+        vocab.push({ id: vocab.length + 1, ...item, source: "ai" });
+      });
+      renderList();
+      setAiStatus(data?.length ? `已加载 ${data.length} 个 AI 词` : "可以上传材料");
     }
 
     function isFavorite(id) {
@@ -1975,6 +2237,22 @@
       select.value = preferred.name;
     }
 
+    $("documentFile").addEventListener("change", (event) => readUploadedDocument(event.target.files?.[0]));
+    $("clearDocument").addEventListener("click", () => {
+      $("documentFile").value = "";
+      $("documentText").value = "";
+      uploadedDocument = null;
+      generatedSuggestions = [];
+      renderSuggestions();
+      setAiStatus("等待材料");
+    });
+    $("generateVocab").addEventListener("click", generateVocabFromDocument);
+    $("addSelectedVocab").addEventListener("click", addSelectedGeneratedVocab);
+    $("aiSuggestions").addEventListener("change", (event) => {
+      if (!event.target.matches("[data-suggestion-index]")) return;
+      const index = Number(event.target.dataset.suggestionIndex);
+      if (generatedSuggestions[index]) generatedSuggestions[index].selected = event.target.checked;
+    });
     $("search").addEventListener("input", () => {
       stopAutoScroll();
       stopCardReview();
@@ -2084,7 +2362,12 @@
         signedInUser = session?.user || null;
         cloudReady = false;
         updateAccountUI();
-        if (signedInUser) loadCloudVocabState();
+        if (signedInUser) {
+          loadGeneratedVocabEntries().then(loadCloudVocabState);
+        } else {
+          vocab.splice(baseVocabCount);
+          renderList();
+        }
       });
     }
     initialiseAccount();

@@ -1,0 +1,4 @@
+project_id = "dqkulgkvzawpboaoysum"
+
+[functions.generate-vocab]
+verify_jwt = true
