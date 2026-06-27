@@ -1096,6 +1096,15 @@
       return Math.max(0, visibleIndex);
     }
 
+    function autoReviewStartIndex(entries) {
+      const saved = loadLastViewed();
+      if (saved) {
+        const savedIndex = entries.findIndex((entry) => Number(entry.dataset.vocabId) === Number(saved));
+        if (savedIndex >= 0) return savedIndex;
+      }
+      return firstVisibleEntryIndex(entries);
+    }
+
     async function playAutoReview(token) {
       const entries = [...document.querySelectorAll(".entry")];
       if (!autoScrollActive || token !== autoReviewToken) return;
@@ -1151,7 +1160,7 @@
         stopAutoScroll();
         return;
       }
-      autoReviewIndex = firstVisibleEntryIndex(entries);
+      autoReviewIndex = autoReviewStartIndex(entries);
       updateScrollToggle();
       playAutoReview(autoReviewToken);
     }
