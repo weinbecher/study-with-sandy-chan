@@ -6,18 +6,18 @@
   <title>N2 押题词汇表｜Study with Sandy</title>
   <style>
     :root {
-      --pink-50: #fff8fb;
-      --pink-100: #ffeaf2;
-      --pink-200: #ffd3e2;
-      --pink-400: #ee79a4;
-      --pink-600: #bd3e6b;
-      --blue-50: #f5f8ff;
-      --blue-100: #e8efff;
-      --blue-500: #527bd2;
-      --ink: #422d36;
-      --muted: #856a76;
+      --pink-50: #f2fbff;
+      --pink-100: #dff5ff;
+      --pink-200: #bfeeff;
+      --pink-400: #5ec4ea;
+      --pink-600: #1f8fb9;
+      --blue-50: #f0fbff;
+      --blue-100: #d8f2ff;
+      --blue-500: #247fb7;
+      --ink: #16384a;
+      --muted: #5a7f92;
       --white: #fff;
-      --shadow: 0 18px 50px rgba(157, 68, 103, .14);
+      --shadow: 0 18px 50px rgba(30, 127, 170, .16);
     }
 
     * { box-sizing: border-box; }
@@ -27,9 +27,11 @@
       padding-bottom: 96px;
       color: var(--ink);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Hiragino Sans", "Yu Gothic", sans-serif;
-      background: radial-gradient(circle at 10% 10%, #fff 0 11%, transparent 11.5%),
-                  radial-gradient(circle at 92% 12%, #ffe4ee 0 12%, transparent 12.5%),
-                  linear-gradient(135deg, #fff8fb, #fff0f5 52%, #f7faff);
+      background: radial-gradient(circle at 12% 10%, rgba(255,255,255,.95) 0 9%, transparent 9.5%),
+                  radial-gradient(circle at 88% 14%, rgba(190,238,255,.72) 0 13%, transparent 13.5%),
+                  radial-gradient(circle at 18% 84%, rgba(112,207,238,.28) 0 18%, transparent 18.5%),
+                  linear-gradient(135deg, #f7fdff 0%, #e7f8ff 45%, #dff4ff 72%, #f7fbff 100%);
+      background-attachment: fixed;
     }
 
     .app { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 42px; }
@@ -37,15 +39,16 @@
     .eyebrow { color: var(--pink-600); font-size: .7rem; font-weight: 900; letter-spacing: .14em; }
     h1 { margin: 5px 0 5px; font-size: clamp(1.55rem, 4.6vw, 2.25rem); letter-spacing: .02em; }
     .subtitle { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.7; }
-    .account { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; padding: 5px 9px; border: 1px solid #f3d5e0; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.7); font-size: .74rem; font-weight: 700; }
+    header::after { content: "𓇼 ⋆｡˚ 𓆝 ⋆｡˚"; display: block; margin-top: 8px; color: rgba(36,127,183,.42); font-size: .88rem; letter-spacing: .12em; }
+    .account { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; padding: 5px 9px; border: 1px solid #cdeefa; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.7); font-size: .74rem; font-weight: 700; }
     .account button { border: 0; padding: 3px 5px; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-weight: 800; }
     .account button:hover { text-decoration: underline; }
     .account a { color: var(--pink-600); font-weight: 800; text-decoration: none; }
     .account a:hover { text-decoration: underline; }
     .account:not(.signed-in) #accountAction, .account.signed-in #loginLink { display: none; }
     .nav { display: flex; justify-content: center; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
-    .nav a { padding: 7px 12px; border: 1px solid #f0c9d7; border-radius: 999px; color: var(--pink-600); background: rgba(255,255,255,.78); font-size: .8rem; font-weight: 900; text-decoration: none; }
-    .nav a:hover { background: white; box-shadow: 0 7px 18px rgba(157,68,103,.12); }
+    .nav a { padding: 7px 12px; border: 1px solid #bfe9f7; border-radius: 999px; color: var(--pink-600); background: rgba(255,255,255,.78); font-size: .8rem; font-weight: 900; text-decoration: none; }
+    .nav a:hover { background: white; box-shadow: 0 7px 18px rgba(28,111,145,.12); }
 
     .toolbar {
       display: grid;
@@ -54,7 +57,7 @@
       align-items: center;
       margin: 0 0 15px;
       padding: 12px;
-      border: 1px solid rgba(238,121,164,.18);
+      border: 1px solid rgba(75,177,218,.18);
       border-radius: 20px;
       background: rgba(255,255,255,.84);
       box-shadow: var(--shadow);
@@ -64,7 +67,7 @@
       min-width: 0;
       width: 100%;
       padding: 12px 14px;
-      border: 1px solid #f0c9d7;
+      border: 1px solid #bfe9f7;
       border-radius: 13px;
       color: var(--ink);
       background: white;
@@ -73,10 +76,10 @@
     }
 
     .voice-picker { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .8rem; font-weight: 800; white-space: nowrap; }
-    .voice-picker select { max-width: 170px; border: 1px solid #f0c9d7; border-radius: 9px; padding: 8px; color: var(--pink-600); background: white; font: inherit; }
-    .sound-toggle, .scroll-toggle, .favorite-filter { border: 0; padding: 10px 12px; border-radius: 12px; color: white; background: linear-gradient(135deg, #ef85aa, #d85888); cursor: pointer; font: inherit; font-weight: 900; white-space: nowrap; }
+    .voice-picker select { max-width: 170px; border: 1px solid #bfe9f7; border-radius: 9px; padding: 8px; color: var(--pink-600); background: white; font: inherit; }
+    .sound-toggle, .scroll-toggle, .favorite-filter { border: 0; padding: 10px 12px; border-radius: 12px; color: white; background: linear-gradient(135deg, #70d5f4, #2b9ccd); cursor: pointer; font: inherit; font-weight: 900; white-space: nowrap; }
     .scroll-toggle { background: linear-gradient(135deg, #7ea0f0, #527bd2); }
-    .favorite-filter { background: linear-gradient(135deg, #ffb36d, #ee79a4); }
+    .favorite-filter { background: linear-gradient(135deg, #7fd9f3, #5ec4ea); }
     .sound-toggle[aria-pressed="false"], .scroll-toggle[aria-pressed="false"], .favorite-filter[aria-pressed="false"] { color: var(--muted); background: #f4edf0; }
     .floating-controls {
       position: fixed;
@@ -89,25 +92,25 @@
       pointer-events: none;
     }
     .floating-controls > * { pointer-events: auto; }
-    .floating-scroll-toggle { padding: 13px 16px; border-radius: 999px; box-shadow: 0 12px 28px rgba(82,123,210,.24); }
-    .floating-progress { max-width: 210px; padding: 6px 10px; border: 1px solid #f0c9d7; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.92); box-shadow: 0 8px 18px rgba(157,68,103,.12); font-size: .76rem; font-weight: 900; text-align: center; }
+    .floating-scroll-toggle { padding: 13px 16px; border-radius: 999px; box-shadow: 0 12px 28px rgba(43,156,205,.24); }
+    .floating-progress { max-width: 210px; padding: 6px 10px; border: 1px solid #bfe9f7; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.92); box-shadow: 0 8px 18px rgba(28,111,145,.12); font-size: .76rem; font-weight: 900; text-align: center; }
 
     .status { margin: 0 4px 12px; color: var(--muted); font-size: .86rem; font-weight: 800; }
     .notebook-panel {
       margin: 0 0 14px;
       padding: 12px;
-      border: 1px solid rgba(238,121,164,.18);
+      border: 1px solid rgba(75,177,218,.18);
       border-radius: 20px;
       background: rgba(255,255,255,.82);
-      box-shadow: 0 12px 30px rgba(157,68,103,.1);
+      box-shadow: 0 12px 30px rgba(28,111,145,.1);
     }
     .notebook-header { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 10px; }
     .notebook-title { display: grid; gap: 2px; font-size: .94rem; font-weight: 950; }
     .notebook-help { color: var(--muted); font-size: .78rem; font-weight: 800; line-height: 1.55; }
-    .clear-favorites { border: 1px solid #f0c9d7; border-radius: 999px; padding: 7px 10px; color: var(--pink-600); background: white; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 900; white-space: nowrap; }
+    .clear-favorites { border: 1px solid #bfe9f7; border-radius: 999px; padding: 7px 10px; color: var(--pink-600); background: white; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 900; white-space: nowrap; }
     .clear-favorites:disabled { cursor: not-allowed; opacity: .45; }
     .notebook-list { display: flex; flex-wrap: wrap; gap: 8px; }
-    .notebook-chip { border: 1px solid #f0c9d7; border-radius: 999px; padding: 7px 11px; color: var(--pink-600); background: #fff8fb; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 900; }
+    .notebook-chip { border: 1px solid #bfe9f7; border-radius: 999px; padding: 7px 11px; color: var(--pink-600); background: #f2fbff; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 900; }
     .notebook-chip:hover, .notebook-chip:focus-visible { border-color: var(--pink-400); background: white; outline: none; }
     .notebook-empty { color: var(--muted); font-size: .84rem; font-weight: 800; }
     .list { display: grid; gap: 10px; }
@@ -117,10 +120,10 @@
       gap: 12px;
       align-items: center;
       padding: 12px;
-      border: 1px solid rgba(238,121,164,.16);
+      border: 1px solid rgba(75,177,218,.16);
       border-radius: 18px;
       background: rgba(255,255,255,.9);
-      box-shadow: 0 8px 22px rgba(157,68,103,.08);
+      box-shadow: 0 8px 22px rgba(28,111,145,.08);
       transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
     }
     .entry.playing { border-color: rgba(117,200,164,.75); box-shadow: 0 12px 28px rgba(75,150,114,.16); transform: translateY(-1px); }
@@ -146,16 +149,16 @@
     .word-button:hover, .word-button:focus-visible { border-color: var(--pink-400); background: white; transform: translateY(-1px); outline: none; }
     .word-button.speaking { border-color: #75c8a4; background: #edfbf4; }
     .reading { color: var(--blue-500); font-family: "Yu Gothic", "Hiragino Sans", sans-serif; font-size: 1rem; font-weight: 900; }
-    .meaning { color: #5d4650; line-height: 1.6; font-size: .94rem; }
+    .meaning { color: #315b70; line-height: 1.6; font-size: .94rem; }
     .tag { display: inline-flex; align-items: center; justify-content: center; width: fit-content; padding: 4px 9px; border-radius: 999px; color: var(--blue-500); background: var(--blue-100); font-size: .75rem; font-weight: 900; }
     .meta { display: grid; gap: 5px; }
     .favorite-button {
       justify-self: end;
-      border: 1px solid #ffd7a8;
+      border: 1px solid #bfe9f7;
       border-radius: 999px;
       padding: 9px 11px;
-      color: #a45a1f;
-      background: #fff6e9;
+      color: #1f8fb9;
+      background: #f2fbff;
       cursor: pointer;
       font: inherit;
       font-size: .82rem;
@@ -163,8 +166,8 @@
       white-space: nowrap;
       transition: transform .16s ease, background .16s ease, border-color .16s ease;
     }
-    .favorite-button[aria-pressed="true"] { color: white; border-color: #f2a45f; background: linear-gradient(135deg, #ffbd78, #ee79a4); box-shadow: 0 8px 18px rgba(238,121,164,.18); }
-    .favorite-button:hover, .favorite-button:focus-visible { border-color: #f2a45f; transform: translateY(-1px); outline: none; }
+    .favorite-button[aria-pressed="true"] { color: white; border-color: #5ec4ea; background: linear-gradient(135deg, #9be8ff, #5ec4ea); box-shadow: 0 8px 18px rgba(75,177,218,.18); }
+    .favorite-button:hover, .favorite-button:focus-visible { border-color: #5ec4ea; transform: translateY(-1px); outline: none; }
     .example-button {
       grid-column: 2 / -1;
       display: grid;
@@ -173,10 +176,10 @@
       align-items: start;
       width: 100%;
       padding: 10px 12px;
-      border: 1px solid #f6d8e3;
+      border: 1px solid #cdeefa;
       border-radius: 13px;
-      color: #60434e;
-      background: #fff9fb;
+      color: #244f63;
+      background: #f7fdff;
       cursor: pointer;
       font: inherit;
       font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
@@ -190,7 +193,7 @@
     .example-button.speaking { border-color: #75c8a4; background: #edfbf4; }
     .example-label { color: var(--pink-600); font-size: .78rem; font-weight: 900; white-space: nowrap; }
 
-    .sandy-tip { margin: 17px 0 0; padding: 13px 15px; border: 1px solid rgba(238,121,164,.16); border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.82); font-size: .86rem; line-height: 1.7; }
+    .sandy-tip { margin: 17px 0 0; padding: 13px 15px; border: 1px solid rgba(75,177,218,.16); border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.82); font-size: .86rem; line-height: 1.7; }
     .empty { display: none; padding: 30px; border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.8); text-align: center; font-weight: 800; }
 
     @media (max-width: 780px) {
@@ -221,6 +224,7 @@
       <nav class="nav" aria-label="学习页面">
         <a href="index.html">🐾 回到 Sandy 练习</a>
         <a href="grammar.html">📝 N2 语法表</a>
+        <a href="grammar-quiz.html">🐾 Sandy 语法四选一</a>
       </nav>
     </header>
 

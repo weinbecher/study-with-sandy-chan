@@ -1,0 +1,982 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sandy N2 语法四选一｜Study with Sandy</title>
+  <style>
+    :root {
+      --pink-50: #f2fbff;
+      --pink-100: #dff5ff;
+      --pink-200: #bfeeff;
+      --pink-400: #5ec4ea;
+      --pink-600: #1f8fb9;
+      --blue-100: #d8f2ff;
+      --blue-500: #247fb7;
+      --ink: #16384a;
+      --muted: #5a7f92;
+      --white: #fff;
+      --shadow: 0 18px 50px rgba(30, 127, 170, .16);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: radial-gradient(circle at 12% 10%, rgba(255,255,255,.95) 0 9%, transparent 9.5%),
+                  radial-gradient(circle at 88% 14%, rgba(190,238,255,.72) 0 13%, transparent 13.5%),
+                  radial-gradient(circle at 18% 84%, rgba(112,207,238,.28) 0 18%, transparent 18.5%),
+                  linear-gradient(135deg, #f7fdff 0%, #e7f8ff 45%, #dff4ff 72%, #f7fbff 100%);
+      background-attachment: fixed;
+    }
+
+    .app { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 36px; }
+    header { text-align: center; margin-bottom: 14px; }
+    .eyebrow { color: var(--pink-600); font-size: .7rem; font-weight: 900; letter-spacing: .12em; }
+    h1 { margin: 4px 0 4px; font-size: clamp(1.45rem, 4.2vw, 2.05rem); letter-spacing: .02em; }
+    .subtitle { margin: 0; color: var(--muted); font-size: .84rem; line-height: 1.7; }
+    header::after { content: "𓇼 ⋆｡˚ 𓆝 ⋆｡˚"; display: block; margin-top: 8px; color: rgba(36,127,183,.42); font-size: .88rem; letter-spacing: .12em; }
+    .account { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; padding: 5px 9px; border: 1px solid #cdeefa; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.7); font-size: .74rem; font-weight: 700; }
+    .account button { border: 0; padding: 3px 5px; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-weight: 800; }
+    .account button:hover { text-decoration: underline; }
+    .account a { color: var(--pink-600); font-weight: 800; text-decoration: none; }
+    .account a:hover { text-decoration: underline; }
+    .account:not(.signed-in) #accountAction, .account.signed-in #loginLink { display: none; }
+    .quick-links { display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .quick-links a { padding: 7px 12px; border: 1px solid #bfe9f7; border-radius: 999px; color: var(--pink-600); background: rgba(255,255,255,.74); font-size: .78rem; font-weight: 900; text-decoration: none; }
+    .quick-links a:hover { background: white; box-shadow: 0 7px 18px rgba(28,111,145,.12); }
+
+    .progress-wrap { display: flex; align-items: center; gap: 12px; margin: 0 4px 14px; color: var(--muted); font-size: .86rem; font-weight: 700; }
+    .progress { overflow: hidden; flex: 1; height: 10px; border-radius: 999px; background: var(--pink-200); }
+    .progress > span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #9be8ff, var(--pink-400)); transition: width .35s ease; }
+
+    .quiz-toolbar { position: sticky; top: 10px; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; padding: 14px clamp(18px, 5vw, 28px); border: 1px solid #cdeefa; border-radius: 20px; color: var(--muted); background: rgba(255,255,255,.9); box-shadow: 0 10px 26px rgba(28,111,145,.11); backdrop-filter: blur(12px); font-size: .88rem; }
+    .quiz-feed { display: grid; gap: 18px; }
+    .card { overflow: hidden; scroll-margin-top: 92px; background: rgba(255,255,255,.92); border: 1px solid rgba(75,177,218,.18); border-radius: 24px; box-shadow: var(--shadow); }
+    .card.active { border-color: rgba(75,177,218,.42); }
+    .card.answered { box-shadow: 0 10px 28px rgba(28,111,145,.1); }
+    .card.jump-highlight { animation: jump-highlight .95s ease-out; }
+    .card-inner { padding: clamp(24px, 6vw, 42px); }
+    .grammar-tag { display: inline-block; padding: 6px 11px; border-radius: 999px; color: var(--blue-500); background: var(--blue-100); font-size: .83rem; font-weight: 900; }
+    .question { margin: 19px 0 7px; font-size: clamp(1.12rem, 3.3vw, 1.42rem); font-weight: 850; line-height: 1.7; }
+    .meaning-box { margin: 16px 0 14px; padding: 13px 15px; border-radius: 15px; color: #244f63; background: var(--pink-50); line-height: 1.75; font-weight: 800; }
+    .choices { display: grid; gap: 12px; }
+    .choice {
+      width: 100%;
+      min-height: 62px;
+      padding: 12px 18px;
+      border: 2px solid #bfe9f7;
+      border-radius: 15px;
+      color: var(--ink);
+      background: var(--white);
+      cursor: pointer;
+      font: inherit;
+      font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
+      font-size: 1rem;
+      text-align: left;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+    .choice:hover:not(:disabled), .choice:focus-visible { border-color: var(--pink-400); background: #f7fdff; transform: translateY(-2px); outline: none; }
+    .choice:disabled { cursor: default; }
+    .choice.correct { border-color: #75c8a4; background: #edfbf4; }
+    .choice.wrong { border-color: #e9868c; background: #fff5f5; }
+    .choice b { display: block; color: var(--pink-600); font-weight: 950; }
+    .choice .choice-meaning { display: block; margin-top: 6px; color: var(--muted); font-size: .86rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Hiragino Sans", sans-serif; line-height: 1.45; }
+    .footer-actions { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+    .score { font-weight: 900; }
+    .restart, .sound-toggle { border: 0; padding: 8px 11px; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-weight: 850; }
+    .restart:hover, .sound-toggle:hover { text-decoration: underline; }
+    .sound-toggle[aria-pressed="false"] { color: var(--muted); }
+    .voice-picker { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: .78rem; font-weight: 700; }
+    .voice-picker select { max-width: 135px; border: 1px solid #bfe9f7; border-radius: 7px; padding: 5px; color: var(--pink-600); background: white; font: inherit; }
+
+    .wrongbook { margin-top: 18px; padding: 18px 20px; border: 1px solid rgba(75,177,218,.18); border-radius: 18px; background: rgba(255,255,255,.8); }
+    .wrongbook-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .wrongbook h2 { margin: 0; font-size: 1rem; }
+    .wrongbook-clear { border: 0; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 800; }
+    .wrongbook-empty { margin: 12px 0 0; color: var(--muted); font-size: .86rem; }
+    .wrongbook-list { display: grid; gap: 10px; margin-top: 13px; }
+    .wrongbook-item { width: 100%; padding: 12px; border: 0; border-radius: 12px; color: inherit; background: #f4fcff; cursor: pointer; font: inherit; font-size: .86rem; line-height: 1.6; text-align: left; }
+    .wrongbook-item:hover, .wrongbook-item:focus-visible { outline: 2px solid rgba(75,177,218,.35); background: white; }
+    .wrongbook-item strong { color: var(--pink-600); font-family: "Yu Gothic", sans-serif; }
+
+    .feedback { display: none; margin-top: 16px; padding: 14px; border-radius: 16px; color: #315b70; background: #f4fcff; line-height: 1.75; }
+    .feedback.show { display: block; }
+    .feedback h2 { margin: 0 0 8px; font-size: 1.05rem; }
+    .feedback p { margin: 0; }
+    .feedback .example { margin-top: 10px; padding: 12px; border-radius: 12px; color: #244f63; background: var(--pink-50); font-size: .92rem; }
+    .inline-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .example-audio { padding: 10px 12px; border: 0; border-radius: 12px; cursor: pointer; font: inherit; font-weight: 850; }
+    .example-audio { color: var(--pink-600); background: #eefaff; box-shadow: inset 0 0 0 1px rgba(75,177,218,.24); }
+    .example-audio:hover { background: #dff6ff; }
+
+    .celebration { position: fixed; z-index: 7; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .2s; }
+    .celebration.show { opacity: 1; }
+    .celebrate-box { padding: 25px 32px; border-radius: 24px; color: var(--pink-600); background: rgba(255,255,255,.93); box-shadow: var(--shadow); text-align: center; transform: scale(.6); }
+    .celebration.show .celebrate-box { animation: pop .8s cubic-bezier(.18,.89,.32,1.28) forwards; }
+    .face { font-size: clamp(2rem, 9vw, 3.3rem); }
+    .yay { margin-top: 9px; font-weight: 900; }
+    .heart { position: absolute; color: #5ec4ea; font-size: 1.7rem; animation: float 1.25s ease-out forwards; }
+    .sandy { position: fixed; z-index: 4; right: clamp(12px, 3vw, 30px); bottom: 16px; display: grid; justify-items: center; cursor: grab; user-select: none; touch-action: none; }
+    .sandy.dragging { cursor: grabbing; }
+    .sandy-speech { max-width: 176px; margin: 0 0 7px; padding: 9px 12px; border: 1px solid #bfe9f7; border-radius: 15px 15px 4px 15px; color: #326b80; background: rgba(255, 255, 255, .94); box-shadow: 0 7px 18px rgba(28,111,145,.13); font-size: .8rem; font-weight: 700; line-height: 1.35; text-align: center; }
+    .sandy-image { position: relative; z-index: 2; display: block; width: 132px; height: 132px; object-fit: contain; filter: drop-shadow(0 7px 7px rgba(17,90,120,.18)); transition: transform .18s ease; }
+    .sandy:hover .sandy-image { transform: translateY(-4px) scale(1.03); }
+    .sandy.happy .sandy-image { animation: kitty-hop .45s ease-in-out 2; }
+    .sandy-art { position: relative; }
+    .sandy-eye { position: absolute; z-index: 3; top: 40px; width: 20px; height: 11px; border-top: 3px solid #5a463e; border-radius: 50%; opacity: 0; transform: scaleY(.2); transition: opacity .12s ease, transform .12s ease; pointer-events: none; }
+    .sandy-eye.left { left: 48px; } .sandy-eye.right { left: 75px; }
+    .sandy.blink .sandy-eye { opacity: 1; transform: scaleY(1); }
+    .snack-pack { position: fixed; z-index: 4; left: clamp(12px, 3vw, 30px); bottom: 20px; padding: 10px; border: 1px solid #bfe9f7; border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: 0 8px 22px rgba(28,111,145,.14); text-align: center; }
+    .snack-pack-title { margin: 0 0 6px; border: 0; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-size: .72rem; font-weight: 900; letter-spacing: .05em; }
+    .snack-pack-title::after { content: "⌃"; display: inline-block; margin-left: 5px; transition: transform .16s ease; }
+    .snack-pack.collapsed { padding: 7px 10px; }
+    .snack-pack.collapsed .snack-list { display: none; }
+    .snack-pack.collapsed .snack-pack-title { margin: 0; }
+    .snack-pack.collapsed .snack-pack-title::after { transform: rotate(180deg); }
+    .snack-list { display: flex; gap: 6px; }
+    .snack { width: 38px; height: 38px; border: 0; border-radius: 11px; background: #eefaff; cursor: grab; font-size: 1.35rem; touch-action: none; transition: transform .15s ease, background .15s ease; }
+    .snack:hover { background: #dcf5ff; transform: translateY(-2px); }
+    .snack.dragging { opacity: .45; cursor: grabbing; }
+    .snack-ghost { position: fixed; z-index: 12; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: white; box-shadow: 0 8px 16px rgba(17,90,120,.22); font-size: 1.7rem; pointer-events: none; transform: translate(-50%, -50%) rotate(8deg); }
+    .snack-pop { position: fixed; z-index: 11; font-size: 2rem; pointer-events: none; animation: snack-pop .9s ease-out forwards; }
+    @keyframes pop { 0% { transform: scale(.6); } 55% { transform: scale(1.08); } 100% { transform: scale(1); } }
+    @keyframes float { from { opacity: 0; transform: translateY(30px) scale(.5); } 20% { opacity: 1; } to { opacity: 0; transform: translateY(-160px) scale(1.25) rotate(18deg); } }
+    @keyframes kitty-hop { 50% { transform: translateY(-8px) rotate(2deg); } }
+    @keyframes snack-pop { from { opacity: 0; transform: translateY(16px) scale(.55); } 30% { opacity: 1; } to { opacity: 0; transform: translateY(-54px) scale(1.3); } }
+    @keyframes jump-highlight { 0% { box-shadow: 0 0 0 0 rgba(75,177,218,.42), var(--shadow); transform: translateY(-2px); } 100% { box-shadow: var(--shadow); transform: translateY(0); } }
+    @media (max-width: 720px) {
+      .quiz-toolbar { position: static; display: grid; }
+      .footer-actions { justify-content: start; }
+      .sandy-image { width: 112px; height: 112px; }
+      .sandy-speech { max-width: 150px; }
+      .snack-pack { bottom: 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="eyebrow">SANDY N2 GRAMMAR QUIZ</div>
+      <h1>Sandy N2 语法四选一</h1>
+      <p class="subtitle">范围来自 N2 押题语法表。看例句挖空，在四个语法里选最合适的一项。</p>
+      <div class="account" id="account">
+        <span id="accountStatus">Progress is saved when you sign in.</span>
+        <a id="loginLink" href="login.html?redirect=grammar-quiz.html">Sign in</a>
+        <button id="accountAction" type="button">Sign out</button>
+      </div>
+      <nav class="quick-links" aria-label="学习页面">
+        <a href="index.html">🐾 二选一陷阱</a>
+        <a href="grammar.html">📝 N2 语法表</a>
+        <a href="vocab.html">📚 N2 词汇表</a>
+      </nav>
+    </header>
+
+    <div class="progress-wrap"><span id="progressText">第 1 / 99 題</span><div class="progress"><span id="progressBar"></span></div></div>
+    <section class="quiz-toolbar" aria-label="练习控制">
+      <span class="score" id="score">答对 0 题</span>
+      <div class="footer-actions">
+        <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 语音：开</button>
+        <label class="voice-picker">声音<select id="voiceSelect" aria-label="选择日文语音"><option>载入中…</option></select></label>
+        <button class="restart" id="restart" type="button">重新开始</button>
+      </div>
+    </section>
+    <section class="quiz-feed" id="quizFeed" aria-live="polite"></section>
+    <section class="wrongbook" aria-live="polite">
+      <div class="wrongbook-head"><h2>📘 语法错题本 <span id="wrongbookCount">0</span></h2><button class="wrongbook-clear" id="wrongbookClear" type="button">清空记录</button></div>
+      <p class="wrongbook-empty" id="wrongbookEmpty">目前没有错题记录。</p>
+      <div class="wrongbook-list" id="wrongbookList"></div>
+    </section>
+  </main>
+
+  <div class="celebration" id="celebration" aria-live="polite"><div class="celebrate-box"><div class="face">٩(◕‿◕)۶</div><div class="yay">答对了！语感很稳！</div></div></div>
+
+  <div class="sandy" id="sandy" role="button" tabindex="0" aria-label="和三花猫 Sandy 互动">
+    <div class="sandy-speech" id="sandySpeech">我是 Sandy，今天陪你刷语法喵。</div>
+    <div class="sandy-art">
+      <img class="sandy-image" src="assets/sandy-green-eyes.png" alt="Sandy，一只绿色眼睛的可爱三花猫">
+      <span class="sandy-eye left" aria-hidden="true"></span><span class="sandy-eye right" aria-hidden="true"></span>
+    </div>
+  </div>
+
+  <div class="snack-pack" aria-label="给 Sandy 的零食包">
+    <button class="snack-pack-title" id="snackToggle" type="button" aria-expanded="true">SNACK</button>
+    <div class="snack-list">
+      <button class="snack" type="button" data-snack="🐟" aria-label="拖小鱼给 Sandy">🐟</button>
+      <button class="snack" type="button" data-snack="🍪" aria-label="拖饼干给 Sandy">🍪</button>
+      <button class="snack" type="button" data-snack="🍓" aria-label="拖草莓给 Sandy">🍓</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const grammarItems = [
+      { id: 1, group: "20+ 真题高频", pattern: "〜からといって", meaning: "虽说……也不能……；不能仅因为……就……", example: "美味しいからといって、食べ過ぎてはいけない。" },
+      { id: 2, group: "20+ 真题高频", pattern: "〜からには", meaning: "既然……就……", example: "受験するからには、合格を目指して頑張りたい。" },
+      { id: 3, group: "20+ 真题高频", pattern: "〜おかげで", meaning: "多亏……；因为……而得到好结果", example: "先生のおかげで、苦手だった文法が分かるようになった。" },
+      { id: 4, group: "20+ 真题高频", pattern: "〜せいだ", meaning: "都是因为……；不好的原因，带责怪语气", example: "寝不足のせいで、今日は頭がぼんやりしている。" },
+      { id: 5, group: "20+ 真题高频", pattern: "〜たところで", meaning: "即使……也……；就算做了也没有好结果", example: "今から急いだところで、始発には間に合わない。" },
+      { id: 6, group: "20+ 真题高频", pattern: "〜どころか", meaning: "岂止……；哪谈得上……，甚至……", example: "疲れすぎて、歩くどころか立つこともできない。" },
+      { id: 7, group: "20+ 真题高频", pattern: "〜ながら", meaning: "一边……一边……；虽然……但是……", example: "彼は知っていながら、何も教えてくれなかった。" },
+      { id: 8, group: "20+ 真题高频", pattern: "〜うちに", meaning: "趁着……；在……期间", example: "若いうちに、いろいろな経験をしておきたい。" },
+      { id: 9, group: "20+ 真题高频", pattern: "〜としたら / 〜とすれば", meaning: "如果……的话；轻微假定", example: "留学するとしたら、まず生活費を計算しなければならない。" },
+      { id: 10, group: "20+ 真题高频", pattern: "〜として / 〜としては / 〜としても", meaning: "作为……；即使作为……也……", example: "学生として、自分の意見をきちんと述べたい。" },
+      { id: 11, group: "20+ 真题高频", pattern: "〜に関して / 〜に関する", meaning: "关于……；有关……", example: "試験に関して分からないことがあれば、先生に聞いてください。" },
+      { id: 12, group: "20+ 真题高频", pattern: "〜に対して / 〜に対する", meaning: "对……；对于……", example: "上司に対して、失礼な言い方をしてしまった。" },
+      { id: 13, group: "20+ 真题高频", pattern: "〜をめぐって / 〜をめぐる", meaning: "围绕……；关于……发生讨论或争论", example: "新しい制度をめぐって、社内で議論が続いている。" },
+      { id: 14, group: "20+ 真题高频", pattern: "〜さえすれば", meaning: "只要……就……", example: "毎日少しずつ復習さえすれば、力は必ずついてくる。" },
+      { id: 15, group: "20+ 真题高频", pattern: "〜も〜ば〜も", meaning: "既……又……", example: "この町は景色もよければ、食べ物もおいしい。" },
+      { id: 16, group: "20+ 真题高频", pattern: "〜ように", meaning: "为了……；以便……", example: "忘れないように、予定を手帳に書いておいた。" },
+      { id: 17, group: "20+ 真题高频", pattern: "〜わけではない / 〜わけでもない", meaning: "并不是……；并不会……", example: "日本語が話せるからといって、敬語が上手なわけではない。" },
+      { id: 18, group: "20+ 真题高频", pattern: "〜わけにはいかない / 〜わけにもいかない", meaning: "不能……；也不能……", example: "明日は試験なので、今夜遊びに行くわけにはいかない。" },
+      { id: 19, group: "20+ 真题高频", pattern: "〜だけ / 〜だけあって / 〜だけに / 〜だけの", meaning: "正因为……；到底是……；毕竟……", example: "経験が長いだけあって、彼の説明はとても分かりやすい。" },
+      { id: 20, group: "20+ 真题高频", pattern: "〜ないことには〜ない", meaning: "不……就不能……", example: "実物を見ないことには、買うかどうか決められない。" },
+      { id: 21, group: "10+ 重要语法", pattern: "〜しかない", meaning: "只好……；只有……", example: "電車が止まったので、歩いて帰るしかない。" },
+      { id: 22, group: "10+ 重要语法", pattern: "〜にすぎない", meaning: "只不过是……", example: "これは一つの例にすぎない。" },
+      { id: 23, group: "10+ 重要语法", pattern: "〜にほかならない", meaning: "无非是……；正是……", example: "今回の成功は、皆の努力の結果にほかならない。" },
+      { id: 24, group: "10+ 重要语法", pattern: "〜ずにはいられない", meaning: "不能不……；忍不住……", example: "その話を聞いて、笑わずにはいられなかった。" },
+      { id: 25, group: "10+ 重要语法", pattern: "〜ないことはない / 〜ないこともない", meaning: "不是不……；也不是没有可能……", example: "少し高いが、買えないこともない。" },
+      { id: 26, group: "10+ 重要语法", pattern: "〜ほかない / 〜よりほかない", meaning: "只有……；不得不……", example: "ここまで来たら、最後までやるほかない。" },
+      { id: 27, group: "10+ 重要语法", pattern: "〜のみならず", meaning: "不仅……而且……", example: "彼は日本語のみならず、英語も流暢に話せる。" },
+      { id: 28, group: "10+ 重要语法", pattern: "たとえ〜ても", meaning: "即使……也……", example: "たとえ失敗しても、もう一度挑戦したい。" },
+      { id: 29, group: "10+ 重要语法", pattern: "〜ば〜ほど", meaning: "越……越……", example: "勉強すればするほど、日本語が面白くなる。" },
+      { id: 30, group: "10+ 重要语法", pattern: "〜ことに / 〜ことには", meaning: "令人……的是……", example: "驚いたことに、彼は一晩でその本を読み終えた。" },
+      { id: 31, group: "10+ 重要语法", pattern: "〜ことだから", meaning: "因为是……，所以想必……", example: "真面目な彼のことだから、きっと約束を守るだろう。" },
+      { id: 32, group: "10+ 重要语法", pattern: "〜かねない", meaning: "有可能……；可能会导致坏结果", example: "このまま放っておくと、大きな問題になりかねない。" },
+      { id: 33, group: "10+ 重要语法", pattern: "〜次第", meaning: "一……就……；取决于……", example: "結果が分かり次第、すぐに連絡します。" },
+      { id: 34, group: "10+ 重要语法", pattern: "一方 / 一方で / 一方では", meaning: "一方面……另一方面……", example: "この町は便利な一方で、家賃が高い。" },
+      { id: 35, group: "10+ 重要语法", pattern: "〜一方だ", meaning: "越来越……；一直朝某方向发展", example: "仕事の量は増える一方だ。" },
+      { id: 36, group: "10+ 重要语法", pattern: "〜にかけては / 〜にかけても", meaning: "在……方面；说到……", example: "料理にかけては、彼にかなう人はいない。" },
+      { id: 37, group: "10+ 重要语法", pattern: "〜によって / 〜により / 〜による", meaning: "由于……；根据……；被……", example: "結果は努力によって大きく変わる。" },
+      { id: 38, group: "10+ 重要语法", pattern: "〜にあたって / 〜にあたり", meaning: "在……之际", example: "発表にあたって、資料をもう一度確認した。" },
+      { id: 39, group: "10+ 重要语法", pattern: "〜にしては", meaning: "照……来说；作为……却……", example: "初めてにしては、よくできている。" },
+      { id: 40, group: "10+ 重要语法", pattern: "〜に限って / 〜に限り / 〜に限らず", meaning: "只限……；不仅限于……", example: "このサービスは学生に限り、無料で利用できる。" },
+      { id: 41, group: "10+ 重要语法", pattern: "〜といっても", meaning: "虽说……但是……", example: "旅行といっても、近くの温泉に行くだけだ。" },
+      { id: 42, group: "10+ 重要语法", pattern: "〜というものだ", meaning: "这才是真正的……；这就是所谓……", example: "困っている人を助けるのが、思いやりというものだ。" },
+      { id: 43, group: "10+ 重要语法", pattern: "〜を問わず", meaning: "不论……；不管……", example: "経験を問わず、誰でも応募できます。" },
+      { id: 44, group: "10+ 重要语法", pattern: "〜からすると / 〜からすれば", meaning: "从……来看；根据……判断", example: "彼の表情からすると、結果はよくなかったようだ。" },
+      { id: 45, group: "10+ 重要语法", pattern: "〜さえ / 〜でさえ", meaning: "连……都……；甚至……", example: "先生でさえ答えられない問題だった。" },
+      { id: 46, group: "10+ 重要语法", pattern: "〜たとたん / 〜たとたんに", meaning: "刚一……就……", example: "家を出たとたん、雨が降り出した。" },
+      { id: 47, group: "10+ 重要语法", pattern: "〜たび / 〜たびに", meaning: "每当……就……", example: "この曲を聞くたびに、故郷を思い出す。" },
+      { id: 48, group: "10+ 重要语法", pattern: "〜だらけ", meaning: "满是……；净是……", example: "引っ越しの後、部屋は箱だらけになった。" },
+      { id: 49, group: "10+ 重要语法", pattern: "〜べき / 〜べきだ / 〜べきではない", meaning: "应该……；不应该……", example: "学生はもっと自分の意見を述べるべきだ。" },
+      { id: 50, group: "5+ 重要语法", pattern: "〜しかねる", meaning: "难以……；不能……", example: "その提案には賛成しかねます。" },
+      { id: 51, group: "5+ 重要语法", pattern: "〜ことはない", meaning: "用不着……；没必要……", example: "少し失敗したくらいで、そんなに落ち込むことはない。" },
+      { id: 52, group: "5+ 重要语法", pattern: "〜てならない / 〜でならない", meaning: "……得不得了；非常……", example: "試験の結果が気になってならない。" },
+      { id: 53, group: "5+ 重要语法", pattern: "〜どころではない", meaning: "哪儿谈得上……；根本没心情……", example: "熱が高くて、勉強どころではない。" },
+      { id: 54, group: "5+ 重要语法", pattern: "〜ないではいられない", meaning: "不能不……；忍不住……", example: "その映画を見て、泣かないではいられなかった。" },
+      { id: 55, group: "5+ 重要语法", pattern: "〜ようがない / 〜ようもない", meaning: "无法……；没办法……", example: "名前が分からないので、調べようがない。" },
+      { id: 56, group: "5+ 重要语法", pattern: "〜わけがない / 〜わけはない", meaning: "不可能……；不会……", example: "毎日練習している彼が、できないわけがない。" },
+      { id: 57, group: "5+ 重要语法", pattern: "〜てしょうがない / 〜てしかたがない", meaning: "……得不得了；非常……", example: "明日の旅行が楽しみでしかたがない。" },
+      { id: 58, group: "5+ 重要语法", pattern: "〜ざるをえない", meaning: "不得不……", example: "予定が変わったので、出発を延期せざるをえない。" },
+      { id: 59, group: "5+ 重要语法", pattern: "〜ということだ", meaning: "听说……；也就是说……", example: "天気予報によると、明日は雨だということだ。" },
+      { id: 60, group: "5+ 重要语法", pattern: "〜ことか", meaning: "多么……啊", example: "合格の知らせを聞いて、どれほど嬉しかったことか。" },
+      { id: 61, group: "5+ 重要语法", pattern: "〜かのようだ", meaning: "就好像……似的", example: "彼は何も知らないかのように話している。" },
+      { id: 62, group: "5+ 重要语法", pattern: "〜きる / 〜きれる / 〜きれない", meaning: "完全……；能……完；不能……完", example: "この量は一人では食べきれない。" },
+      { id: 63, group: "5+ 重要语法", pattern: "〜かけだ / 〜かけの / 〜かける", meaning: "刚开始……；做了一半……", example: "読みかけの本を机の上に置いた。" },
+      { id: 64, group: "5+ 重要语法", pattern: "〜得る", meaning: "可能……；能够……", example: "この方法なら、問題を解決し得る。" },
+      { id: 65, group: "5+ 重要语法", pattern: "〜抜く", meaning: "坚持到底；完全……", example: "最後まで走り抜いた選手に拍手が送られた。" },
+      { id: 66, group: "5+ 重要语法", pattern: "〜がち", meaning: "往往……；容易……", example: "忙しいと、朝ご飯を抜きがちだ。" },
+      { id: 67, group: "5+ 重要语法", pattern: "〜はともかく", meaning: "暂且不说……", example: "値段はともかく、デザインはとても気に入っている。" },
+      { id: 68, group: "5+ 重要语法", pattern: "〜つつある", meaning: "正在……；不断……", example: "この町の人口は少しずつ増えつつある。" },
+      { id: 69, group: "5+ 重要语法", pattern: "〜か〜ないかのうちに", meaning: "刚一……就……", example: "授業が終わるか終わらないかのうちに、学生たちは教室を出た。" },
+      { id: 70, group: "5+ 重要语法", pattern: "〜から〜にかけて", meaning: "从……到……；断断续续", example: "夕方から夜にかけて、雨が強くなるでしょう。" },
+      { id: 71, group: "5+ 重要语法", pattern: "〜てからでないと", meaning: "如果不先……就不能……", example: "予約してからでないと、この店には入れない。" },
+      { id: 72, group: "5+ 重要语法", pattern: "〜かわりに", meaning: "代替……；不……而……", example: "電車で行くかわりに、自転車で行くことにした。" },
+      { id: 73, group: "5+ 重要语法", pattern: "〜くせに", meaning: "明明……却……；带责备语气", example: "知っているくせに、どうして教えてくれなかったの。" },
+      { id: 74, group: "5+ 重要语法", pattern: "〜たところ", meaning: "一……却……；刚刚……", example: "先生に聞いたところ、明日までに提出すればよいそうだ。" },
+      { id: 75, group: "5+ 重要语法", pattern: "〜ばかりに", meaning: "就因为……；不好的原因", example: "確認を怠ったばかりに、大きなミスになってしまった。" },
+      { id: 76, group: "5+ 重要语法", pattern: "〜ついでに", meaning: "顺便……", example: "買い物に行くついでに、郵便局にも寄った。" },
+      { id: 77, group: "5+ 重要语法", pattern: "〜のもとで / 〜のもとに", meaning: "在……之下；按照……", example: "先生の指導のもとで、研究を進めている。" },
+      { id: 78, group: "5+ 重要语法", pattern: "〜わりに", meaning: "虽然……却……；相对比较", example: "この店は安いわりに、料理がおいしい。" },
+      { id: 79, group: "5+ 重要语法", pattern: "〜とともに", meaning: "和……一起；随着……", example: "卒業とともに、新しい生活が始まった。" },
+      { id: 80, group: "5+ 重要语法", pattern: "〜を通じて / 〜を通して", meaning: "通过……；经过……", example: "留学を通じて、多くの友人ができた。" },
+      { id: 81, group: "5+ 重要语法", pattern: "〜において / 〜における", meaning: "在……；在……方面", example: "現代社会において、情報の扱いはとても重要だ。" },
+      { id: 82, group: "5+ 重要语法", pattern: "〜にしたがって / 〜にしたがい", meaning: "随着……；按照……", example: "年を取るにしたがって、健康の大切さが分かってきた。" },
+      { id: 83, group: "5+ 重要语法", pattern: "〜にしたら / 〜にすれば / 〜にしても", meaning: "从……立场看；即使对……来说", example: "親にすれば、子どもの安全が一番心配だ。" },
+      { id: 84, group: "5+ 重要语法", pattern: "〜にしろ / 〜にせよ / 〜にもせよ", meaning: "无论……；即使……也……", example: "行くにせよ行かないにせよ、早く返事をしてください。" },
+      { id: 85, group: "5+ 重要语法", pattern: "〜について / 〜についての", meaning: "关于……", example: "日本の文化について、発表することになった。" },
+      { id: 86, group: "5+ 重要语法", pattern: "〜に反して / 〜に反する", meaning: "与……相反；违反……", example: "予想に反して、試験はそれほど難しくなかった。" },
+      { id: 87, group: "5+ 重要语法", pattern: "〜にわたって / 〜にわたり", meaning: "历经……；范围涉及……", example: "会議は三時間にわたって行われた。" },
+      { id: 88, group: "5+ 重要语法", pattern: "〜に基づいて / 〜に基づき", meaning: "根据……；按照……", example: "調査結果に基づいて、計画を立て直した。" },
+      { id: 89, group: "5+ 重要语法", pattern: "〜ものがある", meaning: "确实有……；令人感到……", example: "彼の努力には、胸を打つものがある。" },
+      { id: 90, group: "5+ 重要语法", pattern: "〜ものだ / 〜ものではない", meaning: "应该……；不应该……；感叹", example: "人の悪口は言うものではない。" },
+      { id: 91, group: "5+ 重要语法", pattern: "〜ものだから", meaning: "因为……；所以……", example: "道が混んでいたものだから、遅れてしまいました。" },
+      { id: 92, group: "5+ 重要语法", pattern: "〜ものなら", meaning: "要是能……；如果……的话", example: "できるものなら、もう一度あの日に戻りたい。" },
+      { id: 93, group: "5+ 重要语法", pattern: "〜あまり", meaning: "由于过于……", example: "緊張のあまり、言いたいことを忘れてしまった。" },
+      { id: 94, group: "5+ 重要语法", pattern: "〜上 / 〜上に", meaning: "不仅……而且……；在……方面", example: "この部屋は広い上に、駅からも近い。" },
+      { id: 95, group: "5+ 重要语法", pattern: "〜上で / 〜上の / 〜上では", meaning: "在……之后；在……方面", example: "内容を確認した上で、申し込みをしてください。" },
+      { id: 96, group: "5+ 重要语法", pattern: "〜こそ", meaning: "正是……；才是……", example: "今度こそ、最後までやり抜きたい。" },
+      { id: 97, group: "5+ 重要语法", pattern: "〜とおり / 〜どおり", meaning: "正如……；按照……", example: "先生が言ったとおりに、もう一度練習した。" },
+      { id: 98, group: "5+ 重要语法", pattern: "〜最中に / 〜最中だ", meaning: "正在……的时候", example: "食事の最中に、電話がかかってきた。" },
+      { id: 99, group: "5+ 重要语法", pattern: "〜など / 〜なんか / 〜なんて", meaning: "……之类；表示轻视或举例", example: "一人で海外旅行なんて、私にはまだ無理だ。" }
+    ];
+
+    const questions = grammarItems.map((item) => ({
+      ...item,
+      correct: item.pattern,
+      correctNote: `${item.pattern}：${item.meaning}`,
+      wrongNote: "这题不是看例句猜答案，而是先抓中文用法，再和语法边界对应起来。"
+    }));
+    const sandySounds = ["assets/sandy-meow-1.wav", "assets/sandy-meow-2.wav", "assets/sandy-meow-3.wav", "assets/sandy-meow-4.wav", "assets/sandy-purr-1.wav"];
+    const supabaseUrl = "https://dqkulgkvzawpboaoysum.supabase.co";
+    const supabasePublishableKey = "sb_publishable_kd_u18OSCcjCkLLAohOHig_67kwF35H";
+    const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabasePublishableKey) : null;
+    const progressKey = "n2-sandy-grammar-quiz-progress-v1";
+    const wrongBookKey = "n2-sandy-grammar-quiz-wrong-book-v1";
+    const lastWrongKey = "n2-sandy-grammar-quiz-last-wrong-v1";
+    const cloudPrefix = "grammar-quiz-";
+    const cloudProgressId = "grammar-quiz-progress-v1";
+    const savedProgress = loadLocalProgress();
+    let current = savedProgress.current;
+    let correctCount = savedProgress.correctCount;
+    let answers = savedProgress.answers;
+    let soundEnabled = "speechSynthesis" in window;
+    let speechUnlocked = false;
+    let exampleSpeechTimer;
+    let autoScrollTimer;
+    let activeSandySound = null;
+    let sandyDrag = null;
+    let snackDrag = null;
+    let japaneseVoices = [];
+    let signedInUser = null;
+    let cloudReady = false;
+    let initialWrongJumpDone = false;
+    let wrongBook = loadWrongBook();
+    const $ = (id) => document.getElementById(id);
+    const quizFeed = $("quizFeed");
+    const choiceOrderById = {};
+
+    function shuffled(items) { return [...items].sort(() => Math.random() - .5); }
+    function cloudId(item) { return `${cloudPrefix}${item.id}`; }
+    function itemById(id) {
+      const raw = String(id || "").replace(cloudPrefix, "");
+      return questions.find((item) => String(item.id) === raw);
+    }
+    function itemByPattern(pattern) { return questions.find((item) => item.pattern === pattern); }
+    function cleanPattern(pattern) { return pattern.replaceAll("〜", "").replaceAll("/", "、"); }
+    function questionLabel(item) { return `${String(item.id).padStart(3, "0")}｜${item.group}｜${item.pattern}`; }
+    function escapeRegExp(value) { return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+    function patternCandidates(pattern) {
+      const candidates = new Set();
+      pattern.split(/\s*\/\s*/).forEach((raw) => {
+        const compact = raw.replace(/\s+/g, "");
+        const plain = compact.replaceAll("〜", "");
+        if (plain.length >= 2) candidates.add(plain);
+        if (plain.endsWith("だ")) candidates.add(`${plain.slice(0, -1)}で`);
+        if (plain.endsWith("ものだ")) candidates.add(`${plain.slice(0, -1)}ではない`);
+        if (plain.endsWith("べきだ")) candidates.add(`${plain.slice(0, -1)}ではない`);
+        if (plain.endsWith("ようだ")) candidates.add(`${plain.slice(0, -1)}に`);
+      });
+      return [...candidates].sort((a, b) => b.length - a.length);
+    }
+
+    function blankedExample(item) {
+      const manualBlanks = {
+        5: "今から急いだ（　　　）、始発には間に合わない。",
+        15: "この町は景色（　　　）、食べ物（　　　）おいしい。",
+        20: "実物を見（　　　）、買うかどうか決められない。",
+        24: "その話を聞いて、笑わ（　　　）。",
+        29: "勉強（　　　）、日本語が面白くなる。",
+        50: "その提案には賛成（　　　）。",
+        54: "その映画を見て、泣か（　　　）。",
+        57: "明日の旅行が楽しみ（　　　）。",
+        65: "最後まで走り（　　　）選手に拍手が送られた。",
+        69: "授業が終わる（　　　）、学生たちは教室を出た。",
+        84: "行く（　　　）行かない（　　　）、早く返事をしてください。"
+      };
+      if (manualBlanks[item.id]) return manualBlanks[item.id];
+      for (const candidate of patternCandidates(item.pattern)) {
+        if (item.example.includes(candidate)) return item.example.replace(candidate, "（　　　）");
+      }
+      const regexes = item.pattern.split(/\s*\/\s*/).map((raw) => {
+        const chunks = raw.replace(/\s+/g, "").split("〜").filter((chunk) => chunk.length >= 2);
+        if (chunks.length < 2) return null;
+        return new RegExp(chunks.map(escapeRegExp).join(".{1,24}?"));
+      }).filter(Boolean);
+      for (const regex of regexes) {
+        if (regex.test(item.example)) return item.example.replace(regex, "（　　　）");
+      }
+      return "この例文の空欄に入る文法を選んでください。";
+    }
+
+    function loadLocalProgress() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(progressKey) || "{}");
+        const answers = sanitizeAnswers(saved.answers);
+        const firstUnanswered = firstUnansweredIndex(answers);
+        const current = Number.isInteger(saved.current) && saved.current >= 0 && saved.current <= questions.length
+          ? saved.current
+          : (firstUnanswered === -1 ? questions.length : firstUnanswered);
+        const correctCount = countCorrectAnswers(answers);
+        return { current, correctCount, answers };
+      } catch {
+        return { current: 0, correctCount: 0, answers: {} };
+      }
+    }
+
+    function sanitizeAnswers(rawAnswers) {
+      const cleaned = {};
+      if (!rawAnswers || typeof rawAnswers !== "object") return cleaned;
+      Object.entries(rawAnswers).forEach(([id, answer]) => {
+        const item = itemById(id);
+        if (!item || !answer || typeof answer.selected !== "string") return;
+        cleaned[cloudId(item)] = {
+          selected: answer.selected,
+          isCorrect: answer.selected === item.correct
+        };
+      });
+      return cleaned;
+    }
+
+    function countCorrectAnswers(answerMap = answers) {
+      return Object.values(answerMap || {}).filter((answer) => answer?.isCorrect).length;
+    }
+
+    function firstUnansweredIndex(answerMap = answers) {
+      return questions.findIndex((item) => !answerMap?.[cloudId(item)]);
+    }
+
+    function recalculateProgress() {
+      correctCount = countCorrectAnswers();
+      const nextIndex = firstUnansweredIndex();
+      current = nextIndex === -1 ? questions.length : nextIndex;
+    }
+
+    function saveLocalProgress() {
+      try { localStorage.setItem(progressKey, JSON.stringify({ current, correctCount, answers })); } catch {}
+      saveCloudProgress();
+    }
+
+    function distractorsFor(item) {
+      const sameGroup = questions.filter((candidate) => candidate.group === item.group && candidate.id !== item.id);
+      const pool = sameGroup.length >= 3 ? sameGroup : questions.filter((candidate) => candidate.id !== item.id);
+      return shuffled(pool).slice(0, 3).map((candidate) => candidate.pattern);
+    }
+
+    function choicesFor(item) {
+      const id = cloudId(item);
+      if (!choiceOrderById[id]) choiceOrderById[id] = shuffled([item.correct, ...distractorsFor(item)]);
+      return choiceOrderById[id];
+    }
+
+    function render() {
+      recalculateProgress();
+      quizFeed.innerHTML = questions.map(renderQuestionCard).join("") + renderResultCard();
+      updateProgressUI();
+      clearTimeout(exampleSpeechTimer);
+      saveLocalProgress();
+    }
+
+    function renderQuestionCard(item) {
+      const id = cloudId(item);
+      const saved = answers[id];
+      const isAnswered = Boolean(saved);
+      const isActive = !isAnswered && questions[current]?.id === item.id;
+      const choices = choicesFor(item).map((answer) => {
+        const answerItem = itemByPattern(answer);
+        const classes = ["choice"];
+        if (isAnswered && answer === item.correct) classes.push("correct");
+        if (isAnswered && answer === saved.selected && answer !== item.correct) classes.push("wrong");
+        return `<button class="${classes.join(" ")}" type="button" data-answer="${escapeHtml(answer)}" ${isAnswered ? "disabled" : ""}>
+          <b>${escapeHtml(answer)}</b>
+          <span class="choice-meaning">意思：${escapeHtml(answerItem?.meaning || "")}</span>
+        </button>`;
+      }).join("");
+      const feedback = isAnswered ? feedbackHtml(item, saved) : "";
+      return `<article class="card ${isActive ? "active" : ""} ${isAnswered ? "answered" : ""}" data-question-id="${escapeHtml(id)}">
+        <div class="card-inner">
+          <span class="grammar-tag">${String(item.id).padStart(3, "0")}｜${escapeHtml(item.group)}</span>
+          <div class="meaning-box">${escapeHtml(blankedExample(item))}</div>
+          <div class="choices">${choices}</div>
+          ${feedback}
+        </div>
+      </article>`;
+    }
+
+    function feedbackHtml(item, saved) {
+      const title = saved.isCorrect ? "答对了！本题重点" : "这题的语法边界";
+      const explanation = saved.isCorrect
+        ? item.correctNote
+        : `你选的是「${saved.selected}」。正解是「${item.correct}」。${item.correctNote} ${item.wrongNote}`;
+      return `<div class="feedback show">
+        <h2>${escapeHtml(title)}</h2>
+        <p>${escapeHtml(explanation)}</p>
+        <div class="example">例句：${escapeHtml(item.example)}</div>
+        <div class="inline-actions"><button class="example-audio" type="button" data-read-example="${escapeHtml(cloudId(item))}">🔊 读例句</button></div>
+      </div>`;
+    }
+
+    function renderResultCard() {
+      if (Object.keys(answers).length < questions.length) return "";
+      const message = correctCount === questions.length ? "全答对！Sandy 已经被你的语法力征服了。" : "把错题本里的语法再点回去重练一遍，会更稳。";
+      return `<article class="card answered" id="resultCard"><div class="card-inner">
+        <span class="grammar-tag">完成！</span>
+        <p class="question">你答对了 ${correctCount} / ${questions.length} 题</p>
+        <div class="meaning-box">${escapeHtml(message)}</div>
+      </div></article>`;
+    }
+
+    function updateProgressUI() {
+      const answeredCount = Object.keys(answers).length;
+      $("progressText").textContent = current >= questions.length
+        ? "练习完成"
+        : `已完成 ${answeredCount} / ${questions.length}｜下一题 ${current + 1}`;
+      $("progressBar").style.width = `${(answeredCount / questions.length) * 100}%`;
+      $("score").textContent = `答对 ${correctCount} 题`;
+    }
+
+    function answerQuestion(item, answer) {
+      const id = cloudId(item);
+      if (answers[id]) return;
+      speechUnlocked = true;
+      speak(cleanPattern(answer));
+      const isCorrect = answer === item.correct;
+      answers[id] = { selected: answer, isCorrect };
+      if (isCorrect) {
+        showCelebration();
+        celebrateSandy();
+      } else {
+        recordWrong(item, answer);
+      }
+      recalculateProgress();
+      render();
+      clearTimeout(exampleSpeechTimer);
+      exampleSpeechTimer = setTimeout(() => speakExample(item, { cancel: false }), 550);
+      clearTimeout(autoScrollTimer);
+      autoScrollTimer = setTimeout(() => {
+        const nextItem = questions[current];
+        if (nextItem) scrollToQuestion(cloudId(nextItem), { block: "center", highlight: true });
+        else document.getElementById("resultCard")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 2400);
+      saveLocalProgress();
+      saveAnswer(item, answer, isCorrect);
+    }
+
+    function speak(text, options = {}) {
+      if (!soundEnabled || !speechUnlocked || !("SpeechSynthesisUtterance" in window)) return;
+      if (options.cancel !== false) window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ja-JP";
+      const japaneseVoice = japaneseVoices.find((voice) => voice.name === $("voiceSelect").value) || japaneseVoices.find((voice) => /siri|kyoko|haruka|nanami|female/i.test(voice.name)) || japaneseVoices[0];
+      if (japaneseVoice) utterance.voice = japaneseVoice;
+      utterance.rate = 0.85;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakExample(item, options = {}) {
+      if (!item?.example) return;
+      speechUnlocked = true;
+      speak(item.example, options);
+    }
+
+    function playMeow() {
+      if (!soundEnabled) return;
+      if (activeSandySound) {
+        activeSandySound.pause();
+        activeSandySound.currentTime = 0;
+      }
+      activeSandySound = new Audio(sandySounds[Math.floor(Math.random() * sandySounds.length)]);
+      activeSandySound.volume = .85;
+      activeSandySound.play().catch(() => {});
+    }
+    function setSandyMessage(message) { $("sandySpeech").textContent = message; }
+    function makeSandySquint() {
+      const sandy = $("sandy");
+      sandy.classList.remove("blink");
+      void sandy.offsetWidth;
+      sandy.classList.add("blink");
+      setTimeout(() => sandy.classList.remove("blink"), 900);
+    }
+    function celebrateSandy() {
+      const sandy = $("sandy");
+      setSandyMessage("答对了！语法雷达启动成功喵！");
+      sandy.classList.remove("happy");
+      void sandy.offsetWidth;
+      sandy.classList.add("happy");
+      makeSandySquint();
+      setTimeout(playMeow, 420);
+      setTimeout(() => sandy.classList.remove("happy"), 1700);
+    }
+    function interactWithSandy() {
+      const messages = ["喵～四选一也不要怕。", "先看意思，再看语法边界。", "Sandy 帮你盯住易混项！", "选完我会告诉你重点，喵。"];
+      setSandyMessage(messages[Math.floor(Math.random() * messages.length)]);
+      const sandy = $("sandy");
+      sandy.classList.remove("happy");
+      void sandy.offsetWidth;
+      sandy.classList.add("happy");
+      makeSandySquint();
+      playMeow();
+      setTimeout(() => sandy.classList.remove("happy"), 1700);
+    }
+
+    function beginSandyDrag(event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      const sandy = $("sandy");
+      const box = sandy.getBoundingClientRect();
+      sandy.setPointerCapture(event.pointerId);
+      sandy.style.left = `${box.left}px`;
+      sandy.style.top = `${box.top}px`;
+      sandy.style.right = "auto";
+      sandy.style.bottom = "auto";
+      sandyDrag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, left: box.left, top: box.top, moved: false };
+      sandy.classList.add("dragging");
+      event.preventDefault();
+    }
+    function moveSandy(event) {
+      if (!sandyDrag || event.pointerId !== sandyDrag.pointerId) return;
+      const dx = event.clientX - sandyDrag.startX;
+      const dy = event.clientY - sandyDrag.startY;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) sandyDrag.moved = true;
+      const sandy = $("sandy");
+      const box = sandy.getBoundingClientRect();
+      const maxLeft = Math.max(0, window.innerWidth - box.width);
+      const maxTop = Math.max(0, window.innerHeight - box.height);
+      sandy.style.left = `${Math.min(maxLeft, Math.max(0, sandyDrag.left + dx))}px`;
+      sandy.style.top = `${Math.min(maxTop, Math.max(0, sandyDrag.top + dy))}px`;
+    }
+    function endSandyDrag(event) {
+      if (!sandyDrag || event.pointerId !== sandyDrag.pointerId) return;
+      const wasDrag = sandyDrag.moved;
+      const sandy = $("sandy");
+      sandy.classList.remove("dragging");
+      if (sandy.hasPointerCapture(event.pointerId)) sandy.releasePointerCapture(event.pointerId);
+      sandyDrag = null;
+      if (!wasDrag) interactWithSandy();
+    }
+
+    function startSnackDrag(event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.stopPropagation();
+      const snack = event.currentTarget;
+      snack.setPointerCapture(event.pointerId);
+      const ghost = document.createElement("div");
+      ghost.className = "snack-ghost";
+      ghost.textContent = snack.dataset.snack;
+      document.body.appendChild(ghost);
+      snack.classList.add("dragging");
+      snackDrag = { pointerId: event.pointerId, snack, ghost };
+      moveSnackDrag(event);
+      event.preventDefault();
+    }
+    function moveSnackDrag(event) {
+      if (!snackDrag || event.pointerId !== snackDrag.pointerId) return;
+      snackDrag.ghost.style.left = `${event.clientX}px`;
+      snackDrag.ghost.style.top = `${event.clientY}px`;
+    }
+    function endSnackDrag(event) {
+      if (!snackDrag || event.pointerId !== snackDrag.pointerId) return;
+      const { snack, ghost } = snackDrag;
+      const sandyBox = $("sandy").getBoundingClientRect();
+      const fedSandy = event.clientX >= sandyBox.left && event.clientX <= sandyBox.right && event.clientY >= sandyBox.top && event.clientY <= sandyBox.bottom;
+      snack.classList.remove("dragging");
+      if (snack.hasPointerCapture(event.pointerId)) snack.releasePointerCapture(event.pointerId);
+      ghost.remove();
+      snackDrag = null;
+      if (fedSandy) feedSandy(snack.dataset.snack, sandyBox);
+    }
+    function feedSandy(snack, sandyBox) {
+      const messages = { "🐟": "喵！语法小鱼吃掉了！", "🍪": "谢谢饼干！再来一题！", "🍓": "草莓甜甜的，语法也甜甜的～" };
+      setSandyMessage(messages[snack] || "谢谢你喂我！");
+      const sandy = $("sandy");
+      sandy.classList.remove("happy");
+      void sandy.offsetWidth;
+      sandy.classList.add("happy");
+      makeSandySquint();
+      playMeow();
+      const pop = document.createElement("div");
+      pop.className = "snack-pop";
+      pop.textContent = "😻";
+      pop.style.left = `${sandyBox.left + sandyBox.width / 2}px`;
+      pop.style.top = `${sandyBox.top + 48}px`;
+      document.body.appendChild(pop);
+      setTimeout(() => { sandy.classList.remove("happy"); pop.remove(); }, 950);
+    }
+
+    function updateSoundToggle() {
+      const toggle = $("soundToggle");
+      toggle.setAttribute("aria-pressed", String(soundEnabled));
+      toggle.textContent = soundEnabled ? "🔊 语音：开" : "🔇 语音：关";
+      if (!("speechSynthesis" in window)) {
+        toggle.textContent = "语音不支援";
+        toggle.disabled = true;
+      }
+    }
+    function loadVoices() {
+      const select = $("voiceSelect");
+      let savedVoice = "";
+      try { savedVoice = localStorage.getItem("n2-grammar-quiz-voice") || ""; } catch {}
+      const previous = savedVoice || select.value;
+      japaneseVoices = window.speechSynthesis ? window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("ja")) : [];
+      select.innerHTML = "";
+      if (!japaneseVoices.length) {
+        select.innerHTML = "<option value=\"\">装置预设</option>";
+        return;
+      }
+      japaneseVoices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = voice.name;
+        select.appendChild(option);
+      });
+      const preferred = japaneseVoices.find((voice) => voice.name === previous) || japaneseVoices.find((voice) => /siri|kyoko|haruka|nanami|female/i.test(voice.name)) || japaneseVoices[0];
+      select.value = preferred.name;
+    }
+
+    function loadWrongBook() {
+      try { return JSON.parse(localStorage.getItem(wrongBookKey)) || {}; } catch { return {}; }
+    }
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char]));
+    }
+    function recordWrong(item, selected) {
+      const id = cloudId(item);
+      wrongBook[id] = { id: item.id, group: item.group, grammar: item.pattern, meaning: item.meaning, example: item.example, selected, correct: item.correct, note: item.correctNote };
+      try { localStorage.setItem(wrongBookKey, JSON.stringify(wrongBook)); } catch {}
+      try { localStorage.setItem(lastWrongKey, id); } catch {}
+      renderWrongBook();
+      if (signedInUser && supabaseClient) {
+        supabaseClient.from("mistake_notebook").upsert({
+          user_id: signedInUser.id,
+          question_id: id,
+          grammar: questionLabel(item),
+          sentence: item.meaning,
+          selected_answer: selected,
+          correct_answer: item.correct,
+          note: `${item.correctNote}｜例句：${item.example}`
+        }, { onConflict: "user_id,question_id" }).then(({ error }) => { if (error) console.warn("Could not save grammar quiz mistake", error); });
+      }
+    }
+    function renderWrongBook() {
+      const items = Object.values(wrongBook);
+      $("wrongbookCount").textContent = items.length;
+      $("wrongbookEmpty").hidden = items.length > 0;
+      $("wrongbookList").innerHTML = items.map((item) => {
+        const label = [String(item.id).padStart(3, "0"), item.group, item.grammar].filter(Boolean).join("｜");
+        return `<button class="wrongbook-item" type="button" data-question-id="${escapeHtml(item.id)}"><strong>${escapeHtml(label)}</strong><br>${escapeHtml(item.meaning || "")}<br>你的答案：${escapeHtml(item.selected)}　正解：${escapeHtml(item.correct)}<br>${escapeHtml(item.example || "")}</button>`;
+      }).join("");
+    }
+    function jumpToQuestion(id, options = {}) {
+      const item = itemById(id);
+      if (!item) return false;
+      clearTimeout(exampleSpeechTimer);
+      clearTimeout(autoScrollTimer);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      current = questions.findIndex((candidate) => candidate.id === item.id);
+      try { localStorage.setItem(lastWrongKey, cloudId(item)); } catch {}
+      if (options.message) setSandyMessage("跳到这道语法错题啦，喵～");
+      render();
+      if (options.scroll) requestAnimationFrame(() => scrollToQuestion(cloudId(item), { block: "center", highlight: true }));
+      return true;
+    }
+
+    function scrollToQuestion(id, options = {}) {
+      const card = document.querySelector(`[data-question-id="${String(id)}"]`);
+      if (!card) return;
+      card.scrollIntoView({ behavior: "smooth", block: options.block || "center" });
+      if (options.highlight) {
+        card.classList.remove("jump-highlight");
+        void card.offsetWidth;
+        card.classList.add("jump-highlight");
+        setTimeout(() => card.classList.remove("jump-highlight"), 1000);
+      }
+    }
+
+    function localLastWrongQuestionId() {
+      try {
+        const saved = localStorage.getItem(lastWrongKey);
+        if (saved) return saved;
+      } catch {}
+      const items = Object.values(wrongBook);
+      return items.length ? items[items.length - 1].id : null;
+    }
+    function jumpToLastWrongOnOpen() {
+      if (initialWrongJumpDone) return;
+      const id = localLastWrongQuestionId();
+      if (!id) return;
+      if (jumpToQuestion(id, { scroll: true, message: true })) initialWrongJumpDone = true;
+    }
+
+    function showCelebration() {
+      const celebration = $("celebration");
+      celebration.classList.add("show");
+      for (let i = 0; i < 10; i++) {
+        const heart = document.createElement("span");
+        heart.className = "heart";
+        heart.textContent = i % 3 === 0 ? "✦" : "♥";
+        heart.style.left = `${38 + Math.random() * 24}%`;
+        heart.style.top = `${52 + Math.random() * 14}%`;
+        heart.style.animationDelay = `${Math.random() * .18}s`;
+        celebration.appendChild(heart);
+        setTimeout(() => heart.remove(), 1400);
+      }
+      setTimeout(() => celebration.classList.remove("show"), 1150);
+    }
+    async function createFreshSession() {
+      current = 0;
+      correctCount = 0;
+      answers = {};
+      Object.keys(choiceOrderById).forEach((id) => delete choiceOrderById[id]);
+      clearTimeout(exampleSpeechTimer);
+      clearTimeout(autoScrollTimer);
+      saveLocalProgress();
+      if (signedInUser && supabaseClient) await saveCloudProgress();
+      render();
+      requestAnimationFrame(() => scrollToQuestion(cloudId(questions[0]), { block: "center", highlight: true }));
+    }
+
+    function updateAccountUI() {
+      $("account").classList.toggle("signed-in", Boolean(signedInUser));
+      $("accountStatus").textContent = !supabaseClient
+        ? "Cloud sync unavailable."
+        : signedInUser
+          ? `Saving grammar quiz for ${signedInUser.email}`
+          : "Progress is saved when you sign in.";
+    }
+    async function saveCloudProgress() {
+      if (!signedInUser || !supabaseClient) return;
+      supabaseClient.from("mistake_notebook").upsert({
+        user_id: signedInUser.id,
+        question_id: cloudProgressId,
+        grammar: "Sandy 语法四选一进度",
+        sentence: "grammar quiz progress",
+        selected_answer: String(current),
+        correct_answer: String(correctCount),
+        note: JSON.stringify({ updatedAt: new Date().toISOString(), answers })
+      }, { onConflict: "user_id,question_id" }).then(({ error }) => { if (error) console.warn("Could not save grammar quiz progress", error); });
+    }
+    async function loadCloudProgress() {
+      if (!signedInUser || !supabaseClient || cloudReady) return;
+      cloudReady = true;
+      const { data, error } = await supabaseClient.from("mistake_notebook").select("*").like("question_id", "grammar-quiz-%");
+      if (error) { console.warn("Could not load grammar quiz cloud progress", error); return; }
+      (data || []).forEach((row) => {
+        if (row.question_id === cloudProgressId) {
+          const cloudCurrent = Number(row.selected_answer);
+          const cloudScore = Number(row.correct_answer);
+          if (Number.isInteger(cloudCurrent) && cloudCurrent >= 0 && cloudCurrent <= questions.length) current = cloudCurrent;
+          if (Number.isInteger(cloudScore) && cloudScore >= 0) correctCount = cloudScore;
+          try {
+            const cloudNote = JSON.parse(row.note || "{}");
+            answers = { ...answers, ...sanitizeAnswers(cloudNote.answers) };
+          } catch {}
+          return;
+        }
+        const item = itemById(row.question_id);
+        if (!item) return;
+        wrongBook[row.question_id] = {
+          id: item.id,
+          group: item.group,
+          grammar: item.pattern,
+          meaning: item.meaning,
+          example: item.example,
+          selected: row.selected_answer,
+          correct: row.correct_answer,
+          note: row.note
+        };
+      });
+      recalculateProgress();
+      try { localStorage.setItem(wrongBookKey, JSON.stringify(wrongBook)); } catch {}
+      saveLocalProgress();
+      renderWrongBook();
+      render();
+    }
+    async function saveAnswer(item, selected, isCorrect) {
+      if (!signedInUser || !supabaseClient) return;
+      supabaseClient.from("practice_attempts").insert({
+        user_id: signedInUser.id,
+        question_id: cloudId(item),
+        grammar: questionLabel(item),
+        selected_answer: selected,
+        is_correct: isCorrect
+      }).then(({ error }) => { if (error) console.warn("Could not save grammar quiz answer", error); });
+    }
+    async function initialiseAccount() {
+      if (!supabaseClient) { updateAccountUI(); return; }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      signedInUser = session?.user || null;
+      updateAccountUI();
+      if (signedInUser) await loadCloudProgress();
+    }
+
+    quizFeed.addEventListener("click", (event) => {
+      const readButton = event.target.closest("[data-read-example]");
+      if (readButton) {
+        const item = itemById(readButton.dataset.readExample);
+        if (item) speakExample(item);
+        return;
+      }
+      const choice = event.target.closest("[data-answer]");
+      if (!choice) return;
+      const card = choice.closest("[data-question-id]");
+      const item = itemById(card?.dataset.questionId);
+      if (item) answerQuestion(item, choice.dataset.answer);
+    });
+    $("restart").addEventListener("click", createFreshSession);
+    $("accountAction").addEventListener("click", () => {
+      if (supabaseClient) supabaseClient.auth.signOut();
+    });
+    $("soundToggle").addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      if (!soundEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      if (!soundEnabled && activeSandySound) activeSandySound.pause();
+      updateSoundToggle();
+    });
+    $("voiceSelect").addEventListener("change", () => {
+      try { localStorage.setItem("n2-grammar-quiz-voice", $("voiceSelect").value); } catch {}
+    });
+    $("wrongbookClear").addEventListener("click", () => {
+      const idsToDelete = Object.keys(wrongBook);
+      wrongBook = {};
+      try { localStorage.removeItem(wrongBookKey); } catch {}
+      try { localStorage.removeItem(lastWrongKey); } catch {}
+      renderWrongBook();
+      if (signedInUser && supabaseClient && idsToDelete.length) {
+        supabaseClient.from("mistake_notebook").delete().eq("user_id", signedInUser.id).in("question_id", idsToDelete).then(({ error }) => { if (error) console.warn("Could not clear grammar quiz mistakes", error); });
+      }
+    });
+    $("wrongbookList").addEventListener("click", (event) => {
+      const item = event.target.closest("[data-question-id]");
+      if (!item) return;
+      jumpToQuestion(item.dataset.questionId, { scroll: true, message: true });
+    });
+    $("sandy").addEventListener("pointerdown", beginSandyDrag);
+    $("sandy").addEventListener("pointermove", moveSandy);
+    $("sandy").addEventListener("pointerup", endSandyDrag);
+    $("sandy").addEventListener("pointercancel", endSandyDrag);
+    $("sandy").addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); interactWithSandy(); }
+    });
+    const snackPack = document.querySelector(".snack-pack");
+    snackPack.classList.add("collapsed");
+    $("snackToggle").addEventListener("click", () => {
+      const collapsed = snackPack.classList.toggle("collapsed");
+      $("snackToggle").setAttribute("aria-expanded", String(!collapsed));
+    });
+    document.querySelectorAll(".snack").forEach((snack) => {
+      snack.addEventListener("pointerdown", startSnackDrag);
+      snack.addEventListener("pointermove", moveSnackDrag);
+      snack.addEventListener("pointerup", endSnackDrag);
+      snack.addEventListener("pointercancel", endSnackDrag);
+    });
+    updateSoundToggle();
+    loadVoices();
+    if ("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    renderWrongBook();
+    render();
+    supabaseClient?.auth.onAuthStateChange((_event, session) => {
+      signedInUser = session?.user || null;
+      cloudReady = false;
+      updateAccountUI();
+      if (signedInUser) loadCloudProgress();
+    });
+    initialiseAccount().then(jumpToLastWrongOnOpen);
+  </script>
+</body>
+</html>
