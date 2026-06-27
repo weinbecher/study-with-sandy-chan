@@ -43,7 +43,7 @@
 
     .toolbar {
       display: grid;
-      grid-template-columns: 1fr auto auto auto;
+      grid-template-columns: 1fr auto auto auto auto;
       gap: 10px;
       align-items: center;
       margin: 0 0 15px;
@@ -68,9 +68,10 @@
 
     .voice-picker { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .8rem; font-weight: 800; white-space: nowrap; }
     .voice-picker select { max-width: 170px; border: 1px solid #f0c9d7; border-radius: 9px; padding: 8px; color: var(--pink-600); background: white; font: inherit; }
-    .sound-toggle, .scroll-toggle { border: 0; padding: 10px 12px; border-radius: 12px; color: white; background: linear-gradient(135deg, #ef85aa, #d85888); cursor: pointer; font: inherit; font-weight: 900; white-space: nowrap; }
+    .sound-toggle, .scroll-toggle, .favorite-filter { border: 0; padding: 10px 12px; border-radius: 12px; color: white; background: linear-gradient(135deg, #ef85aa, #d85888); cursor: pointer; font: inherit; font-weight: 900; white-space: nowrap; }
     .scroll-toggle { background: linear-gradient(135deg, #7ea0f0, #527bd2); }
-    .sound-toggle[aria-pressed="false"], .scroll-toggle[aria-pressed="false"] { color: var(--muted); background: #f4edf0; }
+    .favorite-filter { background: linear-gradient(135deg, #ffb36d, #ee79a4); }
+    .sound-toggle[aria-pressed="false"], .scroll-toggle[aria-pressed="false"], .favorite-filter[aria-pressed="false"] { color: var(--muted); background: #f4edf0; }
     .floating-controls {
       position: fixed;
       z-index: 20;
@@ -86,6 +87,23 @@
     .floating-progress { max-width: 210px; padding: 6px 10px; border: 1px solid #f0c9d7; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.92); box-shadow: 0 8px 18px rgba(157,68,103,.12); font-size: .76rem; font-weight: 900; text-align: center; }
 
     .status { margin: 0 4px 12px; color: var(--muted); font-size: .86rem; font-weight: 800; }
+    .notebook-panel {
+      margin: 0 0 14px;
+      padding: 12px;
+      border: 1px solid rgba(238,121,164,.18);
+      border-radius: 20px;
+      background: rgba(255,255,255,.82);
+      box-shadow: 0 12px 30px rgba(157,68,103,.1);
+    }
+    .notebook-header { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 10px; }
+    .notebook-title { display: grid; gap: 2px; font-size: .94rem; font-weight: 950; }
+    .notebook-help { color: var(--muted); font-size: .78rem; font-weight: 800; line-height: 1.55; }
+    .clear-favorites { border: 1px solid #f0c9d7; border-radius: 999px; padding: 7px 10px; color: var(--pink-600); background: white; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 900; white-space: nowrap; }
+    .clear-favorites:disabled { cursor: not-allowed; opacity: .45; }
+    .notebook-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .notebook-chip { border: 1px solid #f0c9d7; border-radius: 999px; padding: 7px 11px; color: var(--pink-600); background: #fff8fb; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 900; }
+    .notebook-chip:hover, .notebook-chip:focus-visible { border-color: var(--pink-400); background: white; outline: none; }
+    .notebook-empty { color: var(--muted); font-size: .84rem; font-weight: 800; }
     .list { display: grid; gap: 10px; }
     .entry {
       display: grid;
@@ -100,6 +118,7 @@
       transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
     }
     .entry.playing { border-color: rgba(117,200,164,.75); box-shadow: 0 12px 28px rgba(75,150,114,.16); transform: translateY(-1px); }
+    .entry.favorited { border-color: rgba(255,179,109,.55); background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,248,251,.94)); }
     .entry { cursor: pointer; }
 
     .num { color: var(--muted); font-size: .85rem; font-weight: 900; text-align: center; }
@@ -124,6 +143,22 @@
     .meaning { color: #5d4650; line-height: 1.6; font-size: .94rem; }
     .tag { display: inline-flex; align-items: center; justify-content: center; width: fit-content; padding: 4px 9px; border-radius: 999px; color: var(--blue-500); background: var(--blue-100); font-size: .75rem; font-weight: 900; }
     .meta { display: grid; gap: 5px; }
+    .favorite-button {
+      justify-self: end;
+      border: 1px solid #ffd7a8;
+      border-radius: 999px;
+      padding: 9px 11px;
+      color: #a45a1f;
+      background: #fff6e9;
+      cursor: pointer;
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 950;
+      white-space: nowrap;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .favorite-button[aria-pressed="true"] { color: white; border-color: #f2a45f; background: linear-gradient(135deg, #ffbd78, #ee79a4); box-shadow: 0 8px 18px rgba(238,121,164,.18); }
+    .favorite-button:hover, .favorite-button:focus-visible { border-color: #f2a45f; transform: translateY(-1px); outline: none; }
     .example-button {
       grid-column: 2 / -1;
       display: grid;
@@ -157,7 +192,9 @@
       .voice-picker { justify-content: space-between; }
       .voice-picker select { max-width: min(100%, 260px); }
       .entry { grid-template-columns: 48px 1fr; }
-      .meta, .meaning, .example-button { grid-column: 2; }
+      .meta, .meaning, .favorite-button, .example-button { grid-column: 2; }
+      .favorite-button { justify-self: start; }
+      .notebook-header { display: grid; }
       .floating-controls { left: 16px; right: 16px; justify-items: stretch; }
       .floating-scroll-toggle { width: 100%; }
       .floating-progress { justify-self: center; }
@@ -179,7 +216,19 @@
       <input class="search" id="search" type="search" placeholder="搜索单词、读音或中文意思，例如：募る / つのる / 招募">
       <label class="voice-picker">日语声音<select id="voiceSelect" aria-label="选择日文语音"><option>载入中…</option></select></label>
       <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 语音：开</button>
+      <button class="favorite-filter" id="favoritesToggle" type="button" aria-pressed="false">⭐ 错题本 0</button>
       <button class="scroll-toggle" id="scrollToggle" data-scroll-toggle type="button" aria-pressed="false">▶ 自动听读</button>
+    </section>
+
+    <section class="notebook-panel" id="notebookPanel" aria-label="收藏错题本">
+      <div class="notebook-header">
+        <div class="notebook-title">
+          <span>⭐ 我的错题本</span>
+          <span class="notebook-help" id="notebookHelp">点词卡上的“收藏”就会放进这里；以后想再点一遍，可以直接从这里跳回去。</span>
+        </div>
+        <button class="clear-favorites" id="clearFavorites" type="button">清空错题本</button>
+      </div>
+      <div class="notebook-list" id="notebookList"></div>
     </section>
 
     <p class="status" id="status">共 160 个词</p>
@@ -534,6 +583,9 @@
     let activeCardId = null;
     let scrollSaveFrame = null;
     const progressKey = "n2-vocab-last-viewed-v1";
+    const favoritesKey = "n2-vocab-favorites-v1";
+    let favoritesOnly = false;
+    let favoriteIds = loadFavorites();
     const $ = (id) => document.getElementById(id);
     const delay = (ms) => new Promise((resolve) => { autoReviewTimer = setTimeout(resolve, ms); });
 
@@ -576,15 +628,19 @@
 
     function renderList() {
       const query = $("search").value.trim().toLowerCase();
-      const results = vocab.filter((item) => [item.word, item.reading, item.meaning, item.example, categoryFor(item.id)].some((value) => value.toLowerCase().includes(query)));
-      $("status").textContent = query ? `找到 ${results.length} / ${vocab.length} 个词` : `共 ${vocab.length} 个词`;
+      const matched = vocab.filter((item) => [item.word, item.reading, item.meaning, item.example, categoryFor(item.id)].some((value) => value.toLowerCase().includes(query)));
+      const results = favoritesOnly ? matched.filter((item) => isFavorite(item.id)) : matched;
+      $("status").textContent = favoritesOnly
+        ? (query ? `错题本里找到 ${results.length} / ${favoriteIds.size} 个词` : `错题本：${results.length} 个词`)
+        : (query ? `找到 ${results.length} / ${vocab.length} 个词` : `共 ${vocab.length} 个词`);
+      $("empty").textContent = favoritesOnly ? "错题本里暂时没有这个词。可以先点词卡上的“收藏”。" : "没有找到这个词。换个关键词试试看。";
       $("empty").style.display = results.length ? "none" : "block";
       const list = $("list");
       list.innerHTML = "";
       const fragment = document.createDocumentFragment();
       results.forEach((item) => {
         const article = document.createElement("article");
-        article.className = "entry";
+        article.className = `entry${isFavorite(item.id) ? " favorited" : ""}`;
         article.dataset.vocabId = item.id;
         article.id = `vocab-${item.id}`;
 
@@ -619,6 +675,17 @@
         meaning.className = "meaning";
         meaning.textContent = item.meaning;
 
+        const favoriteButton = document.createElement("button");
+        favoriteButton.className = "favorite-button";
+        favoriteButton.type = "button";
+        updateFavoriteButton(favoriteButton, item.id);
+        favoriteButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          stopAutoScroll();
+          stopCardReview();
+          toggleFavorite(item.id, article, favoriteButton);
+        });
+
         const exampleButton = document.createElement("button");
         exampleButton.className = "example-button";
         exampleButton.type = "button";
@@ -637,12 +704,119 @@
           speakJapanese(item.example, exampleButton);
         });
 
-        article.append(num, wordButton, meta, meaning, exampleButton);
+        article.append(num, wordButton, meta, meaning, favoriteButton, exampleButton);
         article.addEventListener("click", () => toggleCardReview(article, item));
         fragment.appendChild(article);
       });
       list.appendChild(fragment);
+      updateFavoriteControls();
       updateFloatingProgress(loadLastViewed());
+    }
+
+    function loadFavorites() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(favoritesKey) || "[]");
+        if (!Array.isArray(saved)) return new Set();
+        return new Set(saved.map(Number).filter((id) => Number.isInteger(id) && id >= 1 && id <= vocab.length));
+      } catch {
+        return new Set();
+      }
+    }
+
+    function saveFavorites() {
+      try {
+        localStorage.setItem(favoritesKey, JSON.stringify([...favoriteIds].sort((a, b) => a - b)));
+      } catch {}
+    }
+
+    function isFavorite(id) {
+      return favoriteIds.has(Number(id));
+    }
+
+    function updateFavoriteButton(button, id) {
+      const active = isFavorite(id);
+      button.setAttribute("aria-pressed", String(active));
+      button.setAttribute("aria-label", active ? "从错题本移除" : "收藏到错题本");
+      button.textContent = active ? "★ 已收藏" : "☆ 收藏";
+    }
+
+    function jumpToVocab(id) {
+      favoritesOnly = false;
+      $("search").value = "";
+      renderList();
+      updateFavoriteControls();
+      const entry = document.querySelector(`[data-vocab-id="${id}"]`);
+      if (!entry) return;
+      saveLastViewed(id);
+      setTimeout(() => {
+        entry.scrollIntoView({ behavior: "smooth", block: "center" });
+        entry.classList.add("playing");
+        setTimeout(() => entry.classList.remove("playing"), 900);
+      }, 80);
+    }
+
+    function updateFavoriteControls() {
+      const count = favoriteIds.size;
+      const toggle = $("favoritesToggle");
+      if (toggle) {
+        toggle.setAttribute("aria-pressed", String(favoritesOnly));
+        toggle.textContent = favoritesOnly ? `★ 看全部 (${count})` : `⭐ 错题本 ${count}`;
+      }
+
+      const clearButton = $("clearFavorites");
+      if (clearButton) clearButton.disabled = count === 0;
+
+      const help = $("notebookHelp");
+      if (help) help.textContent = count ? `已收藏 ${count} 个词。点下面的小标签可以直接跳回那张卡。` : "点词卡上的“收藏”就会放进这里；以后想再点一遍，可以直接从这里跳回去。";
+
+      const list = $("notebookList");
+      if (!list) return;
+      list.innerHTML = "";
+      if (!count) {
+        const empty = document.createElement("span");
+        empty.className = "notebook-empty";
+        empty.textContent = "还没有收藏。看到想复习的词，就点一下 ☆ 收藏。";
+        list.appendChild(empty);
+        return;
+      }
+
+      [...favoriteIds].sort((a, b) => a - b).forEach((id) => {
+        const item = vocab.find((vocabItem) => vocabItem.id === id);
+        if (!item) return;
+        const chip = document.createElement("button");
+        chip.className = "notebook-chip";
+        chip.type = "button";
+        chip.textContent = `${String(item.id).padStart(3, "0")} ${item.word}`;
+        chip.setAttribute("aria-label", `跳到错题本词汇：${item.word}`);
+        chip.addEventListener("click", () => {
+          stopAutoScroll();
+          stopCardReview();
+          jumpToVocab(item.id);
+        });
+        list.appendChild(chip);
+      });
+    }
+
+    function toggleFavorite(id, article, button) {
+      const numericId = Number(id);
+      if (!Number.isInteger(numericId) || numericId < 1 || numericId > vocab.length) return;
+      if (favoriteIds.has(numericId)) favoriteIds.delete(numericId);
+      else favoriteIds.add(numericId);
+      saveFavorites();
+      saveLastViewed(numericId);
+      if (button) updateFavoriteButton(button, numericId);
+      if (article) article.classList.toggle("favorited", isFavorite(numericId));
+      updateFavoriteControls();
+      if (favoritesOnly && !isFavorite(numericId)) renderList();
+    }
+
+    function clearFavorites() {
+      if (!favoriteIds.size) return;
+      const ok = window.confirm("要清空整个错题本吗？这只会删除收藏记录，不会删除词库。");
+      if (!ok) return;
+      favoriteIds = new Set();
+      saveFavorites();
+      renderList();
     }
 
     function loadLastViewed() {
@@ -878,6 +1052,19 @@
       stopAutoScroll();
       stopCardReview();
       renderList();
+    });
+    $("favoritesToggle").addEventListener("click", () => {
+      stopAutoScroll();
+      stopCardReview();
+      favoritesOnly = !favoritesOnly;
+      $("search").value = "";
+      renderList();
+      if (!favoritesOnly) restoreLastViewedPosition();
+    });
+    $("clearFavorites").addEventListener("click", () => {
+      stopAutoScroll();
+      stopCardReview();
+      clearFavorites();
     });
     document.querySelectorAll("[data-scroll-toggle]").forEach((toggle) => {
       toggle.addEventListener("click", toggleAutoScroll);
