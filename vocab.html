@@ -92,8 +92,58 @@
       pointer-events: none;
     }
     .floating-controls > * { pointer-events: auto; }
-    .floating-scroll-toggle { padding: 13px 16px; border-radius: 999px; box-shadow: 0 12px 28px rgba(43,156,205,.24); }
     .floating-progress { max-width: 210px; padding: 6px 10px; border: 1px solid #bfe9f7; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.92); box-shadow: 0 8px 18px rgba(28,111,145,.12); font-size: .76rem; font-weight: 900; text-align: center; }
+    .floating-sandy-toggle {
+      display: grid;
+      justify-items: center;
+      width: 104px;
+      padding: 0;
+      border: 0;
+      color: var(--pink-600);
+      background: transparent;
+      cursor: grab;
+      font: inherit;
+      font-weight: 900;
+      user-select: none;
+      touch-action: none;
+    }
+    .floating-sandy-toggle:active, .floating-controls.dragging .floating-sandy-toggle { cursor: grabbing; }
+    .floating-sandy-bubble {
+      max-width: 148px;
+      margin: 0 0 6px;
+      padding: 8px 10px;
+      border: 1px solid #bfe9f7;
+      border-radius: 15px 15px 15px 5px;
+      color: #326b80;
+      background: rgba(255,255,255,.95);
+      box-shadow: 0 8px 18px rgba(28,111,145,.13);
+      font-size: .75rem;
+      line-height: 1.35;
+      text-align: center;
+    }
+    .floating-sandy-image {
+      width: 82px;
+      height: 82px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 9px rgba(17,90,120,.2));
+    }
+    .floating-sandy-toggle:focus-visible { outline: 2px solid rgba(75,177,218,.55); outline-offset: 6px; border-radius: 18px; }
+    .floating-sandy-status {
+      margin-top: 3px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 6px 12px rgba(28,111,145,.1);
+      font-size: .68rem;
+      letter-spacing: .02em;
+    }
+    .floating-sandy-toggle[aria-pressed="true"] .floating-sandy-bubble {
+      color: white;
+      border-color: rgba(94,196,234,.5);
+      background: linear-gradient(135deg, #70d5f4, #2b9ccd);
+    }
+    .floating-sandy-toggle[aria-pressed="true"] .floating-sandy-status { color: #1f8fb9; background: #e8faff; }
 
     .status { margin: 0 4px 12px; color: var(--muted); font-size: .86rem; font-weight: 800; }
     .notebook-panel {
@@ -205,7 +255,7 @@
       .favorite-button { justify-self: start; }
       .notebook-header { display: grid; }
       .floating-controls { left: 16px; right: 16px; justify-items: stretch; }
-      .floating-scroll-toggle { width: 100%; }
+      .floating-sandy-toggle { justify-self: end; width: 98px; }
       .floating-progress { justify-self: center; }
     }
   </style>
@@ -252,9 +302,13 @@
     <p class="empty" id="empty">没有找到这个词。换个关键词试试看。</p>
     <p class="sandy-tip">小提示：点整张卡片可以读这张卡，再点一次会暂停。点“自动听读”后，页面会滚到当前词，先读单词，再读例句，然后继续下一张。点“停止听读”、滚轮、触摸屏幕或按方向键都会停。</p>
   </main>
-  <div class="floating-controls" aria-label="悬浮学习控制">
+  <div class="floating-controls" id="floatingControls" aria-label="悬浮学习控制">
     <span class="floating-progress" id="floatingProgress">进度：还没开始</span>
-    <button class="scroll-toggle floating-scroll-toggle" id="floatingScrollToggle" data-scroll-toggle type="button" aria-pressed="false">▶ 自动听读</button>
+    <button class="floating-sandy-toggle" id="floatingSandyToggle" type="button" aria-pressed="false" aria-label="点击 Sandy 开始自动跟读">
+      <span class="floating-sandy-bubble" id="floatingSandyBubble">点我自动跟读</span>
+      <img class="floating-sandy-image" src="assets/sandy-green-eyes.png" alt="Sandy 自动跟读按钮">
+      <span class="floating-sandy-status" id="floatingSandyStatus">AUTO READ</span>
+    </button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -614,6 +668,8 @@
     let pendingCloudProgressId = null;
     const $ = (id) => document.getElementById(id);
     const delay = (ms) => new Promise((resolve) => { autoReviewTimer = setTimeout(resolve, ms); });
+    const floatingSandyPositionKey = "n2-vocab-floating-sandy-position-v1";
+    let floatingSandyDrag = null;
 
     function categoryFor(id) {
       if (id <= 40) return "动词";
@@ -1094,6 +1150,95 @@
         toggle.setAttribute("aria-pressed", String(autoScrollActive));
         toggle.textContent = autoScrollActive ? "⏸ 停止听读" : "▶ 自动听读";
       });
+      updateFloatingSandyToggle();
+    }
+
+    function updateFloatingSandyToggle() {
+      const toggle = $("floatingSandyToggle");
+      const bubble = $("floatingSandyBubble");
+      const status = $("floatingSandyStatus");
+      if (!toggle || !bubble || !status) return;
+      toggle.setAttribute("aria-pressed", String(autoScrollActive));
+      toggle.setAttribute("aria-label", autoScrollActive ? "点击 Sandy 暂停自动跟读" : "点击 Sandy 开始自动跟读");
+      bubble.textContent = autoScrollActive ? "读书中..." : "点我自动跟读";
+      status.textContent = autoScrollActive ? "..." : "AUTO READ";
+    }
+
+    function saveFloatingSandyPosition() {
+      const controls = $("floatingControls");
+      if (!controls) return;
+      const box = controls.getBoundingClientRect();
+      try { localStorage.setItem(floatingSandyPositionKey, JSON.stringify({ left: box.left, top: box.top })); } catch {}
+    }
+
+    function positionFloatingSandy(left, top) {
+      const controls = $("floatingControls");
+      if (!controls) return;
+      const box = controls.getBoundingClientRect();
+      const nextLeft = Math.min(Math.max(0, left), Math.max(0, window.innerWidth - box.width));
+      const nextTop = Math.min(Math.max(0, top), Math.max(0, window.innerHeight - box.height));
+      controls.style.left = `${nextLeft}px`;
+      controls.style.top = `${nextTop}px`;
+      controls.style.right = "auto";
+      controls.style.bottom = "auto";
+      controls.style.justifyItems = "end";
+    }
+
+    function restoreFloatingSandyPosition() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(floatingSandyPositionKey) || "null");
+        if (!saved || !Number.isFinite(saved.left) || !Number.isFinite(saved.top)) return;
+        requestAnimationFrame(() => positionFloatingSandy(saved.left, saved.top));
+      } catch {}
+    }
+
+    function beginFloatingSandyDrag(event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      const controls = $("floatingControls");
+      if (!controls) return;
+      const box = controls.getBoundingClientRect();
+      controls.setPointerCapture(event.pointerId);
+      floatingSandyDrag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        left: box.left,
+        top: box.top,
+        moved: false
+      };
+      controls.classList.add("dragging");
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    function moveFloatingSandyDrag(event) {
+      if (!floatingSandyDrag || event.pointerId !== floatingSandyDrag.pointerId) return;
+      const dx = event.clientX - floatingSandyDrag.startX;
+      const dy = event.clientY - floatingSandyDrag.startY;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) floatingSandyDrag.moved = true;
+      positionFloatingSandy(floatingSandyDrag.left + dx, floatingSandyDrag.top + dy);
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    function endFloatingSandyDrag(event) {
+      if (!floatingSandyDrag || event.pointerId !== floatingSandyDrag.pointerId) return;
+      const wasDrag = floatingSandyDrag.moved;
+      const controls = $("floatingControls");
+      controls?.classList.remove("dragging");
+      if (controls?.hasPointerCapture(event.pointerId)) controls.releasePointerCapture(event.pointerId);
+      floatingSandyDrag = null;
+      if (wasDrag) saveFloatingSandyPosition();
+      else toggleAutoScroll();
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    function cancelFloatingSandyDrag(event) {
+      if (!floatingSandyDrag || event.pointerId !== floatingSandyDrag.pointerId) return;
+      const controls = $("floatingControls");
+      controls?.classList.remove("dragging");
+      floatingSandyDrag = null;
     }
 
     function firstVisibleEntryIndex(entries) {
@@ -1239,6 +1384,17 @@
       toggle.addEventListener("touchstart", (event) => event.stopPropagation(), { passive: true });
       toggle.addEventListener("pointerdown", (event) => event.stopPropagation());
     });
+    $("floatingSandyToggle").addEventListener("pointerdown", beginFloatingSandyDrag);
+    $("floatingControls").addEventListener("pointermove", moveFloatingSandyDrag);
+    $("floatingControls").addEventListener("pointerup", endFloatingSandyDrag);
+    $("floatingControls").addEventListener("pointercancel", cancelFloatingSandyDrag);
+    $("floatingControls").addEventListener("touchstart", (event) => event.stopPropagation(), { passive: true });
+    $("floatingSandyToggle").addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleAutoScroll();
+      }
+    });
     $("soundToggle").addEventListener("click", () => {
       soundEnabled = !soundEnabled;
       if (!soundEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -1262,6 +1418,7 @@
       if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(event.key)) stopAutoScroll();
     });
     renderList();
+    restoreFloatingSandyPosition();
     restoreLastViewedPosition();
     if (supabaseClient) {
       supabaseClient.auth.onAuthStateChange((_event, session) => {
