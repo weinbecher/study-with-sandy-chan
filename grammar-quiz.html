@@ -172,6 +172,7 @@
         <a href="index.html">🐾 二选一陷阱</a>
         <a href="grammar.html">📝 N2 语法表</a>
         <a href="vocab.html">📚 N2 词汇表</a>
+        <a href="mistakes.html">📘 错题复习</a>
       </nav>
     </header>
 
@@ -328,6 +329,7 @@
     const progressKey = "n2-sandy-grammar-quiz-progress-v1";
     const wrongBookKey = "n2-sandy-grammar-quiz-wrong-book-v1";
     const lastWrongKey = "n2-sandy-grammar-quiz-last-wrong-v1";
+    const reviewListKey = "n2-sandy-review-list-v1";
     const cloudPrefix = "grammar-quiz-";
     const cloudProgressId = "grammar-quiz-progress-v1";
     const savedProgress = loadLocalProgress();
@@ -732,6 +734,19 @@
     function loadWrongBook() {
       try { return JSON.parse(localStorage.getItem(wrongBookKey)) || {}; } catch { return {}; }
     }
+    function loadReviewList() {
+      try { return JSON.parse(localStorage.getItem(reviewListKey) || "{}") || {}; } catch { return {}; }
+    }
+    function saveReviewEntry(entry) {
+      const list = loadReviewList();
+      list[entry.reviewId] = { ...list[entry.reviewId], ...entry, updatedAt: new Date().toISOString() };
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
+    function removeReviewEntries(ids) {
+      const list = loadReviewList();
+      ids.forEach((id) => delete list[`grammar-quiz-${String(id).replace(cloudPrefix, "")}`]);
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
     function escapeHtml(value) {
       return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char]));
     }
@@ -740,6 +755,19 @@
       wrongBook[id] = { id: item.id, group: item.group, grammar: item.pattern, meaning: item.meaning, example: item.example, selected, correct: item.correct, note: item.correctNote };
       try { localStorage.setItem(wrongBookKey, JSON.stringify(wrongBook)); } catch {}
       try { localStorage.setItem(lastWrongKey, id); } catch {}
+      saveReviewEntry({
+        reviewId: `grammar-quiz-${item.id}`,
+        source: "grammar-quiz",
+        sourceLabel: "Sandy 语法四选一",
+        targetId: id,
+        title: questionLabel(item),
+        prompt: item.meaning,
+        example: item.example,
+        selected,
+        correct: item.correct,
+        note: item.correctNote,
+        url: "grammar-quiz.html"
+      });
       renderWrongBook();
       if (signedInUser && supabaseClient) {
         supabaseClient.from("mistake_notebook").upsert({
@@ -880,6 +908,19 @@
           correct: row.correct_answer,
           note: row.note
         };
+        saveReviewEntry({
+          reviewId: `grammar-quiz-${item.id}`,
+          source: "grammar-quiz",
+          sourceLabel: "Sandy 语法四选一",
+          targetId: row.question_id,
+          title: questionLabel(item),
+          prompt: item.meaning,
+          example: item.example,
+          selected: row.selected_answer,
+          correct: row.correct_answer,
+          note: row.note,
+          url: "grammar-quiz.html"
+        });
       });
       recalculateProgress();
       try { localStorage.setItem(wrongBookKey, JSON.stringify(wrongBook)); } catch {}
@@ -936,6 +977,7 @@
       wrongBook = {};
       try { localStorage.removeItem(wrongBookKey); } catch {}
       try { localStorage.removeItem(lastWrongKey); } catch {}
+      removeReviewEntries(idsToDelete);
       renderWrongBook();
       if (signedInUser && supabaseClient && idsToDelete.length) {
         supabaseClient.from("mistake_notebook").delete().eq("user_id", signedInUser.id).in("question_id", idsToDelete).then(({ error }) => { if (error) console.warn("Could not clear grammar quiz mistakes", error); });

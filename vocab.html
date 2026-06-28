@@ -530,6 +530,7 @@
         <a href="index.html">🐾 回到 Sandy 练习</a>
         <a href="grammar.html">📝 N2 语法表</a>
         <a href="grammar-quiz.html">🐾 Sandy 语法四选一</a>
+        <a href="mistakes.html">📘 错题复习</a>
       </nav>
     </header>
 
@@ -602,6 +603,7 @@
       <a class="top-jump-link" href="index.html">Sandy 练习</a>
       <a class="top-jump-link" href="grammar.html">语法表</a>
       <a class="top-jump-link" href="grammar-quiz.html">语法四选一</a>
+      <a class="top-jump-link" href="mistakes.html">错题复习</a>
     </div>
   </div>
   <div class="floating-controls" id="floatingControls" aria-label="悬浮学习控制">
@@ -964,6 +966,7 @@
     const progressKey = "n2-vocab-last-viewed-v1";
     const favoritesKey = "n2-vocab-favorites-v1";
     const favoriteReasonsKey = "n2-vocab-favorite-reasons-v1";
+    const reviewListKey = "n2-sandy-review-list-v1";
     const mistakeReasonOptions = [
       "我被汉字骗了",
       "我被中文意思骗了",
@@ -1160,6 +1163,7 @@
       });
       list.appendChild(fragment);
       updateFavoriteControls();
+      syncFavoritesToReviewList();
       updateFloatingProgress(loadLastViewed());
       updateWritingBoard(loadLastViewed());
     }
@@ -1312,6 +1316,28 @@
       } catch {}
     }
 
+    function loadReviewList() {
+      try { return JSON.parse(localStorage.getItem(reviewListKey) || "{}") || {}; } catch { return {}; }
+    }
+
+    function saveReviewEntry(entry) {
+      const list = loadReviewList();
+      list[entry.reviewId] = { ...list[entry.reviewId], ...entry, updatedAt: new Date().toISOString() };
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
+
+    function removeReviewEntry(reviewId) {
+      const list = loadReviewList();
+      delete list[reviewId];
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
+
+    function removeReviewEntries(ids) {
+      const list = loadReviewList();
+      ids.forEach((id) => delete list[`vocab-${id}`]);
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
+
     function loadFavoriteReasons() {
       try {
         const saved = JSON.parse(localStorage.getItem(favoriteReasonsKey) || "{}");
@@ -1339,6 +1365,34 @@
 
     function getFavoriteReason(id) {
       return favoriteReasons[Number(id)] || "";
+    }
+
+    function vocabReviewEntry(id) {
+      const item = vocab.find((vocabItem) => vocabItem.id === Number(id));
+      if (!item) return null;
+      const reason = getFavoriteReason(item.id);
+      return {
+        reviewId: `vocab-${item.id}`,
+        source: "vocab",
+        sourceLabel: "N2 词汇表",
+        targetId: String(item.id),
+        title: `${item.reading || item.word}｜${item.word}`,
+        prompt: item.meaning,
+        example: item.example,
+        selected: reason || "星标复习",
+        correct: item.word,
+        note: reason ? `错因：${reason}` : "未选错因",
+        url: "vocab.html"
+      };
+    }
+
+    function saveVocabReviewEntry(id) {
+      const entry = vocabReviewEntry(id);
+      if (entry) saveReviewEntry(entry);
+    }
+
+    function syncFavoritesToReviewList() {
+      [...favoriteIds].forEach(saveVocabReviewEntry);
     }
 
     function extractMistakeReason(note) {
@@ -1428,6 +1482,7 @@
 
       saveFavorites();
       saveFavoriteReasons();
+      syncFavoritesToReviewList();
       renderList();
       if (Number.isInteger(cloudProgressId) && cloudProgressId >= 1 && cloudProgressId <= vocab.length) {
         saveLastViewed(cloudProgressId, { syncCloud: false });
@@ -1537,6 +1592,7 @@
       favoriteReasons[numericId] = reason;
       saveFavoriteReasons();
       saveLastViewed(numericId);
+      saveVocabReviewEntry(numericId);
       updateReasonPanels(numericId);
       updateFavoriteControls();
       saveFavoriteToCloud(numericId);
@@ -1607,9 +1663,11 @@
       if (wasFavorite) {
         favoriteIds.delete(numericId);
         delete favoriteReasons[numericId];
+        removeReviewEntry(`vocab-${numericId}`);
         removeFavoriteFromCloud(numericId);
       } else {
         favoriteIds.add(numericId);
+        saveVocabReviewEntry(numericId);
         saveFavoriteToCloud(numericId);
       }
       saveFavorites();
@@ -1631,6 +1689,7 @@
       favoriteReasons = {};
       saveFavorites();
       saveFavoriteReasons();
+      removeReviewEntries(idsToDelete);
       renderList();
       if (supabaseClient && signedInUser && idsToDelete.length) {
         supabaseClient.from("mistake_notebook").delete()

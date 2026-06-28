@@ -152,6 +152,7 @@
         <a href="vocab.html">📚 N2 词汇表</a>
         <a href="grammar.html">📝 N2 语法表</a>
         <a href="grammar-quiz.html">🐾 Sandy 语法四选一</a>
+        <a href="mistakes.html">📘 错题复习</a>
       </nav>
     </header>
 
@@ -339,6 +340,7 @@
     let cloudReady = false;
     const wrongBookKey = "n2-two-choice-wrong-book-v2";
     const lastWrongKey = "n2-two-choice-last-wrong-v1";
+    const reviewListKey = "n2-sandy-review-list-v1";
     let initialWrongJumpDone = false;
     let wrongBook = loadWrongBook();
     const $ = (id) => document.getElementById(id);
@@ -633,6 +635,22 @@
       try { return JSON.parse(localStorage.getItem(wrongBookKey)) || {}; } catch { return {}; }
     }
 
+    function loadReviewList() {
+      try { return JSON.parse(localStorage.getItem(reviewListKey) || "{}") || {}; } catch { return {}; }
+    }
+
+    function saveReviewEntry(entry) {
+      const list = loadReviewList();
+      list[entry.reviewId] = { ...list[entry.reviewId], ...entry, updatedAt: new Date().toISOString() };
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
+
+    function removeReviewEntries(ids) {
+      const list = loadReviewList();
+      ids.forEach((id) => delete list[`two-choice-${id}`]);
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
+
     function questionLabel(item) { return `${item.id}｜${item.topic}｜${item.grammar}`; }
 
     function recordWrong(item, selected) {
@@ -640,6 +658,18 @@
       wrongBook[id] = { id: item.id, topic: item.topic, grammar: item.grammar, label: questionLabel(item), sentence: item.sentence, selected, correct: item.correct, note: item.correctNote };
       try { localStorage.setItem(wrongBookKey, JSON.stringify(wrongBook)); } catch {}
       try { localStorage.setItem(lastWrongKey, id); } catch {}
+      saveReviewEntry({
+        reviewId: `two-choice-${id}`,
+        source: "two-choice",
+        sourceLabel: "Sandy 二选一",
+        targetId: id,
+        title: questionLabel(item),
+        prompt: item.sentence.replace("____", "（　　）"),
+        selected,
+        correct: item.correct,
+        note: item.correctNote,
+        url: "index.html"
+      });
       renderWrongBook();
       if (signedInUser) {
         supabaseClient.from("mistake_notebook").upsert({
@@ -794,7 +824,20 @@
       const { data: mistakes, error: mistakesError } = await supabaseClient.from("mistake_notebook").select("*");
       if (!mistakesError && mistakes) {
         mistakes.filter((item) => !/^(vocab-|grammar-list-|grammar-quiz-)/.test(String(item.question_id || ""))).forEach((item) => {
-          wrongBook[item.question_id || item.grammar] = { id: item.question_id, grammar: item.grammar, label: item.grammar, sentence: item.sentence, selected: item.selected_answer, correct: item.correct_answer, note: item.note };
+          const id = item.question_id || item.grammar;
+          wrongBook[id] = { id: item.question_id, grammar: item.grammar, label: item.grammar, sentence: item.sentence, selected: item.selected_answer, correct: item.correct_answer, note: item.note };
+          saveReviewEntry({
+            reviewId: `two-choice-${id}`,
+            source: "two-choice",
+            sourceLabel: "Sandy 二选一",
+            targetId: id,
+            title: item.grammar,
+            prompt: item.sentence,
+            selected: item.selected_answer,
+            correct: item.correct_answer,
+            note: item.note,
+            url: "index.html"
+          });
         });
         renderWrongBook();
       }
@@ -849,6 +892,7 @@
       wrongBook = {};
       try { localStorage.removeItem(wrongBookKey); } catch {}
       try { localStorage.removeItem(lastWrongKey); } catch {}
+      removeReviewEntries(idsToDelete);
       renderWrongBook();
       if (signedInUser && idsToDelete.length) supabaseClient.from("mistake_notebook").delete().eq("user_id", signedInUser.id).in("question_id", idsToDelete).then(({ error }) => { if (error) console.warn("Could not clear cloud mistakes", error); });
     });

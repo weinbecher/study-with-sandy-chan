@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>错题复习 List｜Study with Sandy</title>
+  <style>
+    :root {
+      --pink-50: #f2fbff;
+      --pink-100: #dff5ff;
+      --pink-200: #bfeeff;
+      --pink-400: #5ec4ea;
+      --pink-600: #1f8fb9;
+      --blue-100: #d8f2ff;
+      --blue-500: #247fb7;
+      --ink: #16384a;
+      --muted: #5a7f92;
+      --white: #fff;
+      --shadow: 0 18px 50px rgba(30, 127, 170, .16);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: radial-gradient(circle at 12% 10%, rgba(255,255,255,.95) 0 9%, transparent 9.5%),
+                  radial-gradient(circle at 88% 14%, rgba(190,238,255,.72) 0 13%, transparent 13.5%),
+                  radial-gradient(circle at 18% 84%, rgba(112,207,238,.28) 0 18%, transparent 18.5%),
+                  linear-gradient(135deg, #f7fdff 0%, #e7f8ff 45%, #dff4ff 72%, #f7fbff 100%);
+      background-attachment: fixed;
+    }
+
+    .app { width: min(1040px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 52px; }
+    header { text-align: center; margin-bottom: 16px; }
+    .eyebrow { color: var(--pink-600); font-size: .7rem; font-weight: 950; letter-spacing: .14em; }
+    h1 { margin: 5px 0 5px; font-size: clamp(1.65rem, 5vw, 2.45rem); letter-spacing: .02em; }
+    .subtitle { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.7; }
+    header::after { content: "𓇼 ⋆｡˚ 𓆝 ⋆｡˚"; display: block; margin-top: 8px; color: rgba(36,127,183,.42); font-size: .88rem; letter-spacing: .12em; }
+    .account { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; padding: 5px 9px; border: 1px solid #cdeefa; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.7); font-size: .74rem; font-weight: 800; }
+    .account button { border: 0; padding: 3px 5px; color: var(--pink-600); background: transparent; cursor: pointer; font: inherit; font-weight: 900; }
+    .account a { color: var(--pink-600); font-weight: 900; text-decoration: none; }
+    .account button:hover, .account a:hover { text-decoration: underline; }
+    .account:not(.signed-in) #accountAction, .account.signed-in #loginLink { display: none; }
+    .nav { display: flex; justify-content: center; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+    .nav a { padding: 7px 12px; border: 1px solid #bfe9f7; border-radius: 999px; color: var(--pink-600); background: rgba(255,255,255,.78); font-size: .8rem; font-weight: 950; text-decoration: none; }
+    .nav a:hover { background: white; box-shadow: 0 7px 18px rgba(28,111,145,.12); }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 14px;
+      padding: 12px;
+      border: 1px solid rgba(75,177,218,.18);
+      border-radius: 20px;
+      background: rgba(255,255,255,.84);
+      box-shadow: var(--shadow);
+    }
+    .search {
+      min-width: 0;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #bfe9f7;
+      border-radius: 13px;
+      color: var(--ink);
+      background: white;
+      font: inherit;
+      font-weight: 800;
+    }
+    .refresh {
+      border: 0;
+      padding: 11px 13px;
+      border-radius: 13px;
+      color: white;
+      background: linear-gradient(135deg, #70d5f4, #2b9ccd);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+    .filter {
+      border: 1px solid #bfe9f7;
+      border-radius: 999px;
+      padding: 8px 11px;
+      color: var(--pink-600);
+      background: white;
+      cursor: pointer;
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 950;
+    }
+    .filter[aria-pressed="true"] { color: white; border-color: transparent; background: linear-gradient(135deg, #70d5f4, #2b9ccd); }
+
+    .summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; color: var(--muted); font-size: .86rem; font-weight: 900; }
+    .summary span { padding: 6px 10px; border: 1px solid rgba(191,233,247,.72); border-radius: 999px; background: rgba(255,255,255,.78); }
+    .list { display: grid; gap: 12px; }
+    .card {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid rgba(75,177,218,.16);
+      border-radius: 20px;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 10px 26px rgba(28,111,145,.1);
+    }
+    .card-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+    .badge { width: fit-content; padding: 5px 10px; border-radius: 999px; color: var(--blue-500); background: var(--blue-100); font-size: .76rem; font-weight: 950; }
+    .title { margin: 3px 0 0; color: var(--pink-600); font-family: "Yu Gothic", "Hiragino Sans", sans-serif; font-size: 1.08rem; font-weight: 950; line-height: 1.45; }
+    .meta { display: grid; gap: 5px; color: #315b70; font-size: .92rem; line-height: 1.65; }
+    .prompt, .example, .note { padding: 10px 12px; border-radius: 14px; background: #f7fdff; }
+    .answers { display: flex; flex-wrap: wrap; gap: 8px; }
+    .answer { padding: 7px 10px; border-radius: 999px; background: #f2fbff; color: #326b80; font-size: .82rem; font-weight: 900; }
+    .answer.correct { color: white; background: linear-gradient(135deg, #75c8a4, #48a47e); }
+    .answer.wrong { color: white; background: linear-gradient(135deg, #f09aa5, #d65d72); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .action {
+      border: 1px solid #bfe9f7;
+      border-radius: 999px;
+      padding: 8px 11px;
+      color: var(--pink-600);
+      background: white;
+      cursor: pointer;
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 950;
+      text-decoration: none;
+    }
+    .action.primary { color: white; border-color: transparent; background: linear-gradient(135deg, #70d5f4, #2b9ccd); }
+    .empty { padding: 34px; border: 1px solid rgba(75,177,218,.16); border-radius: 22px; color: var(--muted); background: rgba(255,255,255,.82); text-align: center; font-weight: 900; line-height: 1.8; }
+
+    @media (max-width: 720px) {
+      .toolbar { grid-template-columns: 1fr; }
+      .card-head { display: grid; }
+      .actions { justify-content: start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="eyebrow">SANDY REVIEW LIST</div>
+      <h1>错题复习 List</h1>
+      <p class="subtitle">这里会汇总 Sandy 二选一、Sandy 语法四选一、词汇表和语法表里的错题 / 星标项目。</p>
+      <div class="account" id="account">
+        <span id="accountStatus">登录后会同步云端错题。</span>
+        <a id="loginLink" href="login.html?redirect=mistakes.html">Sign in</a>
+        <button id="accountAction" type="button">Sign out</button>
+      </div>
+      <nav class="nav" aria-label="学习页面">
+        <a href="index.html">🐾 二选一陷阱</a>
+        <a href="grammar-quiz.html">🐾 语法四选一</a>
+        <a href="vocab.html">📚 N2 词汇表</a>
+        <a href="grammar.html">📝 N2 语法表</a>
+      </nav>
+    </header>
+
+    <section class="toolbar" aria-label="错题工具">
+      <input class="search" id="search" type="search" placeholder="搜索语法、词汇、错因、例句、答案">
+      <button class="refresh" id="refresh" type="button">重新整理 list</button>
+    </section>
+
+    <section class="filters" aria-label="错题分类">
+      <button class="filter" type="button" data-filter="all" aria-pressed="true">全部</button>
+      <button class="filter" type="button" data-filter="two-choice" aria-pressed="false">二选一</button>
+      <button class="filter" type="button" data-filter="grammar-quiz" aria-pressed="false">语法四选一</button>
+      <button class="filter" type="button" data-filter="vocab" aria-pressed="false">词汇</button>
+      <button class="filter" type="button" data-filter="grammar-list" aria-pressed="false">语法表</button>
+    </section>
+
+    <section class="summary" id="summary" aria-live="polite"></section>
+    <section class="list" id="list"></section>
+    <p class="empty" id="empty" hidden>目前没有可复习的错题。去做题页答错一次，或者在词汇 / 语法表里点星标，这里就会自动出现。</p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const reviewListKey = "n2-sandy-review-list-v1";
+    const twoChoiceWrongKey = "n2-two-choice-wrong-book-v2";
+    const grammarQuizWrongKey = "n2-sandy-grammar-quiz-wrong-book-v1";
+    const vocabFavoritesKey = "n2-vocab-favorites-v1";
+    const vocabReasonsKey = "n2-vocab-favorite-reasons-v1";
+    const grammarFavoritesKey = "n2-grammar-list-favorites-v1";
+    const supabaseUrl = "https://dqkulgkvzawpboaoysum.supabase.co";
+    const supabasePublishableKey = "sb_publishable_kd_u18OSCcjCkLLAohOHig_67kwF35H";
+    const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabasePublishableKey) : null;
+    let signedInUser = null;
+    let items = [];
+    let activeFilter = "all";
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char]));
+    }
+
+    function readJson(key, fallback) {
+      try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; }
+    }
+
+    function loadReviewMap() {
+      return readJson(reviewListKey, {});
+    }
+
+    function saveReviewMap(map) {
+      try { localStorage.setItem(reviewListKey, JSON.stringify(map)); } catch {}
+    }
+
+    function normalizeEntry(entry) {
+      if (!entry || !entry.reviewId) return null;
+      return {
+        reviewId: entry.reviewId,
+        source: entry.source || "two-choice",
+        sourceLabel: entry.sourceLabel || "错题",
+        targetId: String(entry.targetId || ""),
+        title: entry.title || entry.grammar || "未命名错题",
+        prompt: entry.prompt || entry.sentence || entry.meaning || "",
+        example: entry.example || "",
+        selected: entry.selected || entry.selected_answer || "",
+        correct: entry.correct || entry.correct_answer || "",
+        note: entry.note || "",
+        url: entry.url || sourceUrl(entry.source),
+        updatedAt: entry.updatedAt || ""
+      };
+    }
+
+    function sourceUrl(source) {
+      if (source === "grammar-quiz") return "grammar-quiz.html";
+      if (source === "vocab") return "vocab.html";
+      if (source === "grammar-list") return "grammar.html";
+      return "index.html";
+    }
+
+    function sourceLabel(source) {
+      if (source === "grammar-quiz") return "Sandy 语法四选一";
+      if (source === "vocab") return "N2 词汇表";
+      if (source === "grammar-list") return "N2 语法表";
+      return "Sandy 二选一";
+    }
+
+    function cloudSource(questionId) {
+      const id = String(questionId || "");
+      if (id.includes("progress")) return "progress";
+      if (id.startsWith("vocab-")) return "vocab";
+      if (id.startsWith("grammar-list-")) return "grammar-list";
+      if (id.startsWith("grammar-quiz-")) return "grammar-quiz";
+      return "two-choice";
+    }
+
+    function reviewIdFor(source, targetId) {
+      const raw = String(targetId || "");
+      if (source === "two-choice") return `two-choice-${raw}`;
+      if (source === "grammar-quiz") return `grammar-quiz-${raw.replace("grammar-quiz-", "")}`;
+      if (source === "grammar-list") return `grammar-list-${raw.replace("grammar-list-", "")}`;
+      if (source === "vocab") return `vocab-${raw.replace("vocab-", "")}`;
+      return raw;
+    }
+
+    function targetIdFor(source, targetId) {
+      const raw = String(targetId || "");
+      if (source === "grammar-quiz") return raw.startsWith("grammar-quiz-") ? raw : `grammar-quiz-${raw}`;
+      if (source === "grammar-list") return raw.replace("grammar-list-", "");
+      if (source === "vocab") return raw.replace("vocab-", "");
+      return raw;
+    }
+
+    function migrateLocalMistakes() {
+      const map = loadReviewMap();
+      Object.values(readJson(twoChoiceWrongKey, {})).forEach((item) => {
+        const targetId = String(item.id || "");
+        if (!targetId) return;
+        const reviewId = `two-choice-${targetId}`;
+        map[reviewId] = {
+          ...map[reviewId],
+          reviewId,
+          source: "two-choice",
+          sourceLabel: "Sandy 二选一",
+          targetId,
+          title: item.label || [item.id, item.topic, item.grammar].filter(Boolean).join("｜"),
+          prompt: String(item.sentence || "").replace("____", "（　　）"),
+          selected: item.selected || "",
+          correct: item.correct || "",
+          note: item.note || "",
+          url: "index.html",
+          updatedAt: map[reviewId]?.updatedAt || ""
+        };
+      });
+
+      Object.values(readJson(grammarQuizWrongKey, {})).forEach((item) => {
+        const rawId = String(item.id || "");
+        if (!rawId) return;
+        const targetId = rawId.startsWith("grammar-quiz-") ? rawId : `grammar-quiz-${rawId}`;
+        const reviewId = `grammar-quiz-${targetId.replace("grammar-quiz-", "")}`;
+        map[reviewId] = {
+          ...map[reviewId],
+          reviewId,
+          source: "grammar-quiz",
+          sourceLabel: "Sandy 语法四选一",
+          targetId,
+          title: [String(item.id).padStart(3, "0"), item.group, item.grammar].filter(Boolean).join("｜"),
+          prompt: item.meaning || "",
+          example: item.example || "",
+          selected: item.selected || "",
+          correct: item.correct || "",
+          note: item.note || "",
+          url: "grammar-quiz.html",
+          updatedAt: map[reviewId]?.updatedAt || ""
+        };
+      });
+
+      readJson(vocabFavoritesKey, []).forEach((id) => {
+        const numericId = Number(id);
+        if (!Number.isInteger(numericId) || numericId < 1) return;
+        const reviewId = `vocab-${numericId}`;
+        if (map[reviewId]?.title && !/^词汇 #/.test(map[reviewId].title)) return;
+        const reasons = readJson(vocabReasonsKey, {});
+        map[reviewId] = {
+          ...map[reviewId],
+          reviewId,
+          source: "vocab",
+          sourceLabel: "N2 词汇表",
+          targetId: String(numericId),
+          title: `词汇 #${String(numericId).padStart(3, "0")}`,
+          prompt: "回到词汇页后会补全单词内容。",
+          selected: reasons[numericId] || "星标复习",
+          correct: "",
+          note: reasons[numericId] ? `错因：${reasons[numericId]}` : "未选错因",
+          url: "vocab.html",
+          updatedAt: map[reviewId]?.updatedAt || ""
+        };
+      });
+
+      readJson(grammarFavoritesKey, []).forEach((id) => {
+        const numericId = Number(id);
+        if (!Number.isInteger(numericId) || numericId < 1) return;
+        const reviewId = `grammar-list-${numericId}`;
+        if (map[reviewId]?.title && !/^语法 #/.test(map[reviewId].title)) return;
+        map[reviewId] = {
+          ...map[reviewId],
+          reviewId,
+          source: "grammar-list",
+          sourceLabel: "N2 语法表",
+          targetId: String(numericId),
+          title: `语法 #${String(numericId).padStart(3, "0")}`,
+          prompt: "回到语法表后会补全语法内容。",
+          selected: "星标复习",
+          correct: "",
+          note: "",
+          url: "grammar.html",
+          updatedAt: map[reviewId]?.updatedAt || ""
+        };
+      });
+
+      saveReviewMap(map);
+      return map;
+    }
+
+    function cloudEntry(row) {
+      const source = cloudSource(row.question_id);
+      if (source === "progress") return null;
+      const targetId = targetIdFor(source, row.question_id);
+      const title = row.grammar || row.correct_answer || row.question_id;
+      const reviewId = reviewIdFor(source, row.question_id);
+      return {
+        reviewId,
+        source,
+        sourceLabel: sourceLabel(source),
+        targetId,
+        title,
+        prompt: row.sentence || "",
+        selected: row.selected_answer || "",
+        correct: row.correct_answer || "",
+        note: row.note || "",
+        url: sourceUrl(source),
+        updatedAt: row.updated_at || ""
+      };
+    }
+
+    async function loadCloudMistakes() {
+      if (!signedInUser || !supabaseClient) return;
+      const { data, error } = await supabaseClient.from("mistake_notebook").select("*");
+      if (error) { console.warn("Could not load review list", error); return; }
+      const map = loadReviewMap();
+      (data || []).forEach((row) => {
+        const entry = cloudEntry(row);
+        if (!entry) return;
+        map[entry.reviewId] = { ...map[entry.reviewId], ...entry };
+      });
+      saveReviewMap(map);
+    }
+
+    function updateAccountUI() {
+      const account = $("account");
+      account.classList.toggle("signed-in", Boolean(signedInUser));
+      $("accountStatus").textContent = !supabaseClient
+        ? "云同步暂时不可用。"
+        : signedInUser
+          ? `云端错题已同步：${signedInUser.email}`
+          : "登录后会同步云端错题。";
+    }
+
+    function currentItems() {
+      const query = $("search").value.trim().toLowerCase();
+      return items
+        .filter((item) => activeFilter === "all" || item.source === activeFilter)
+        .filter((item) => !query || [item.sourceLabel, item.title, item.prompt, item.example, item.selected, item.correct, item.note].some((value) => String(value || "").toLowerCase().includes(query)))
+        .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+    }
+
+    function renderSummary(filtered) {
+      const counts = items.reduce((acc, item) => {
+        acc[item.source] = (acc[item.source] || 0) + 1;
+        return acc;
+      }, {});
+      $("summary").innerHTML = [
+        `当前显示 ${filtered.length} / ${items.length}`,
+        `二选一 ${counts["two-choice"] || 0}`,
+        `语法四选一 ${counts["grammar-quiz"] || 0}`,
+        `词汇 ${counts.vocab || 0}`,
+        `语法表 ${counts["grammar-list"] || 0}`
+      ].map((text) => `<span>${escapeHtml(text)}</span>`).join("");
+    }
+
+    function render() {
+      items = Object.values(loadReviewMap()).map(normalizeEntry).filter(Boolean);
+      const filtered = currentItems();
+      renderSummary(filtered);
+      $("empty").hidden = filtered.length > 0;
+      $("list").innerHTML = filtered.map((item) => `
+        <article class="card" data-review-id="${escapeHtml(item.reviewId)}">
+          <div class="card-head">
+            <div>
+              <span class="badge">${escapeHtml(item.sourceLabel)}</span>
+              <div class="title">${escapeHtml(item.title)}</div>
+            </div>
+            <div class="actions">
+              <button class="action primary" type="button" data-open="${escapeHtml(item.reviewId)}">回原页复习</button>
+              <button class="action" type="button" data-remove="${escapeHtml(item.reviewId)}">移出 list</button>
+            </div>
+          </div>
+          <div class="meta">
+            ${item.prompt ? `<div class="prompt">${escapeHtml(item.prompt)}</div>` : ""}
+            ${item.example ? `<div class="example">${escapeHtml(item.example)}</div>` : ""}
+            <div class="answers">
+              ${item.selected ? `<span class="answer wrong">我选：${escapeHtml(item.selected)}</span>` : ""}
+              ${item.correct ? `<span class="answer correct">正解：${escapeHtml(item.correct)}</span>` : ""}
+            </div>
+            ${item.note ? `<div class="note">${escapeHtml(item.note)}</div>` : ""}
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function openReviewItem(reviewId) {
+      const item = normalizeEntry(loadReviewMap()[reviewId]);
+      if (!item) return;
+      try {
+        if (item.source === "two-choice") localStorage.setItem("n2-two-choice-last-wrong-v1", item.targetId);
+        if (item.source === "grammar-quiz") localStorage.setItem("n2-sandy-grammar-quiz-last-wrong-v1", targetIdFor("grammar-quiz", item.targetId));
+        if (item.source === "vocab") localStorage.setItem("n2-vocab-last-viewed-v1", targetIdFor("vocab", item.targetId));
+        if (item.source === "grammar-list") localStorage.setItem("n2-grammar-list-last-viewed-v1", targetIdFor("grammar-list", item.targetId));
+      } catch {}
+      window.location.href = item.url || sourceUrl(item.source);
+    }
+
+    function removeReviewItem(reviewId) {
+      const map = loadReviewMap();
+      delete map[reviewId];
+      saveReviewMap(map);
+      render();
+    }
+
+    async function refreshList() {
+      migrateLocalMistakes();
+      await loadCloudMistakes();
+      render();
+    }
+
+    async function initialiseAccount() {
+      if (!supabaseClient) { updateAccountUI(); render(); return; }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      signedInUser = session?.user || null;
+      updateAccountUI();
+      await refreshList();
+    }
+
+    $("search").addEventListener("input", render);
+    $("refresh").addEventListener("click", refreshList);
+    document.querySelectorAll(".filter").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeFilter = button.dataset.filter;
+        document.querySelectorAll(".filter").forEach((filter) => filter.setAttribute("aria-pressed", String(filter === button)));
+        render();
+      });
+    });
+    $("list").addEventListener("click", (event) => {
+      const open = event.target.closest("[data-open]");
+      if (open) { openReviewItem(open.dataset.open); return; }
+      const remove = event.target.closest("[data-remove]");
+      if (remove) removeReviewItem(remove.dataset.remove);
+    });
+    $("accountAction").addEventListener("click", () => {
+      if (supabaseClient) supabaseClient.auth.signOut();
+    });
+    if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        signedInUser = session?.user || null;
+        updateAccountUI();
+        refreshList();
+      });
+    }
+    initialiseAccount();
+  </script>
+</body>
+</html>

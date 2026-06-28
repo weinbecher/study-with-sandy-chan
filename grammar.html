@@ -181,6 +181,7 @@
         <a href="index.html">🐾 回到 Sandy 练习</a>
         <a href="vocab.html">📚 N2 词汇表</a>
         <a href="grammar-quiz.html">🐾 Sandy 语法四选一</a>
+        <a href="mistakes.html">📘 错题复习</a>
       </nav>
     </header>
 
@@ -329,6 +330,7 @@
     let scrollSaveFrame = null;
     const progressKey = "n2-grammar-list-last-viewed-v1";
     const favoritesKey = "n2-grammar-list-favorites-v1";
+    const reviewListKey = "n2-sandy-review-list-v1";
     const supabaseUrl = "https://dqkulgkvzawpboaoysum.supabase.co";
     const supabasePublishableKey = "sb_publishable_kd_u18OSCcjCkLLAohOHig_67kwF35H";
     const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabasePublishableKey) : null;
@@ -466,6 +468,7 @@
       });
       list.appendChild(fragment);
       updateFavoriteControls();
+      syncFavoritesToReviewList();
       updateFloatingProgress(loadLastViewed());
     }
 
@@ -481,6 +484,55 @@
 
     function saveFavorites() {
       try { localStorage.setItem(favoritesKey, JSON.stringify([...favoriteIds].sort((a, b) => a - b))); } catch {}
+    }
+
+    function loadReviewList() {
+      try { return JSON.parse(localStorage.getItem(reviewListKey) || "{}") || {}; } catch { return {}; }
+    }
+
+    function saveReviewEntry(entry) {
+      const list = loadReviewList();
+      list[entry.reviewId] = { ...list[entry.reviewId], ...entry, updatedAt: new Date().toISOString() };
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
+
+    function removeReviewEntry(reviewId) {
+      const list = loadReviewList();
+      delete list[reviewId];
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
+
+    function removeReviewEntries(ids) {
+      const list = loadReviewList();
+      ids.forEach((id) => delete list[`grammar-list-${id}`]);
+      try { localStorage.setItem(reviewListKey, JSON.stringify(list)); } catch {}
+    }
+
+    function grammarReviewEntry(id) {
+      const item = grammarItems.find((grammarItem) => grammarItem.id === Number(id));
+      if (!item) return null;
+      return {
+        reviewId: `grammar-list-${item.id}`,
+        source: "grammar-list",
+        sourceLabel: "N2 语法表",
+        targetId: String(item.id),
+        title: item.pattern,
+        prompt: item.meaning,
+        example: item.example,
+        selected: "星标复习",
+        correct: item.pattern,
+        note: item.meaning,
+        url: "grammar.html"
+      };
+    }
+
+    function saveGrammarReviewEntry(id) {
+      const entry = grammarReviewEntry(id);
+      if (entry) saveReviewEntry(entry);
+    }
+
+    function syncFavoritesToReviewList() {
+      [...favoriteIds].forEach(saveGrammarReviewEntry);
     }
 
     function cloudFavoritePayload(id) {
@@ -557,6 +609,7 @@
         if (Number.isInteger(id) && id >= 1 && id <= grammarItems.length) favoriteIds.add(id);
       });
       saveFavorites();
+      syncFavoritesToReviewList();
       renderList();
       if (Number.isInteger(cloudProgress) && cloudProgress >= 1 && cloudProgress <= grammarItems.length) {
         saveLastViewed(cloudProgress, { syncCloud: false });
@@ -636,9 +689,11 @@
       const wasFavorite = favoriteIds.has(numericId);
       if (wasFavorite) {
         favoriteIds.delete(numericId);
+        removeReviewEntry(`grammar-list-${numericId}`);
         removeFavoriteFromCloud(numericId);
       } else {
         favoriteIds.add(numericId);
+        saveGrammarReviewEntry(numericId);
         saveFavoriteToCloud(numericId);
       }
       saveFavorites();
@@ -656,6 +711,7 @@
       const idsToDelete = [...favoriteIds];
       favoriteIds = new Set();
       saveFavorites();
+      removeReviewEntries(idsToDelete);
       renderList();
       if (supabaseClient && signedInUser && idsToDelete.length) {
         supabaseClient.from("mistake_notebook").delete()
