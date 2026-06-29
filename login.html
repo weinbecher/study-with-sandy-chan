@@ -49,7 +49,7 @@
     const client = window.supabase.createClient("https://dqkulgkvzawpboaoysum.supabase.co", "sb_publishable_kd_u18OSCcjCkLLAohOHig_67kwF35H");
     const $ = (id) => document.getElementById(id);
     const redirectParam = new URLSearchParams(window.location.search).get("redirect");
-    const allowedRedirects = new Set(["index.html", "vocab.html", "grammar.html", "grammar-quiz.html", "mistakes.html"]);
+    const allowedRedirects = new Set(["index.html", "vocab.html", "grammar.html", "grammar-quiz.html", "mistakes.html", "tag.html"]);
     const redirectTarget = allowedRedirects.has(redirectParam) ? redirectParam : "index.html";
     let mode = "signin";
     let recovery = window.location.hash.includes("type=recovery");
