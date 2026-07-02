@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>N2 核心语法真题表｜Study with Sandy</title>
+  <style>
+    :root {
+      --sea-50: #f2fbff;
+      --sea-100: #dff5ff;
+      --sea-200: #bfeeff;
+      --sea-400: #5ec4ea;
+      --sea-600: #1f8fb9;
+      --blue-100: #d8f2ff;
+      --blue-500: #247fb7;
+      --ink: #16384a;
+      --muted: #5a7f92;
+      --shadow: 0 18px 50px rgba(30, 127, 170, .16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: radial-gradient(circle at 10% 10%, rgba(255,255,255,.94) 0 9%, transparent 9.5%),
+                  radial-gradient(circle at 88% 18%, rgba(190,238,255,.74) 0 13%, transparent 13.5%),
+                  radial-gradient(circle at 16% 86%, rgba(112,207,238,.28) 0 18%, transparent 18.5%),
+                  linear-gradient(135deg, #f7fdff 0%, #e7f8ff 45%, #dff4ff 72%, #f7fbff 100%);
+      background-attachment: fixed;
+    }
+    .app { width: min(1060px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 56px; }
+    header { text-align: center; margin-bottom: 16px; }
+    .eyebrow { color: var(--sea-600); font-size: .7rem; font-weight: 950; letter-spacing: .14em; }
+    h1 { margin: 5px 0; font-size: clamp(1.65rem, 5vw, 2.45rem); letter-spacing: .02em; }
+    .subtitle { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.7; }
+    header::after { content: "𓇼 ⋆｡˚ 𓆝 ⋆｡˚"; display: block; margin-top: 8px; color: rgba(36,127,183,.42); font-size: .88rem; letter-spacing: .12em; }
+    .nav { display: flex; justify-content: center; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+    .nav a { padding: 7px 12px; border: 1px solid #bfe9f7; border-radius: 999px; color: var(--sea-600); background: rgba(255,255,255,.78); font-size: .8rem; font-weight: 950; text-decoration: none; }
+    .nav a:hover { background: white; box-shadow: 0 7px 18px rgba(28,111,145,.12); }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 14px;
+      padding: 12px;
+      border: 1px solid rgba(75,177,218,.18);
+      border-radius: 20px;
+      background: rgba(255,255,255,.84);
+      box-shadow: var(--shadow);
+    }
+    .search {
+      min-width: 0;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #bfe9f7;
+      border-radius: 13px;
+      color: var(--ink);
+      background: white;
+      font: inherit;
+      font-weight: 800;
+    }
+    .voice-picker { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .8rem; font-weight: 900; white-space: nowrap; }
+    .voice-picker select { max-width: 170px; border: 1px solid #bfe9f7; border-radius: 9px; padding: 8px; color: var(--sea-600); background: white; font: inherit; }
+    .sound-toggle, .auto-toggle {
+      border: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: white;
+      background: linear-gradient(135deg, #70d5f4, #2b9ccd);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+    .auto-toggle { background: linear-gradient(135deg, #7ea0f0, #527bd2); }
+    .sound-toggle[aria-pressed="false"], .auto-toggle[aria-pressed="false"] { color: var(--muted); background: #f4edf0; }
+    .filter-panel {
+      margin: 0 0 14px;
+      border: 1px solid rgba(75,177,218,.18);
+      border-radius: 18px;
+      background: rgba(255,255,255,.78);
+      box-shadow: 0 10px 26px rgba(28,111,145,.08);
+      overflow: hidden;
+    }
+    .filter-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      border: 0;
+      padding: 12px 14px;
+      color: var(--ink);
+      background: linear-gradient(135deg, rgba(255,255,255,.94), rgba(223,245,255,.78));
+      cursor: pointer;
+      font: inherit;
+      font-weight: 950;
+      text-align: left;
+    }
+    .filter-summary { color: var(--blue-500); font-size: .8rem; font-weight: 950; text-align: right; }
+    .filter-toggle .chevron { color: var(--sea-600); transition: transform .18s ease; }
+    .filter-toggle[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+    .categories { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border-top: 1px solid rgba(75,177,218,.15); }
+    .categories.collapsed { display: none; }
+    .category {
+      border: 1px solid #bfe9f7;
+      border-radius: 999px;
+      padding: 8px 11px;
+      color: var(--sea-600);
+      background: white;
+      cursor: pointer;
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 950;
+    }
+    .category[aria-pressed="true"] { color: white; border-color: transparent; background: linear-gradient(135deg, #70d5f4, #2b9ccd); }
+    .status { margin: 0 4px 12px; color: var(--muted); font-size: .86rem; font-weight: 900; }
+    .list { display: grid; gap: 10px; }
+    .entry {
+      display: grid;
+      grid-template-columns: 70px minmax(190px, .9fr) minmax(190px, .9fr) minmax(270px, 1.25fr);
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid rgba(75,177,218,.16);
+      border-radius: 18px;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 8px 22px rgba(28,111,145,.08);
+    }
+    .entry.playing { border-color: rgba(117,200,164,.75); box-shadow: 0 12px 28px rgba(75,150,114,.16); transform: translateY(-1px); }
+    .num { color: var(--muted); font-size: .8rem; font-weight: 950; text-align: center; line-height: 1.45; }
+    .source { display: block; color: var(--blue-500); font-size: .72rem; }
+    .term-button {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--sea-200);
+      border-radius: 13px;
+      color: var(--sea-600);
+      background: var(--sea-50);
+      cursor: pointer;
+      font: inherit;
+      font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
+      font-size: 1.12rem;
+      font-weight: 950;
+      text-align: left;
+    }
+    .term-button:hover, .term-button:focus-visible { border-color: var(--sea-400); background: white; outline: none; }
+    .term-button.speaking, .example-button.speaking { border-color: #75c8a4; background: #edfbf4; }
+    .connection { color: var(--blue-500); font-family: "Yu Gothic", "Hiragino Sans", sans-serif; font-size: .88rem; font-weight: 950; line-height: 1.55; }
+    .meaning { color: #315b70; line-height: 1.6; font-size: .94rem; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      padding: 4px 9px;
+      border: 0;
+      border-radius: 999px;
+      color: var(--blue-500);
+      background: var(--blue-100);
+      cursor: pointer;
+      font: inherit;
+      font-size: .75rem;
+      font-weight: 950;
+    }
+    .tag:hover, .tag:focus-visible { color: white; background: linear-gradient(135deg, #70d5f4, #2b9ccd); outline: none; }
+    .point { color: var(--muted); font-size: .82rem; font-weight: 800; line-height: 1.55; }
+    .meta { display: grid; gap: 5px; }
+    .example-button {
+      grid-column: 2 / -1;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: start;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cdeefa;
+      border-radius: 13px;
+      color: #244f63;
+      background: #f7fdff;
+      cursor: pointer;
+      font: inherit;
+      font-family: "Yu Gothic", "Hiragino Sans", sans-serif;
+      font-size: .94rem;
+      font-weight: 850;
+      line-height: 1.6;
+      text-align: left;
+    }
+    .example-label { color: var(--sea-600); font-size: .78rem; font-weight: 950; white-space: nowrap; }
+    .empty { display: none; padding: 30px; border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.8); text-align: center; font-weight: 900; }
+    .tip { margin: 17px 0 0; padding: 13px 15px; border: 1px solid rgba(75,177,218,.16); border-radius: 18px; color: var(--muted); background: rgba(255,255,255,.82); font-size: .86rem; line-height: 1.7; }
+    .floating-controls {
+      position: fixed;
+      z-index: 20;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      display: grid;
+      gap: 7px;
+      justify-items: end;
+      pointer-events: none;
+    }
+    .floating-controls > * { pointer-events: auto; }
+    .floating-progress { max-width: 230px; padding: 6px 10px; border: 1px solid #bfe9f7; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.93); box-shadow: 0 8px 18px rgba(28,111,145,.12); font-size: .76rem; font-weight: 900; text-align: center; }
+    .floating-sandy-toggle { display: grid; justify-items: center; width: 104px; padding: 0; border: 0; color: var(--sea-600); background: transparent; cursor: grab; font: inherit; font-weight: 900; user-select: none; touch-action: none; }
+    .floating-sandy-toggle:active, .floating-controls.dragging .floating-sandy-toggle { cursor: grabbing; }
+    .floating-sandy-bubble { max-width: 148px; margin: 0 0 6px; padding: 8px 10px; border: 1px solid #bfe9f7; border-radius: 15px 15px 15px 5px; color: #326b80; background: rgba(255,255,255,.95); box-shadow: 0 8px 18px rgba(28,111,145,.13); font-size: .75rem; line-height: 1.35; text-align: center; }
+    .floating-sandy-image { width: 82px; height: 82px; object-fit: contain; filter: drop-shadow(0 8px 9px rgba(17,90,120,.2)); }
+    .floating-sandy-toggle:focus-visible { outline: 2px solid rgba(75,177,218,.55); outline-offset: 6px; border-radius: 18px; }
+    .floating-sandy-status { margin-top: 3px; padding: 4px 8px; border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.9); box-shadow: 0 6px 12px rgba(28,111,145,.1); font-size: .68rem; letter-spacing: .02em; }
+    .floating-sandy-toggle[aria-pressed="true"] .floating-sandy-bubble { color: white; border-color: rgba(94,196,234,.5); background: linear-gradient(135deg, #70d5f4, #2b9ccd); }
+    .floating-sandy-toggle[aria-pressed="true"] .floating-sandy-status { color: #1f8fb9; background: #e8faff; }
+    @media (max-width: 840px) {
+      .toolbar { grid-template-columns: 1fr; }
+      .voice-picker { justify-content: space-between; }
+      .entry { grid-template-columns: 50px 1fr; }
+      .meta, .meaning, .point, .example-button { grid-column: 2; }
+      .floating-controls { left: 16px; right: 16px; justify-items: end; }
+      .floating-progress { justify-self: center; }
+      .floating-sandy-toggle { width: 98px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="eyebrow">N2 CORE GRAMMAR</div>
+      <h1>N2 核心语法真题表</h1>
+      <p class="subtitle">基于你提供的 2020-2025 核心语法整理表；每个项目保留接续、中文核心义、考点和日语例句。</p>
+      <nav class="nav" aria-label="学习页面">
+        <a href="index.html">🐾 二选一陷阱</a>
+        <a href="grammar-quiz.html">🐾 语法四选一</a>
+        <a href="vocab.html">📚 N2 词汇表</a>
+        <a href="adverbs.html">🌊 副词接续词表</a>
+        <a href="grammar.html">📝 原语法表</a>
+        <a href="mistakes.html">📘 错题复习</a>
+        <a href="tag.html">🏷️ Tags</a>
+      </nav>
+    </header>
+    <section class="toolbar" aria-label="核心语法工具">
+      <input class="search" id="search" type="search" placeholder="搜索语法、接续、中文、类别或例句，例如：からには / 既然 / 義務">
+      <label class="voice-picker">日语声音<select id="voiceSelect" aria-label="选择日文语音"><option>载入中…</option></select></label>
+      <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 语音：开</button>
+      <button class="auto-toggle" id="autoToggle" type="button" aria-pressed="false">▶ 自动听读</button>
+    </section>
+    <section class="filter-panel" aria-label="Tag 筛选">
+      <button class="filter-toggle" id="filterToggle" type="button" aria-expanded="false" aria-controls="categories">
+        <span>🏷️ Tag 筛选</span>
+        <span class="filter-summary" id="filterSummary">全部</span>
+        <span class="chevron" aria-hidden="true">⌄</span>
+      </button>
+      <div class="categories collapsed" id="categories"></div>
+    </section>
+    <p class="status" id="status">共 103 个项目</p>
+    <section class="list" id="list" aria-live="polite"></section>
+    <p class="empty" id="empty">没有找到这个语法。换个关键词试试看。</p>
+    <p class="tip">小提示：点语法或例句会朗读日语；点 Sandy 或“自动听读”会从当前屏幕附近开始，先读语法，再读例句。滚动、触摸屏幕或按方向键会停止自动听读。</p>
+  </main>
+  <div class="floating-controls" id="floatingControls" aria-label="Sandy 自动听读控制">
+    <span class="floating-progress" id="floatingProgress">进度：还没开始</span>
+    <button class="floating-sandy-toggle" id="floatingSandyToggle" type="button" aria-pressed="false" aria-label="点击 Sandy 开始自动听读">
+      <span class="floating-sandy-bubble" id="floatingSandyBubble">点我自动听读</span>
+      <img class="floating-sandy-image" src="assets/sandy-green-eyes.png" alt="Sandy 自动听读按钮">
+      <span class="floating-sandy-status" id="floatingSandyStatus">AUTO READ</span>
+    </button>
+  </div>
+  <script>
+    const items = [{"id":1,"sourceNo":"1","w":"～すら","r":"N + すら","m":"连……都；极端举例","c":"极端举例","p":"比「さえ」更书面/强调；常接否定","e":"彼は自分の名前すら書けなかった。"},{"id":2,"sourceNo":"2","w":"～とはいえ","r":"N/普通形 + とはいえ","m":"虽说……但是……","c":"逆接","p":"前面承认事实，后面转折","e":"便利とはいえ、問題も多い。"},{"id":3,"sourceNo":"3","w":"～において","r":"N + において","m":"在……；在……方面/场合","c":"场合・方面","p":"书面语；≈で/に","e":"会議において新しい方針が発表された。"},{"id":4,"sourceNo":"4","w":"～にこたえて","r":"N + にこたえて","m":"响应……；按照……要求","c":"对应・响应","p":"常接 要望/期待/声/请求","e":"学生の要望にこたえて、図書館の時間を延ばした。"},{"id":5,"sourceNo":"5","w":"～に際して","r":"N/Vる + に際して","m":"在……之际；值……之时","c":"时间・场面","p":"正式书面；用于重要场面","e":"入学に際して、必要な書類を提出してください。"},{"id":6,"sourceNo":"5","w":"～にあたって","r":"N/Vる + にあたって","m":"在……之际；临……时","c":"时间・场面","p":"比「に際して」稍自然，也正式","e":"試験を受けるにあたって、注意事項を確認した。"},{"id":7,"sourceNo":"6","w":"～かねる","r":"Vます + かねる","m":"难以……；不能……","c":"难易・拒绝","p":"客观/礼貌地表示做不到","e":"その意見には賛成しかねます。"},{"id":8,"sourceNo":"6","w":"～かねない","r":"Vます + かねない","m":"很可能……；容易导致坏结果","c":"可能・负面","p":"多用于负面结果","e":"このままでは事故が起こりかねない。"},{"id":9,"sourceNo":"7","w":"～ということだ","r":"普通形 + ということだ","m":"听说……；据说……","c":"转述・总结","p":"转述信息；也可总结为“也就是说”","e":"明日は休みだということだ。"},{"id":10,"sourceNo":"7","w":"～とのことだ","r":"普通形 + とのことだ","m":"听说……；据称……","c":"转述","p":"比「ということだ」更书面","e":"先生は来週戻るとのことだ。"},{"id":11,"sourceNo":"8","w":"～うえで","r":"Vた/Nの + うえで","m":"在……之后；在此基础上","c":"条件・顺序","p":"先做前项，再做后项","e":"内容を確認したうえで、署名してください。"},{"id":12,"sourceNo":"8","w":"～うえに","r":"普通形 + うえに","m":"不仅……而且……","c":"递进","p":"递进追加","e":"この店は安いうえに、味もいい。"},{"id":13,"sourceNo":"8","w":"～うえは","r":"普通形 + うえは","m":"既然……就……","c":"既然・义务","p":"既成事实→后项责任/决心","e":"約束したうえは、最後までやるべきだ。"},{"id":14,"sourceNo":"9","w":"～に従って","r":"N/Vる + に従って","m":"随着……；按照……","c":"伴随・遵照","p":"可表变化随之发生，也可表遵照","e":"年を取るに従って、考え方も変わる。"},{"id":15,"sourceNo":"9","w":"～につれて","r":"N/Vる + につれて","m":"随着……","c":"伴随变化","p":"两件事一起变化；自然变化多","e":"気温が上がるにつれて、眠くなった。"},{"id":16,"sourceNo":"9","w":"～に伴って","r":"N/Vる + に伴って","m":"伴随……；随着……","c":"伴随变化","p":"较正式；社会/制度/规模变化常用","e":"人口の増加に伴って、問題も増えた。"},{"id":17,"sourceNo":"9","w":"～とともに","r":"N/Vる + とともに","m":"随着……；和……一起","c":"伴随・共同","p":"可表共同动作/同时变化","e":"春になるとともに、花が咲き始めた。"},{"id":18,"sourceNo":"10","w":"～からといって","r":"普通形 + からといって + 否定","m":"虽说……也不能……","c":"让步・否定","p":"不能只因前项就推出后项","e":"安いからといって、買いすぎてはいけない。"},{"id":19,"sourceNo":"11","w":"～ものの","r":"普通形 + ものの","m":"虽然……但是……","c":"逆接・书面","p":"书面逆接；前后事实不一致","e":"買ったものの、まだ一度も使っていない。"},{"id":20,"sourceNo":"12","w":"～というと","r":"N + というと","m":"说到……；提起……","c":"话题","p":"引出话题/联想","e":"日本の冬というと、雪を思い出す。"},{"id":21,"sourceNo":"13","w":"～のは～からだ/ためだ/のだ","r":"普通形 + のは + 理由 + からだ/ためだ/のだ","m":"之所以……是因为……","c":"因果","p":"强调原因说明","e":"彼が遅れたのは、電車が止まったからだ。"},{"id":22,"sourceNo":"14","w":"～とのことでした","r":"普通形 + とのことでした","m":"听说……；据称……","c":"转述・礼貌","p":"礼貌转述过去获得的信息","e":"会議は中止になったとのことでした。"},{"id":23,"sourceNo":"15","w":"～にほかならない","r":"N/普通形 + にほかならない","m":"无非是……；正是……","c":"强调判断","p":"强判断；强调本质","e":"成功の理由は努力にほかならない。"},{"id":24,"sourceNo":"16","w":"～わりに（は）","r":"普通形/Nの + わりに（は）","m":"相对于……却……","c":"反差比较","p":"前后出现反差","e":"値段のわりに、料理がおいしい。"},{"id":25,"sourceNo":"17","w":"～として","r":"N + として","m":"作为……","c":"身份・资格","p":"身份/立场/资格","e":"研究者として意見を述べた。"},{"id":26,"sourceNo":"17","w":"～とされている","r":"N/普通形 + とされている","m":"被认为……；被视为……","c":"客观认定","p":"客观/社会普遍认定","e":"この方法は有効だとされている。"},{"id":27,"sourceNo":"18","w":"～がちだ","r":"Vます + がちだ","m":"往往……；容易……","c":"倾向・消极","p":"多用于消极倾向","e":"忙しいと食事を抜きがちだ。"},{"id":28,"sourceNo":"19","w":"～おそれがある","r":"Vる + おそれがある","m":"有……的危险；恐怕会……","c":"风险・负面","p":"负面风险预告","e":"大雨で電車が止まるおそれがある。"},{"id":29,"sourceNo":"20","w":"～ながら","r":"Vます + ながら","m":"一边……一边……；虽然……却……","c":"同时・逆接","p":"可表同时动作，也可表逆接","e":"彼は知っていながら、何も言わなかった。"},{"id":30,"sourceNo":"20","w":"～つつ","r":"Vます + つつ","m":"一边……一边……；虽然……却……","c":"同时・逆接・书面","p":"比「ながら」更书面","e":"悪いと知りつつ、続けてしまった。"},{"id":31,"sourceNo":"21","w":"～向けだ","r":"N + 向けだ","m":"面向……；适合……对象","c":"对象","p":"强调目标对象","e":"この本は初心者向けだ。"},{"id":32,"sourceNo":"22","w":"～連れ","r":"N + 連れ（づれ）","m":"带着……；伴随……","c":"伴随・同行","p":"多指带人一起，如子供連れ","e":"子供連れの客が多い。"},{"id":33,"sourceNo":"23","w":"～に限り","r":"N + に限り","m":"仅限于……","c":"限定","p":"限定范围","e":"本日に限り、半額です。"},{"id":34,"sourceNo":"23","w":"～に限らず","r":"N + に限らず","m":"不限于……","c":"不限范围","p":"范围扩大","e":"学生に限らず、誰でも参加できる。"},{"id":35,"sourceNo":"23","w":"～に限って","r":"N + に限って","m":"唯独……；偏偏……","c":"偏偏・意外","p":"常带意外/不满语气","e":"急いでいる日に限って、電車が遅れる。"},{"id":36,"sourceNo":"23","w":"～ない限り","r":"Vない + 限り","m":"只要不……就不……","c":"条件限制","p":"条件限制","e":"努力しない限り、合格できない。"},{"id":37,"sourceNo":"23","w":"～とは限らない","r":"普通形 + とは限らない","m":"未必……；不一定……","c":"部分否定","p":"否定绝对判断","e":"高いものが必ずいいとは限らない。"},{"id":38,"sourceNo":"24","w":"～について","r":"N + について","m":"关于……；就……而言","c":"话题","p":"话题/对象","e":"日本語の勉強について話した。"},{"id":39,"sourceNo":"24","w":"～にしては","r":"N/普通形 + にしては","m":"就……而言，算是……","c":"评价反差","p":"与预想标准相比的反差","e":"初心者にしては、上手だ。"},{"id":40,"sourceNo":"24","w":"～に比べて","r":"N + に比べて","m":"与……相比","c":"比较","p":"比较","e":"去年に比べて、今年は暖かい。"},{"id":41,"sourceNo":"24","w":"～に至って","r":"N/Vる + に至って","m":"至于……；甚至到……","c":"极端・阶段","p":"到达极端阶段/程度","e":"問題は会社全体に至って広がった。"},{"id":42,"sourceNo":"25","w":"～次第だ","r":"N + 次第だ","m":"取决于……","c":"取决于","p":"由前项决定结果","e":"結果は努力次第だ。"},{"id":43,"sourceNo":"25","w":"～次第","r":"Vます + 次第","m":"一……就立刻……","c":"立即","p":"后项马上发生","e":"終わり次第、連絡します。"},{"id":44,"sourceNo":"26","w":"～ては/では","r":"Vて/イAくて/N・ナAで + は/では","m":"一旦……就……","c":"假定・负面结果","p":"多接不顺心/负面结果","e":"そんなに遊んでいては、合格できない。"},{"id":45,"sourceNo":"27","w":"～しかない","r":"Vる/N + しかない","m":"只能……；别无他法","c":"限定・无选择","p":"表达没有其他选择","e":"ここまで来たら、やるしかない。"},{"id":46,"sourceNo":"28","w":"～て以来","r":"Vて + 以来","m":"自从……以来","c":"时间持续","p":"从过去某点持续到现在","e":"日本語を始めて以来、毎日勉強している。"},{"id":47,"sourceNo":"29","w":"～ならともかく","r":"N/普通形 + ならともかく","m":"姑且不论……；先不管……","c":"让步・对比","p":"前项还能理解，后项不行","e":"平日ならともかく、週末は休みたい。"},{"id":48,"sourceNo":"30","w":"～以上は","r":"Vた + 以上は","m":"既然……就必须……","c":"既然・责任","p":"前项既成事实→责任/决心","e":"約束した以上は、守らなければならない。"},{"id":49,"sourceNo":"31","w":"～ようがない","r":"Vます + ようがない","m":"无法……；没办法……","c":"无方法","p":"没有方法/手段","e":"名前が分からないので、調べようがない。"},{"id":50,"sourceNo":"33","w":"～ずにはいられない","r":"Vず + にはいられない","m":"不由得……；情不自禁……","c":"情绪难抑","p":"情绪/冲动无法控制","e":"その話を聞いて、笑わずにはいられなかった。"},{"id":51,"sourceNo":"34","w":"～までだ","r":"Vる/普通形 + までだ","m":"只不过……；大不了……","c":"限定・最后手段","p":"表示程度有限/最后手段","e":"だめなら、もう一度やってみるまでだ。"},{"id":52,"sourceNo":"35","w":"～づらい","r":"Vます + づらい","m":"难以……；不方便……","c":"难易","p":"心理/客观阻碍造成困难","e":"この字は読みづらい。"},{"id":53,"sourceNo":"36","w":"～一方だ","r":"Vる + 一方だ","m":"越来越……","c":"变化趋势","p":"变化持续单向发展","e":"気温は上がる一方だ。"},{"id":54,"sourceNo":"36","w":"～ばかりだ","r":"Vる + ばかりだ","m":"越来越……","c":"变化趋势・消极","p":"常用于消极趋势","e":"状況は悪くなるばかりだ。"},{"id":55,"sourceNo":"37","w":"～に違いない","r":"普通形 + に違いない","m":"一定……；肯定……","c":"推测","p":"主观推测，把握较强","e":"彼はもう帰ったに違いない。"},{"id":56,"sourceNo":"38","w":"～てもかまわない","r":"Vても/イAくても/N・ナAでも + かまわない","m":"……也没关系；可以……","c":"许可","p":"许可/不介意","e":"少し遅れてもかまいません。"},{"id":57,"sourceNo":"39","w":"～ものなら","r":"Vる + ものなら","m":"如果能……的话","c":"愿望・难实现","p":"多用于难以实现的愿望","e":"戻れるものなら、昔に戻りたい。"},{"id":58,"sourceNo":"40","w":"～ようとしている","r":"Vよう + としている","m":"正要……；马上就要……","c":"即将","p":"即将发生的状态","e":"電車が出発しようとしている。"},{"id":59,"sourceNo":"41","w":"～ようとする","r":"Vよう + とする","m":"试图……；打算……","c":"尝试・意志","p":"意志性动作","e":"彼は何かを言おうとした。"},{"id":60,"sourceNo":"42","w":"～に沿って","r":"N + に沿って","m":"按照……；顺着……","c":"遵照","p":"依照方针/路线/规则","e":"計画に沿って進めます。"},{"id":61,"sourceNo":"43","w":"～ことになる","r":"Vる + ことになる","m":"决定……；规定……","c":"决定・外部","p":"外部/他人/制度决定","e":"来月から転勤することになった。"},{"id":62,"sourceNo":"43","w":"～ことにする","r":"Vる + ことにする","m":"决定……","c":"决定・自己","p":"自己决定","e":"毎朝日本語を勉強することにした。"},{"id":63,"sourceNo":"44","w":"～ないかな","r":"Vない + かな","m":"多希望……；能不能……呢","c":"愿望・委婉","p":"委婉期待/愿望","e":"早く春にならないかな。"},{"id":64,"sourceNo":"45","w":"～なくちゃ","r":"Vない形去い + くちゃ","m":"必须……","c":"义务・口语","p":"口语；≈なければならない","e":"もう行かなくちゃ。"},{"id":65,"sourceNo":"45","w":"～ないではならない","r":"Vない + ではならない","m":"必须……","c":"义务","p":"较书面/正式","e":"確認しないではならない。"},{"id":66,"sourceNo":"45","w":"～なければならない","r":"Vない形去い + ければならない","m":"必须……","c":"义务","p":"标准表达","e":"毎日練習しなければならない。"},{"id":67,"sourceNo":"46","w":"～を通して","r":"N + を通して","m":"通过……（手段）","c":"手段","p":"通过媒介/经验/活动","e":"友人を通して彼を知った。"},{"id":68,"sourceNo":"46","w":"～を通して","r":"N + を通して","m":"在……期间一直","c":"期间","p":"整个期间持续","e":"一年を通して、ここは暖かい。"},{"id":69,"sourceNo":"47","w":"～とおりだ","r":"Vる/Vた/Nの + とおりだ","m":"按照……；和……一样","c":"按照・一致","p":"照样/一致","e":"説明のとおりに書いてください。"},{"id":70,"sourceNo":"48","w":"～を問わず","r":"N + を問わず","m":"不问……；不论……","c":"无关条件","p":"不受条件限制","e":"年齢を問わず、参加できます。"},{"id":71,"sourceNo":"48","w":"～にかかわらず","r":"N/普通形 + にかかわらず","m":"不管……；无论……","c":"无关条件","p":"条件无关","e":"天気にかかわらず、試合は行われる。"},{"id":72,"sourceNo":"49","w":"～からには","r":"普通形 + からには","m":"既然……就……","c":"既然・决心","p":"责任/决心/当然结论","e":"やるからには、最後までやりたい。"},{"id":73,"sourceNo":"50","w":"～かける","r":"Vます + かける","m":"做到一半；刚开始做……","c":"动作未完","p":"动作未完成","e":"読みかけの本を机に置いた。"},{"id":74,"sourceNo":"51","w":"～てほしい","r":"Vて + ほしい","m":"希望别人做……","c":"请求・愿望","p":"说话人希望对方/第三者做","e":"もう少し待ってほしい。"},{"id":75,"sourceNo":"51","w":"～てもらう","r":"Vて + もらう","m":"请别人为自己做……","c":"受益","p":"得到他人帮助","e":"友達に説明してもらった。"},{"id":76,"sourceNo":"51","w":"～ていただく","r":"Vて + いただく","m":"请别人做……；承蒙……","c":"敬语・自谦","p":"「てもらう」的自谦礼貌形","e":"先生に見ていただいた。"},{"id":77,"sourceNo":"52","w":"～させてもらう","r":"V（さ）せて + もらう","m":"让/允许我做……","c":"使役受益","p":"得到许可，自己受益","e":"少し休ませてもらった。"},{"id":78,"sourceNo":"52","w":"～させていただく","r":"V（さ）せて + いただく","m":"请允许我做……","c":"敬语・自谦","p":"自谦礼貌；正式场景","e":"発表させていただきます。"},{"id":79,"sourceNo":"53","w":"～たものだ/もんだ","r":"Vた + ものだ/もんだ","m":"过去常常……；以前总是……","c":"回忆・过去习惯","p":"回忆过去习惯；もんだ口语","e":"子どものころ、よく川で遊んだものだ。"},{"id":80,"sourceNo":"54","w":"～ものか/もんか","r":"普通形 + ものか/もんか","m":"绝不会……；岂能……","c":"强烈否定","p":"强烈否定；もんか口语","e":"あんな店、二度と行くものか。"},{"id":81,"sourceNo":"55","w":"～ものだ","r":"Vる/Nの + ものだ","m":"理应……；本该……；常识上……","c":"常识・道理","p":"表示常识、普遍道理","e":"人は失敗から学ぶものだ。"},{"id":82,"sourceNo":"56","w":"～てしょうがない","r":"Vて/イAくて/ナAで + しょうがない","m":"……得不得了","c":"程度・无法控制","p":"程度强烈，无法控制","e":"眠くてしょうがない。"},{"id":83,"sourceNo":"56","w":"～てしかたがない","r":"Vて/イAくて/ナAで + しかたがない","m":"……得不得了","c":"程度・无法控制","p":"≈てしょうがない；较自然","e":"心配でしかたがない。"},{"id":84,"sourceNo":"56","w":"～てたまらない","r":"Vて/イAくて/ナAで + たまらない","m":"……得受不了","c":"程度・强烈","p":"程度很强，多情绪/感觉","e":"会いたくてたまらない。"},{"id":85,"sourceNo":"57","w":"～てならない","r":"Vて/イAくて/ナAで + ならない","m":"不由得……；非常……","c":"情绪难抑","p":"情绪自然涌出，难以抑制","e":"将来が不安でならない。"},{"id":86,"sourceNo":"57","w":"～てたまらない","r":"Vて/イAくて/ナAで + たまらない","m":"……得受不了","c":"程度・强烈","p":"感情/感觉强烈到难忍","e":"悔しくてたまらない。"},{"id":87,"sourceNo":"58","w":"～おきに","r":"数量词 + おきに","m":"每隔……","c":"间隔数量","p":"表示间隔数量；考试常考「一日おき」","e":"一日おきに運動している。"},{"id":88,"sourceNo":"58","w":"～ぶりに","r":"时间名词 + ぶりに","m":"时隔……","c":"间隔时长","p":"强调间隔时间很久","e":"三年ぶりに友達に会った。"},{"id":89,"sourceNo":"58","w":"～たびに","r":"Vる/Nの + たびに","m":"每次……；每逢……","c":"每次","p":"每当前项发生，后项也发生","e":"この曲を聞くたびに、泣きそうになる。"},{"id":90,"sourceNo":"59","w":"～にすぎない","r":"N/普通形 + にすぎない","m":"只不过……；仅仅……","c":"限定","p":"降低评价/限定程度","e":"それはただの噂にすぎない。"},{"id":91,"sourceNo":"60","w":"～がたい","r":"Vます + がたい","m":"难以……；很难……","c":"心理难易","p":"心理上难以接受/相信/忘记","e":"この経験は忘れがたい。"},{"id":92,"sourceNo":"61","w":"～に基づいて","r":"N + に基づいて","m":"基于……；依据……","c":"根据","p":"以事实/资料/规则为依据","e":"データに基づいて判断する。"},{"id":93,"sourceNo":"62","w":"～ことはない","r":"Vる + ことはない","m":"没必要……；不必……","c":"不必要","p":"劝对方不用做/不用担心","e":"そんなに心配することはない。"},{"id":94,"sourceNo":"63","w":"～ところだった","r":"Vる/Vない + ところだった","m":"差一点就……；险些……","c":"险些・未发生","p":"未发生坏事，带庆幸","e":"もう少しで電車に乗り遅れるところだった。"},{"id":95,"sourceNo":"64","w":"～たところだ","r":"Vた + ところだ","m":"刚刚……","c":"刚刚完成","p":"客观刚完成","e":"今、着いたところだ。"},{"id":96,"sourceNo":"64","w":"～るところだ","r":"Vる + ところだ","m":"正要……；马上要……","c":"正要","p":"动作即将开始","e":"これから出かけるところだ。"},{"id":97,"sourceNo":"64","w":"～ているところだ","r":"Vている + ところだ","m":"正在……","c":"正在进行","p":"动作正在进行","e":"今、資料を読んでいるところだ。"},{"id":98,"sourceNo":"65","w":"～わけがない/はずがない","r":"普通形 + わけがない/はずがない","m":"不可能……","c":"强否定・不可能","p":"逻辑/情理上绝对不会","e":"彼がそんなことを言うわけがない。"},{"id":99,"sourceNo":"65","w":"～わけではない","r":"普通形 + わけではない","m":"并非……；不见得……","c":"部分否定","p":"部分否定，不是完全否定","e":"日本語が嫌いなわけではない。"},{"id":100,"sourceNo":"65","w":"～わけにはいかない","r":"Vる/ない + わけにはいかない","m":"不能……；不能不……","c":"情理限制","p":"受情理/责任/社会规则限制","e":"約束したので、行かないわけにはいかない。"},{"id":101,"sourceNo":"65","w":"～わけだ","r":"普通形 + わけだ","m":"怪不得……；理所当然……","c":"推导结论","p":"顺理成章推出结论","e":"毎日練習したのだから、上手なわけだ。"},{"id":102,"sourceNo":"66","w":"～べきだ","r":"Vる + べきだ","m":"应该……；理应……","c":"义务・建议","p":"道德/常识/责任方面的建议","e":"約束は守るべきだ。"},{"id":103,"sourceNo":"66","w":"～べきではない","r":"Vる + べきではない","m":"不应该……","c":"义务・否定","p":"否定建议/道德判断","e":"人を傷つけることは言うべきではない。"}];
+    let selectedCategories = new Set();
+    let filtersOpen = false;
+    let soundEnabled = "speechSynthesis" in window;
+    let japaneseVoices = [];
+    let autoActive = false;
+    let autoIndex = 0;
+    let autoToken = 0;
+    let autoTimer = null;
+    let floatingSandyDrag = null;
+    const floatingSandyPositionKey = "n2-core-grammar-floating-sandy-position-v1";
+    const $ = (id) => document.getElementById(id);
+    const delay = (ms) => new Promise((resolve) => { autoTimer = setTimeout(resolve, ms); });
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    function speakTextFor(item) {
+      return item.w.replace(/^～/, "").replaceAll("～", "").replaceAll("/", "、").replace(/[（）()]/g, " ");
+    }
+    function visibleItems() {
+      const q = $("search").value.trim().toLowerCase();
+      return items
+        .filter((item) => selectedCategories.size === 0 || selectedCategories.has(item.c))
+        .filter((item) => !q || [item.w, item.r, item.m, item.c, item.p, item.e, item.sourceNo].some((value) => String(value || "").toLowerCase().includes(q)));
+    }
+    function selectedCategoryLabel() {
+      if (selectedCategories.size === 0) return "全部";
+      const selected = [...selectedCategories];
+      if (selected.length <= 3) return selected.join("、");
+      return `${selected.slice(0, 3).join("、")} +${selected.length - 3}`;
+    }
+    function renderCategories() {
+      const categories = ["全部", ...new Set(items.map((item) => item.c))];
+      $("filterToggle").setAttribute("aria-expanded", String(filtersOpen));
+      $("categories").classList.toggle("collapsed", !filtersOpen);
+      $("filterSummary").textContent = selectedCategoryLabel();
+      $("categories").innerHTML = categories.map((category) => {
+        const active = category === "全部" ? selectedCategories.size === 0 : selectedCategories.has(category);
+        const label = category === "全部" ? "全部 / 清空" : category;
+        return `<button class="category" type="button" data-category="${escapeHtml(category)}" aria-pressed="${active}">${escapeHtml(label)}</button>`;
+      }).join("");
+    }
+    function toggleCategoryFilter(category, scrollToFilters = false, openFilters = false) {
+      stopAuto();
+      if (!category || category === "全部") selectedCategories.clear();
+      else if (selectedCategories.has(category)) selectedCategories.delete(category);
+      else selectedCategories.add(category);
+      if (openFilters) filtersOpen = true;
+      renderCategories();
+      renderList();
+      if (scrollToFilters) $("filterToggle").scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    function renderList() {
+      const results = visibleItems();
+      $("status").textContent = selectedCategories.size === 0 ? `共 ${results.length} / ${items.length} 个项目` : `已选 ${selectedCategories.size} 个 tag：${selectedCategoryLabel()}｜${results.length} 个项目`;
+      $("empty").style.display = results.length ? "none" : "block";
+      $("list").innerHTML = results.map((item) => `
+        <article class="entry" data-id="${item.id}">
+          <div class="num">${String(item.id).padStart(3, "0")}<span class="source">原图 ${escapeHtml(item.sourceNo)}</span></div>
+          <button class="term-button" type="button" data-speak="${item.id}" aria-label="朗读：${escapeHtml(item.w)}">${escapeHtml(item.w)}</button>
+          <div class="meta">
+            <div class="connection">${escapeHtml(item.r)}</div>
+            <button class="tag" type="button" data-category-filter="${escapeHtml(item.c)}" aria-label="筛选类别：${escapeHtml(item.c)}">${escapeHtml(item.c)}</button>
+          </div>
+          <div class="meaning">${escapeHtml(item.m)}</div>
+          <div class="point">${escapeHtml(item.p)}</div>
+          <button class="example-button" type="button" data-example="${item.id}" aria-label="朗读例句：${escapeHtml(item.e)}">
+            <span class="example-label">例句 🔊</span><span>${escapeHtml(item.e)}</span>
+          </button>
+        </article>
+      `).join("");
+      if (!autoActive) updateFloatingProgress();
+    }
+    function updateSoundToggle() {
+      $("soundToggle").setAttribute("aria-pressed", String(soundEnabled));
+      $("soundToggle").textContent = soundEnabled ? "🔊 语音：开" : "🔇 语音：关";
+    }
+    function updateAutoToggle() {
+      $("autoToggle").setAttribute("aria-pressed", String(autoActive));
+      $("autoToggle").textContent = autoActive ? "⏸ 停止听读" : "▶ 自动听读";
+      updateFloatingSandyToggle();
+    }
+    function updateFloatingSandyToggle() {
+      const toggle = $("floatingSandyToggle");
+      const bubble = $("floatingSandyBubble");
+      const status = $("floatingSandyStatus");
+      if (!toggle || !bubble || !status) return;
+      toggle.setAttribute("aria-pressed", String(autoActive));
+      toggle.setAttribute("aria-label", autoActive ? "点击 Sandy 暂停自动听读" : "点击 Sandy 开始自动听读");
+      bubble.textContent = autoActive ? "Sandy..." : "点我自动听读";
+      status.textContent = autoActive ? "..." : "AUTO READ";
+    }
+    function updateFloatingProgress(item = null) {
+      const progress = $("floatingProgress");
+      if (!progress) return;
+      progress.textContent = item ? `进度：${String(item.id).padStart(3, "0")} / ${items.length}　${item.w}` : "进度：还没开始";
+    }
+    function loadVoices() {
+      if (!("speechSynthesis" in window)) return;
+      japaneseVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("ja"));
+      const select = $("voiceSelect");
+      const previous = select.value;
+      select.innerHTML = "";
+      if (!japaneseVoices.length) {
+        select.innerHTML = "<option>浏览器暂未提供日语声音</option>";
+        return;
+      }
+      japaneseVoices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = voice.name;
+        select.appendChild(option);
+      });
+      const preferred = japaneseVoices.find((voice) => voice.name === previous) || japaneseVoices.find((voice) => /siri|kyoko|haruka|nanami|female/i.test(voice.name)) || japaneseVoices[0];
+      select.value = preferred.name;
+    }
+    function speakJapanese(text, button, options = {}) {
+      if (!soundEnabled || !("SpeechSynthesisUtterance" in window)) return Promise.resolve(false);
+      return new Promise((resolve) => {
+        if (options.cancelCurrent !== false) window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+        document.querySelectorAll(".speaking").forEach((node) => node.classList.remove("speaking"));
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "ja-JP";
+        utterance.rate = .82;
+        utterance.pitch = 1;
+        const voice = japaneseVoices.find((voice) => voice.name === $("voiceSelect").value) || japaneseVoices[0];
+        if (voice) utterance.voice = voice;
+        button?.classList.add("speaking");
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          button?.classList.remove("speaking");
+          resolve(true);
+        };
+        const timer = setTimeout(finish, Math.min(16000, Math.max(2200, text.length * 230)));
+        utterance.onend = finish;
+        utterance.onerror = finish;
+        window.speechSynthesis.speak(utterance);
+      });
+    }
+    function stopAuto() {
+      autoActive = false;
+      autoToken++;
+      clearTimeout(autoTimer);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      document.querySelectorAll(".speaking, .entry.playing").forEach((node) => node.classList.remove("speaking", "playing"));
+      updateAutoToggle();
+      updateFloatingProgress();
+    }
+    function firstVisibleEntryIndex(entries) {
+      const visibleIndex = entries.findIndex((entry) => entry.getBoundingClientRect().bottom > 130);
+      return Math.max(0, visibleIndex);
+    }
+    async function playAuto(token) {
+      const entries = [...document.querySelectorAll(".entry")];
+      if (!autoActive || token !== autoToken || autoIndex >= entries.length) { stopAuto(); return; }
+      const entry = entries[autoIndex];
+      const item = items.find((candidate) => String(candidate.id) === entry.dataset.id);
+      if (!item) { autoIndex++; playAuto(token); return; }
+      document.querySelectorAll(".entry.playing").forEach((node) => node.classList.remove("playing"));
+      entry.classList.add("playing");
+      updateFloatingProgress(item);
+      entry.scrollIntoView({ behavior: "smooth", block: "center" });
+      await delay(380);
+      if (!autoActive || token !== autoToken) return;
+      await speakJapanese(speakTextFor(item), entry.querySelector(".term-button"));
+      if (!autoActive || token !== autoToken) return;
+      await delay(180);
+      await speakJapanese(item.e, entry.querySelector(".example-button"));
+      if (!autoActive || token !== autoToken) return;
+      await delay(430);
+      entry.classList.remove("playing");
+      autoIndex++;
+      playAuto(token);
+    }
+    function toggleAuto() {
+      if (autoActive) { stopAuto(); return; }
+      if (!soundEnabled && "speechSynthesis" in window) {
+        soundEnabled = true;
+        updateSoundToggle();
+      }
+      const entries = [...document.querySelectorAll(".entry")];
+      if (!entries.length) { stopAuto(); return; }
+      autoActive = true;
+      autoToken++;
+      autoIndex = firstVisibleEntryIndex(entries);
+      updateAutoToggle();
+      playAuto(autoToken);
+    }
+    function saveFloatingSandyPosition() {
+      const controls = $("floatingControls");
+      if (!controls) return;
+      const box = controls.getBoundingClientRect();
+      try { localStorage.setItem(floatingSandyPositionKey, JSON.stringify({ left: box.left, top: box.top })); } catch {}
+    }
+    function positionFloatingSandy(left, top) {
+      const controls = $("floatingControls");
+      if (!controls) return;
+      const box = controls.getBoundingClientRect();
+      const nextLeft = Math.min(Math.max(0, left), Math.max(0, window.innerWidth - box.width));
+      const nextTop = Math.min(Math.max(0, top), Math.max(0, window.innerHeight - box.height));
+      controls.style.left = `${nextLeft}px`;
+      controls.style.top = `${nextTop}px`;
+      controls.style.right = "auto";
+      controls.style.bottom = "auto";
+      controls.style.justifyItems = "end";
+    }
+    function restoreFloatingSandyPosition() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(floatingSandyPositionKey) || "null");
+        if (!saved || !Number.isFinite(saved.left) || !Number.isFinite(saved.top)) return;
+        requestAnimationFrame(() => positionFloatingSandy(saved.left, saved.top));
+      } catch {}
+    }
+    function beginFloatingSandyDrag(event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      const controls = $("floatingControls");
+      if (!controls) return;
+      const box = controls.getBoundingClientRect();
+      controls.setPointerCapture(event.pointerId);
+      floatingSandyDrag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, left: box.left, top: box.top, moved: false };
+      controls.classList.add("dragging");
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    function moveFloatingSandyDrag(event) {
+      if (!floatingSandyDrag || event.pointerId !== floatingSandyDrag.pointerId) return;
+      const dx = event.clientX - floatingSandyDrag.startX;
+      const dy = event.clientY - floatingSandyDrag.startY;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) floatingSandyDrag.moved = true;
+      positionFloatingSandy(floatingSandyDrag.left + dx, floatingSandyDrag.top + dy);
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    function endFloatingSandyDrag(event) {
+      if (!floatingSandyDrag || event.pointerId !== floatingSandyDrag.pointerId) return;
+      const wasDrag = floatingSandyDrag.moved;
+      const controls = $("floatingControls");
+      controls?.classList.remove("dragging");
+      if (controls?.hasPointerCapture(event.pointerId)) controls.releasePointerCapture(event.pointerId);
+      floatingSandyDrag = null;
+      if (wasDrag) saveFloatingSandyPosition();
+      else toggleAuto();
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    function cancelFloatingSandyDrag(event) {
+      if (!floatingSandyDrag || event.pointerId !== floatingSandyDrag.pointerId) return;
+      $("floatingControls")?.classList.remove("dragging");
+      floatingSandyDrag = null;
+    }
+    $("search").addEventListener("input", () => { stopAuto(); renderList(); });
+    $("filterToggle").addEventListener("click", () => {
+      filtersOpen = !filtersOpen;
+      renderCategories();
+    });
+    $("categories").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-category]");
+      if (!button) return;
+      toggleCategoryFilter(button.dataset.category);
+    });
+    $("list").addEventListener("click", (event) => {
+      const categoryButton = event.target.closest("[data-category-filter]");
+      if (categoryButton) {
+        toggleCategoryFilter(categoryButton.dataset.categoryFilter, true, true);
+        return;
+      }
+      const speak = event.target.closest("[data-speak]");
+      const example = event.target.closest("[data-example]");
+      if (speak) {
+        stopAuto();
+        const item = items.find((candidate) => String(candidate.id) === speak.dataset.speak);
+        if (item) speakJapanese(speakTextFor(item), speak);
+      }
+      if (example) {
+        stopAuto();
+        const item = items.find((candidate) => String(candidate.id) === example.dataset.example);
+        if (item) speakJapanese(item.e, example);
+      }
+    });
+    $("soundToggle").addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      if (!soundEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      updateSoundToggle();
+    });
+    $("autoToggle").addEventListener("click", toggleAuto);
+    $("floatingSandyToggle").addEventListener("pointerdown", beginFloatingSandyDrag);
+    $("floatingControls").addEventListener("pointermove", moveFloatingSandyDrag);
+    $("floatingControls").addEventListener("pointerup", endFloatingSandyDrag);
+    $("floatingControls").addEventListener("pointercancel", cancelFloatingSandyDrag);
+    $("floatingControls").addEventListener("touchstart", (event) => event.stopPropagation(), { passive: true });
+    $("floatingSandyToggle").addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleAuto();
+      }
+    });
+    $("voiceSelect").addEventListener("change", () => {});
+    window.addEventListener("wheel", stopAuto, { passive: true });
+    window.addEventListener("touchstart", stopAuto, { passive: true });
+    window.addEventListener("keydown", (event) => {
+      if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(event.key)) stopAuto();
+    });
+    updateSoundToggle();
+    updateAutoToggle();
+    renderCategories();
+    renderList();
+    restoreFloatingSandyPosition();
+    loadVoices();
+    if ("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+  </script>
+</body>
+</html>

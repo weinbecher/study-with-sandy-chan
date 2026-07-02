@@ -291,6 +291,7 @@
         <a href="index.html">🐾 二选一陷阱</a>
         <a href="grammar-quiz.html">🐾 语法四选一</a>
         <a href="vocab.html">📚 N2 词汇表</a>
+        <a href="core-grammar.html">🌊 核心语法表</a>
         <a href="grammar.html">📝 N2 语法表</a>
         <a href="mistakes.html">📘 错题复习</a>
         <a href="tag.html">🏷️ Tags</a>
@@ -728,6 +729,7 @@
     $("floatingSandyToggle").addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
+        event.stopPropagation();
         toggleAuto();
       }
     });
