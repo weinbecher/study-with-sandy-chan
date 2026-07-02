@@ -102,8 +102,26 @@
     .filter-summary { color: var(--blue-500); font-size: .8rem; font-weight: 950; text-align: right; }
     .filter-toggle .chevron { color: var(--sea-600); transition: transform .18s ease; }
     .filter-toggle[aria-expanded="true"] .chevron { transform: rotate(180deg); }
-    .categories { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border-top: 1px solid rgba(75,177,218,.15); }
+    .categories { display: grid; gap: 12px; padding: 12px; border-top: 1px solid rgba(75,177,218,.15); }
     .categories.collapsed { display: none; }
+    .category-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .category-group { display: grid; gap: 7px; padding: 10px; border: 1px solid rgba(75,177,218,.14); border-radius: 15px; background: rgba(247,253,255,.72); }
+    .category-group-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--ink); font-size: .8rem; font-weight: 950; }
+    .category-group-meta { display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+    .category-count { color: var(--muted); font-size: .72rem; font-weight: 900; }
+    .category-group-select {
+      border: 1px solid #bfe9f7;
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: var(--blue-500);
+      background: #eef9ff;
+      cursor: pointer;
+      font: inherit;
+      font-size: .72rem;
+      font-weight: 950;
+    }
+    .category-group-select[aria-pressed="true"] { color: white; border-color: transparent; background: linear-gradient(135deg, #7ea0f0, #527bd2); }
+    .category-group-tags { display: flex; flex-wrap: wrap; gap: 8px; }
     .category {
       border: 1px solid #bfe9f7;
       border-radius: 999px;
@@ -116,6 +134,7 @@
       font-weight: 950;
     }
     .category[aria-pressed="true"] { color: white; border-color: transparent; background: linear-gradient(135deg, #70d5f4, #2b9ccd); }
+    .category.clear { color: var(--blue-500); background: #eef9ff; }
     .status { margin: 0 4px 12px; color: var(--muted); font-size: .86rem; font-weight: 900; }
     .list { display: grid; gap: 10px; }
     .entry {
@@ -280,6 +299,18 @@
     const $ = (id) => document.getElementById(id);
     const delay = (ms) => new Promise((resolve) => { autoTimer = setTimeout(resolve, ms); });
     const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    const CATEGORY_GROUPS = [
+      { title: "时间・顺序・阶段", cats: ["时间・场面", "时间持续", "期间", "条件・顺序", "立即", "刚刚完成", "正要", "正在进行", "即将", "动作未完", "险些・未发生", "回忆・过去习惯", "间隔数量", "间隔时长", "每次"] },
+      { title: "条件・义务・决定", cats: ["既然・义务", "既然・责任", "既然・决心", "条件限制", "假定・负面结果", "义务", "义务・口语", "义务・建议", "义务・否定", "不必要", "决定・外部", "决定・自己", "情理限制"] },
+      { title: "逆接・让步・反差", cats: ["逆接", "逆接・书面", "让步・否定", "让步・对比", "同时・逆接", "同时・逆接・书面", "反差比较", "评价反差", "偏偏・意外"] },
+      { title: "限定・范围・无关", cats: ["限定", "限定・无选择", "限定・最后手段", "不限范围", "无关条件", "部分否定", "极端举例", "极端・阶段"] },
+      { title: "因果・根据・判断", cats: ["因果", "根据", "推导结论", "强调判断", "客观认定", "常识・道理", "推测", "强否定・不可能", "强烈否定", "可能・负面", "风险・负面"] },
+      { title: "变化・伴随・比较", cats: ["伴随变化", "变化趋势", "变化趋势・消极", "伴随・共同", "伴随・同行", "伴随・遵照", "比较", "取决于"] },
+      { title: "话题・对象・手段", cats: ["话题", "对象", "身份・资格", "场合・方面", "对应・响应", "手段", "遵照", "按照・一致"] },
+      { title: "敬语・受益・请求", cats: ["请求・愿望", "受益", "使役受益", "敬语・自谦", "许可"] },
+      { title: "情绪・愿望・难易・程度", cats: ["愿望・委婉", "愿望・难实现", "情绪难抑", "心理难易", "难易", "难易・拒绝", "无方法", "倾向・消极", "尝试・意志", "程度・强烈", "程度・无法控制"] },
+      { title: "转述・递进", cats: ["转述", "转述・礼貌", "转述・总结", "递进"] }
+    ];
     function speakTextFor(item) {
       return item.w.replace(/^～/, "").replaceAll("～", "").replaceAll("/", "、").replace(/[（）()]/g, " ");
     }
@@ -296,15 +327,65 @@
       return `${selected.slice(0, 3).join("、")} +${selected.length - 3}`;
     }
     function renderCategories() {
-      const categories = ["全部", ...new Set(items.map((item) => item.c))];
+      const availableCategories = new Set(items.map((item) => item.c));
       $("filterToggle").setAttribute("aria-expanded", String(filtersOpen));
       $("categories").classList.toggle("collapsed", !filtersOpen);
       $("filterSummary").textContent = selectedCategoryLabel();
-      $("categories").innerHTML = categories.map((category) => {
+      const categoryButton = (category, label = category, extraClass = "") => {
         const active = category === "全部" ? selectedCategories.size === 0 : selectedCategories.has(category);
-        const label = category === "全部" ? "全部 / 清空" : category;
-        return `<button class="category" type="button" data-category="${escapeHtml(category)}" aria-pressed="${active}">${escapeHtml(label)}</button>`;
+        return `<button class="category ${extraClass}" type="button" data-category="${escapeHtml(category)}" aria-pressed="${active}">${escapeHtml(label)}</button>`;
+      };
+      const grouped = new Set();
+      const groupHtml = CATEGORY_GROUPS.map((group, groupIndex) => {
+        const cats = group.cats.filter((category) => availableCategories.has(category));
+        cats.forEach((category) => grouped.add(category));
+        if (!cats.length) return "";
+        const selectedCount = cats.filter((category) => selectedCategories.has(category)).length;
+        const allSelected = selectedCount === cats.length;
+        return `<section class="category-group">
+          <div class="category-group-title">
+            <span>${escapeHtml(group.title)}</span>
+            <span class="category-group-meta">
+              <span class="category-count">已选 ${selectedCount}/${cats.length}</span>
+              <button class="category-group-select" type="button" data-category-group="${groupIndex}" aria-pressed="${allSelected}">${allSelected ? "取消本组" : "全选本组"}</button>
+            </span>
+          </div>
+          <div class="category-group-tags">${cats.map((category) => categoryButton(category)).join("")}</div>
+        </section>`;
       }).join("");
+      const leftover = [...availableCategories].filter((category) => !grouped.has(category)).sort((a, b) => a.localeCompare(b, "zh-Hans"));
+      const leftoverSelectedCount = leftover.filter((category) => selectedCategories.has(category)).length;
+      const leftoverAllSelected = leftover.length > 0 && leftoverSelectedCount === leftover.length;
+      const leftoverHtml = leftover.length ? `<section class="category-group">
+        <div class="category-group-title">
+          <span>其他</span>
+          <span class="category-group-meta">
+            <span class="category-count">已选 ${leftoverSelectedCount}/${leftover.length}</span>
+            <button class="category-group-select" type="button" data-category-group="leftover" aria-pressed="${leftoverAllSelected}">${leftoverAllSelected ? "取消本组" : "全选本组"}</button>
+          </span>
+        </div>
+        <div class="category-group-tags">${leftover.map((category) => categoryButton(category)).join("")}</div>
+      </section>` : "";
+      $("categories").innerHTML = `<div class="category-actions">${categoryButton("全部", "全部 / 清空", "clear")}</div>${groupHtml}${leftoverHtml}`;
+    }
+    function categoriesForGroup(groupKey) {
+      const availableCategories = new Set(items.map((item) => item.c));
+      const grouped = new Set(CATEGORY_GROUPS.flatMap((group) => group.cats));
+      if (groupKey === "leftover") return [...availableCategories].filter((category) => !grouped.has(category)).sort((a, b) => a.localeCompare(b, "zh-Hans"));
+      const group = CATEGORY_GROUPS[Number(groupKey)];
+      return group ? group.cats.filter((category) => availableCategories.has(category)) : [];
+    }
+    function toggleCategoryGroup(groupKey) {
+      stopAuto();
+      const cats = categoriesForGroup(groupKey);
+      if (!cats.length) return;
+      const allSelected = cats.every((category) => selectedCategories.has(category));
+      cats.forEach((category) => {
+        if (allSelected) selectedCategories.delete(category);
+        else selectedCategories.add(category);
+      });
+      renderCategories();
+      renderList();
     }
     function toggleCategoryFilter(category, scrollToFilters = false, openFilters = false) {
       stopAuto();
@@ -524,6 +605,11 @@
       renderCategories();
     });
     $("categories").addEventListener("click", (event) => {
+      const groupButton = event.target.closest("[data-category-group]");
+      if (groupButton) {
+        toggleCategoryGroup(groupButton.dataset.categoryGroup);
+        return;
+      }
       const button = event.target.closest("[data-category]");
       if (!button) return;
       toggleCategoryFilter(button.dataset.category);
